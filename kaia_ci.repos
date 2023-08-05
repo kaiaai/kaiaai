@@ -1,5 +1,0 @@
-repositories:
-  kaiaai/kaia_msgs:
-    type: git
-    url: https://github.com/kaiaai/kaia_msgs.git
-    version: humble
