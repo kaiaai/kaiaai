@@ -1,0 +1,13 @@
+repositories:
+  kaiaai/kaia_bots:
+    type: git
+    url: https://github.com/kaiaai/kaia_bots.git
+    version: humble
+  kaiaai/kaia_msgs:
+    type: git
+    url: https://github.com/kaiaai/kaia_msgs.git
+    version: humble
+  kaiaai/kaia_sims:
+    type: git
+    url: https://github.com/kaiaai/kaia_sims.git
+    version: humble

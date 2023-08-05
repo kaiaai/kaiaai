@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>kaia_teleop</name>
+  <version>0.0..</version>
+  <description>Teleoperation node using keyboard for Kaia.ai bots</description>
+
+  <maintainer email="iliao@remake.ai">Ilia O.</maintainer>
+  <license>Apache 2.0</license>
+  <url type="website">https://kaia.ai</url>
+  <url type="repository">https://github.com/kaiaai/kaia_bots</url>
+  <url type="bugtracker">https://github.com/kaiaai/kaia_bots/issues</url>
+  <author email="iliao@remake.ai">Ilia O.</author>
+
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>rclpy</exec_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
