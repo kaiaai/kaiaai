@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>kaia_teleop</name>
-  <version>0.0..</version>
+  <version>0.0.0</version>
   <description>Teleoperation node using keyboard for Kaia.ai bots</description>
 
   <maintainer email="iliao@remake.ai">Ilia O.</maintainer>
