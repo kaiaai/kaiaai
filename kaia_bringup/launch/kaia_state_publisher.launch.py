@@ -26,10 +26,10 @@ from launch_ros.actions import Node
 
 
 def generate_launch_description():
-    KAIA_MODEL = os.environ['KAIA_MODEL']
+    KAIA_BOT_MODEL = os.environ['KAIA_BOT_MODEL']
 
     use_sim_time = LaunchConfiguration('use_sim_time', default='false')
-    urdf_file_name = 'kaia_' + KAIA_MODEL + '.urdf'
+    urdf_file_name = 'kaia_' + KAIA_BOT_MODEL + '.urdf'
 
     print("urdf_file_name : {}".format(urdf_file_name))
 

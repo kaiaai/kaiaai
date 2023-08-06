@@ -29,7 +29,7 @@ from launch_ros.actions import Node
 
 
 def generate_launch_description():
-    KAIA_MODEL = os.environ['KAIA_MODEL']
+    KAIA_BOT_MODEL = os.environ['KAIA_BOT_MODEL']
     LDS_MODEL = os.environ['LDS_MODEL']
     LDS_LAUNCH_FILE = '/hlds_laser.launch.py'
 
@@ -40,7 +40,7 @@ def generate_launch_description():
         default=os.path.join(
             get_package_share_directory('kaia_bringup'),
             'param',
-            KAIA_MODEL + '.yaml'))
+            KAIA_BOT_MODEL + '.yaml'))
 
     if LDS_MODEL == 'LDS-01':
         lidar_pkg_dir = LaunchConfiguration(

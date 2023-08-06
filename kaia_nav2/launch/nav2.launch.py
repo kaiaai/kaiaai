@@ -25,7 +25,7 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
-KAIA_MODEL = os.environ['KAIA_MODEL']
+KAIA_BOT_MODEL = os.environ['KAIA_BOT_MODEL']
 
 
 def generate_launch_description():
@@ -37,7 +37,7 @@ def generate_launch_description():
             'map',
             'map.yaml'))
 
-    param_file_name = KAIA_MODEL + '.yaml'
+    param_file_name = KAIA_BOT_MODEL + '.yaml'
     param_dir = LaunchConfiguration(
         'params_file',
         default=os.path.join(

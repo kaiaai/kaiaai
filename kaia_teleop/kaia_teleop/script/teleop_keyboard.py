@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+w#!/usr/bin/env python
 #
 # Copyright 2023 REMAKE.AI
 # Copyright (c) 2011, Willow Garage, Inc.
@@ -50,8 +50,8 @@ else:
     import termios
     import tty
 
-BURGER_MAX_LIN_VEL = 0.22
-BURGER_MAX_ANG_VEL = 2.84
+SNOOPY_MAX_LIN_VEL = 0.22
+SNOOPY_MAX_ANG_VEL = 2.84
 
 WAFFLE_MAX_LIN_VEL = 0.26
 WAFFLE_MAX_ANG_VEL = 1.82
@@ -59,7 +59,7 @@ WAFFLE_MAX_ANG_VEL = 1.82
 LIN_VEL_STEP_SIZE = 0.01
 ANG_VEL_STEP_SIZE = 0.1
 
-KAIA_MODEL = os.environ['KAIA_MODEL']
+KAIA_BOT_MODEL = os.environ['KAIA_BOT_MODEL']
 
 msg = """
 Control Your Kaia.ai Bot!
@@ -69,8 +69,8 @@ Moving around:
    a    s    d
         x
 
-w/x : increase/decrease linear velocity (Burger : ~ 0.22, Waffle and Waffle Pi : ~ 0.26)
-a/d : increase/decrease angular velocity (Burger : ~ 2.84, Waffle and Waffle Pi : ~ 1.82)
+w/x : increase/decrease linear velocity (Snoopy : ~ 0.22, Waffle and Waffle Pi : ~ 0.26)
+a/d : increase/decrease angular velocity (Snoopy : ~ 2.84, Waffle and Waffle Pi : ~ 1.82)
 
 space key, s : force stop
 
@@ -125,15 +125,15 @@ def constrain(input_vel, low_bound, high_bound):
 
 
 def check_linear_limit_velocity(velocity):
-    if KAIA_MODEL == 'burger':
-        return constrain(velocity, -BURGER_MAX_LIN_VEL, BURGER_MAX_LIN_VEL)
+    if KAIA_BOT_MODEL == 'snoopy':
+        return constrain(velocity, -SNOOPY_MAX_LIN_VEL, SNOOPY_MAX_LIN_VEL)
     else:
         return constrain(velocity, -WAFFLE_MAX_LIN_VEL, WAFFLE_MAX_LIN_VEL)
 
 
 def check_angular_limit_velocity(velocity):
-    if KAIA_MODEL == 'burger':
-        return constrain(velocity, -BURGER_MAX_ANG_VEL, BURGER_MAX_ANG_VEL)
+    if KAIA_BOT_MODEL == 'snoopy':
+        return constrain(velocity, -SNOOPY_MAX_ANG_VEL, SNOOPY_MAX_ANG_VEL)
     else:
         return constrain(velocity, -WAFFLE_MAX_ANG_VEL, WAFFLE_MAX_ANG_VEL)
 
