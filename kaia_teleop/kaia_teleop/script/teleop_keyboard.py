@@ -1,4 +1,4 @@
-w#!/usr/bin/env python
+#!/usr/bin/env python
 #
 # Copyright 2023 REMAKE.AI
 # Copyright (c) 2011, Willow Garage, Inc.
