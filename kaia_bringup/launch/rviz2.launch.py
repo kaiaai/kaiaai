@@ -25,7 +25,7 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
     rviz_config_dir = os.path.join(
-        get_package_share_directory('kaia_description'),
+        get_package_share_directory('kaia_desc'),
         'rviz',
         'model.rviz')
 
