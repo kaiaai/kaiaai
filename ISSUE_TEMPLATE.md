@@ -4,7 +4,7 @@ ISSUE TEMPLATE ver. 0.0.0
 
 1. Select the Kaia bot model.
 
-    - [ ] Kaia Scout
+    - [ ] Kaia Snoopy
     - [ ] Other (please specify)
 
 2. Which Micro-Controller is installed on Kaia bot?

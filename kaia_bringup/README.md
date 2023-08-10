@@ -11,7 +11,7 @@ ROS2 stack will launch automatically. Make sure that you have installed Docker f
 docker run --name kaia-ros-iron -it --rm -p 8888:8888/udp kaiaai/kaia-ros:iron launch
 ```
 
-Now you can power up your [Kaia.ai](https://kaia.ai) robot. If this is the first time you have powered up
+Now you can power up your Kaia.ai robot. If this is the first time you have powered up
 your robot:
 - run the Docker image using the `launch` option as described above
 - use your smartphone or PC to search for WiFi networks

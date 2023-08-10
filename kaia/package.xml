@@ -3,7 +3,7 @@
 <package format="3">
   <name>kaia</name>
   <version>0.0.0</version>
-  <description>ROS2 packages for Kaia.ai bots</description>
+  <description>ROS2 packages for Kaia.ai robots</description>
   <maintainer email="iliao@remake.ai">Ilia O.</maintainer> 
   <license>Apache 2.0</license>
   <url type="website">https://kaia.ai</url>
