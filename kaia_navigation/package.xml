@@ -1,21 +1,20 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>kaia_launch</name>
+  <name>kaia_navigation</name>
   <version>0.0.0</version>
+  <description>ROS2 launch scripts for Navigation2</description> 
 
-  <description>Kaia.ai ROS2 system launch scripts</description>
   <maintainer email="iliao@remake.ai">Ilia O.</maintainer>
-  <license>Apache-2.0</license>
+  <license>Apache 2.0</license>
+  <url type="website">https://kaia.ai</url>
+  <url type="repository">https://github.com/kaiaai/kaia</url>
+  <url type="bugtracker">https://github.com/kaiaai/kaia/issues</url>
   <author email="iliao@remake.ai">Ilia O.</author>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
-  <exec_depend>ros2launch</exec_depend>
-  <exec_depend>kaia_telem</exec_depend>
 
-  <test_depend>ament_lint_auto</test_depend>
-  <test_depend>ament_lint_common</test_depend>
-
+  <exec_depend>nav2_bringup</exec_depend>
   <export>
     <build_type>ament_cmake</build_type>
   </export>

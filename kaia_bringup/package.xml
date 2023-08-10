@@ -3,13 +3,13 @@
 <package format="3">
   <name>kaia_bringup</name>
   <version>0.0.0</version>
-  <description>ROS2 launch scripts for starting Kaia.ai bots</description>
+  <description>ROS2 scripts to start Kaia.ai robots</description>
 
   <maintainer email="iliao@remake.ai">Ilia O.</maintainer>
   <license>Apache 2.0</license>
   <url type="website">https://kaia.ai</url>
-  <url type="repository">https://github.com/kaiaai/kaia_bots</url>
-  <url type="bugtracker">https://github.com/kaiaai/kaia_bots/issues</url>
+  <url type="repository">https://github.com/kaiaai/kaia</url>
+  <url type="bugtracker">https://github.com/kaiaai/kaia/issues</url>
   <author email="iliao@remake.ai">Ilia O.</author>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
@@ -17,8 +17,18 @@
   <exec_depend>hls_lfcd_lds_driver</exec_depend>
   <exec_depend>robot_state_publisher</exec_depend>
   <exec_depend>rviz2</exec_depend>
-  <exec_depend>kaia_desc</exec_depend>
+  <exec_depend>kaia_description</exec_depend>
   <exec_depend>kaia_node</exec_depend>
+  <exec_depend>ros2launch</exec_depend>
+  <exec_depend>kaia_telemetry</exec_depend>
+
+  <exec_depend>joint_state_publisher</exec_depend>
+  <exec_depend>joint_state_publisher_gui</exec_depend>
+  <exec_depend>robot_state_publisher</exec_depend>
+  <exec_depend>xacro</exec_depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

@@ -1,24 +1,24 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>kaia_bots</name>
+  <name>kaia</name>
   <version>0.0.0</version>
   <description>ROS2 packages for Kaia.ai bots</description>
   <maintainer email="iliao@remake.ai">Ilia O.</maintainer> 
   <license>Apache 2.0</license>
   <url type="website">https://kaia.ai</url>
-  <url type="repository">https://github.com/kaiaai/kaia_bots</url>
-  <url type="bugtracker">https://github.com/kaiaai/kaia_bots/issues</url>
+  <url type="repository">https://github.com/kaiaai/kaia</url>
+  <url type="bugtracker">https://github.com/kaiaai/kaia/issues</url>
   <author email="iliao@remake.ai">Ilia O.</author>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
   <exec_depend>kaia_bringup</exec_depend>
   <exec_depend>kaia_cartographer</exec_depend>
-  <exec_depend>kaia_desc</exec_depend>
-  <exec_depend>kaia_nav2</exec_depend>
+  <exec_depend>kaia_description</exec_depend>
+  <exec_depend>kaia_navigation</exec_depend>
   <exec_depend>kaia_teleop</exec_depend>
-  <exec_depend>kaia_telem</exec_depend>
+  <exec_depend>kaia_telemetry</exec_depend>
 
   <export>
     <build_type>ament_cmake</build_type>
