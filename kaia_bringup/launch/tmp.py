@@ -16,36 +16,44 @@
 #
 # ACKNOWLEDGEMENTS: This code is based on ROS2 urdf_tutorial
 
-from ament_index_python.packages import get_package_share_path
-
+import os
+from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.conditions import IfCondition, UnlessCondition
 from launch.substitutions import Command, LaunchConfiguration
-
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
 
 def generate_launch_description():
-    KAIA_BOT_MODEL = os.environ['KAIA_BOT_MODEL', default='snoopy']
+    default_model_name = os.getenv('KAIA_BOT_MODEL', default='kaia_snoopy')
+    default_package_name = os.getenv('KAIA_BOT_PACKAGE', default='kaia_description')
 
-    urdf_path = get_package_share_path('kaia_description')
-    default_model_path = os.path.join(urdf_path,
-      get_package_share_path('kaia_description'),
-      'urdf',
-      'kaia_' + KAIA_BOT_MODEL + '.urdf')
-    default_rviz_config_path = urdf_path / 'rviz/urdf.rviz'
+    default_rviz_config_path = os.path.join(
+        get_package_share_directory('kaia_bringup'),
+        'rviz',
+        'inspect_urdf.rviz')
 
     gui_arg = DeclareLaunchArgument(name='gui', default_value='true', choices=['true', 'false'],
                                     description='Flag to enable joint_state_publisher_gui')
-    model_arg = DeclareLaunchArgument(name='model', default_value=str(default_model_path),
-                                      description='Absolute path to robot urdf file')
-    rviz_arg = DeclareLaunchArgument(name='rvizconfig', default_value=str(default_rviz_config_path),
+    model_arg = DeclareLaunchArgument(name='model', default_value=default_model_name,
+                                      description='Robot model name, overrides KAIA_BOT_MODEL')
+    package_arg = DeclareLaunchArgument(name='package', default_value=default_package_name,
+                                      description='Robot description package name, overrides KAIA_BOT_PACKAGE')
+    rviz_arg = DeclareLaunchArgument(name='rvizconfig', default_value=default_rviz_config_path,
                                      description='Absolute path to rviz config file')
 
-    robot_description = ParameterValue(Command(['xacro ', LaunchConfiguration('model')]),
-                                       value_type=str)
+    model_urdf_path = os.path.join(
+        get_package_share_directory(LaunchConfiguration('package')),
+        'urdf',
+        LaunchConfiguration('model') + '.urdf')
 
+    print()
+    print(model_urdf_path)
+    print()
+
+    robot_description = ParameterValue(Command(['xacro ', model_urdf_path]),
+                                       value_type=str)
     robot_state_publisher_node = Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
