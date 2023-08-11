@@ -25,7 +25,7 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
-KAIA_BOT_MODEL = os.environ['KAIA_BOT_MODEL']
+KAIA_BOT_MODEL = os.getenv('KAIA_BOT_MODEL', default='snoopy')
 
 
 def generate_launch_description():

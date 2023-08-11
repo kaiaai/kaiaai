@@ -14,10 +14,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+from ament_index_python.packages import get_package_share_path
 from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
+
+
 def generate_launch_description():
+    urdf_file_name = os.getenv('KAIA_BOT_MODEL', default='snoopy') + '.urdf'
+    package_name = os.getenv('KAIA_BOT_PACKAGE', default='kaia_description')
+    # print("urdf_file_name : {}".format(urdf_file_name))
+
+    urdf = os.path.join(
+        get_package_share_path(package_name),
+        'urdf',
+        urdf_file_name)
+
+    with open(urdf, 'r') as infp:
+        robot_desc = infp.read()
+
+    # print (robot_desc) # Printing urdf information.
+    rsp_params = {'robot_description': robot_desc}
+    use_sim_time = LaunchConfiguration('use_sim_time', default='false')
+
     return LaunchDescription([
         Node(
             package="kaia_telemetry",
@@ -42,5 +64,14 @@ def generate_launch_description():
             output="screen",
             arguments = ["--frame-id", "map", "--child-frame-id", "lds"]
             # arguments = ["0", "0", "0", "0", "0", "0", "map", "lds"]
-        )
+        ),
+        Node(
+            package='robot_state_publisher',
+            executable='robot_state_publisher',
+            output='screen',
+            parameters=[rsp_params, {'use_sim_time': use_sim_time}]),
+        DeclareLaunchArgument(
+            'use_sim_time',
+            default_value='false',
+            description='Use simulation (Gazebo) clock if true')
     ])
