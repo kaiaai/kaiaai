@@ -41,3 +41,13 @@ Now you can launch the Kaia.ai ROS2 stack manually by typing
 ```
 ros2 launch kaia_bringup main.launch.py
 ```
+
+### Inspect robot model - URDF
+```
+ros2 launch kaia_bringup inspect_urdf.launch.py description:=kaia_snoopy_description
+```
+
+### Monitor your robot in action
+```
+ros2 launch kaia_bringup rviz2.launch.py description:=kaia_snoopy_description
+```
