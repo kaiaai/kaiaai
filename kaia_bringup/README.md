@@ -39,7 +39,7 @@ docker run --name kaia-ros-dev-iron -it --rm -p 8888:8888/udp -e DISPLAY=host.do
 
 Now you can launch the Kaia.ai ROS2 stack manually by typing
 ```
-ros2 launch kaia_bringup main.launch.py
+ros2 launch kaia_bringup main.launch.py description:=kaia_snoopy_snoopy_description
 ```
 
 ### Inspect robot model - URDF
