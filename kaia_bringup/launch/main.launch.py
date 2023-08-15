@@ -16,40 +16,49 @@
 
 import os
 from ament_index_python.packages import get_package_share_path
-from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
-from launch.substitutions import LaunchConfiguration
+from launch import LaunchDescription, LaunchContext
+from launch.actions import DeclareLaunchArgument, OpaqueFunction
+from launch.substitutions import Command, LaunchConfiguration
 from launch_ros.actions import Node
+from launch_ros.parameter_descriptions import ParameterValue
 
+
+def make_robot_description_node(context: LaunchContext, description, use_sim_time):
+    description_str = context.perform_substitution(description)
+    use_sim_time_str = context.perform_substitution(use_sim_time)
+
+    urdf_path_name = os.path.join(
+      get_package_share_path(description_str),
+      'urdf',
+      'robot.urdf')
+    print('URDF file name : {}'.format(urdf_path_name))
+
+    # with open(urdf_path, 'r') as infp:
+    #     robot_desc = infp.read()
+    robot_description = ParameterValue(Command(['xacro ', urdf_path_name]), value_type=str)
+
+    return [
+        Node(
+            package='robot_state_publisher',
+            executable='robot_state_publisher',
+            name='robot_state_publisher',
+            output='screen',
+            parameters=[{
+                'use_sim_time': use_sim_time_str,
+                'robot_description': robot_description
+            }]
+        )
+    ]
 
 
 def generate_launch_description():
-    urdf_file_name = os.getenv('KAIA_BOT_MODEL', default='snoopy') + '.urdf'
-    package_name = os.getenv('KAIA_BOT_PACKAGE', default='kaia_description')
-    # print("urdf_file_name : {}".format(urdf_file_name))
-
-    urdf = os.path.join(
-        get_package_share_path(package_name),
-        'urdf',
-        urdf_file_name)
-
-    with open(urdf, 'r') as infp:
-        robot_desc = infp.read()
-
-    # print (robot_desc) # Printing urdf information.
-    rsp_params = {'robot_description': robot_desc}
-    use_sim_time = LaunchConfiguration('use_sim_time', default='false')
+    default_description_name = os.getenv('KAIA_ROBOT_DESCRIPTION', default='kaia_snoopy_description')
 
     return LaunchDescription([
         Node(
             package="kaia_telemetry",
             executable="telem",
-            # name="kaia_telem_node",
-            output="screen" #,
-            # emulate_tty=True,
-            # parameters=[
-            #     {"my_parameter": "earth"}
-            # ]
+            output="screen"
         ),
         Node(
             package='micro_ros_agent',
@@ -65,13 +74,19 @@ def generate_launch_description():
             arguments = ["--frame-id", "map", "--child-frame-id", "lds"]
             # arguments = ["0", "0", "0", "0", "0", "0", "map", "lds"]
         ),
-        Node(
-            package='robot_state_publisher',
-            executable='robot_state_publisher',
-            output='screen',
-            parameters=[rsp_params, {'use_sim_time': use_sim_time}]),
+        OpaqueFunction(function=make_robot_description_node, args=[
+            LaunchConfiguration('description'),
+            LaunchConfiguration('use_sim_time')
+        ]),
         DeclareLaunchArgument(
-            'use_sim_time',
+            name='description',
+            default_value=str(default_description_name),
+            description='Robot description package name, overrides KAIA_ROBOT_DESCRIPTION'
+        ),
+        DeclareLaunchArgument(
+            name='use_sim_time',
             default_value='false',
-            description='Use simulation (Gazebo) clock if true')
+            choices=['true', 'false'],
+            description='Use simulation (Gazebo) clock if true'
+        )
     ])

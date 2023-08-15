@@ -25,75 +25,65 @@ from launch.substitutions import Command, LaunchConfiguration
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
 
-def make_robot_description_node(context: LaunchContext, model_name, package_name):
-    model_name_str = context.perform_substitution(model_name)
-    package_name_str = context.perform_substitution(package_name)
+def make_nodes(context: LaunchContext, description):
+    description_str = context.perform_substitution(description)
 
-    model_path_str = os.path.join(
-      get_package_share_path(package_name_str),
+    urdf_path_name = os.path.join(
+      get_package_share_path(description_str),
       'urdf',
-      model_name_str + '.urdf')
+      'robot.urdf')
 
-    robot_description = ParameterValue(Command(['xacro ', model_path_str]), value_type=str)
+    print("URDF file name : {}".format(urdf_path_name))
+    robot_description = ParameterValue(Command(['xacro ', urdf_path_name]), value_type=str)
 
-    robot_state_publisher_node = Node(
-        package='robot_state_publisher',
-        executable='robot_state_publisher',
-        parameters=[{'robot_description': robot_description}]
-    )
-
-    return [robot_state_publisher_node]
-
-
-def generate_launch_description():
-    default_model_name = os.getenv('KAIA_BOT_MODEL', default='kaia_snoopy')
-    default_package_name = os.getenv('KAIA_BOT_PACKAGE', default='kaia_description')
-
-    default_rviz_config_path = os.path.join(
-        get_package_share_path('kaia_bringup'),
+    rviz_config_path = os.path.join(
+        get_package_share_path(description_str),
         'rviz',
         'inspect_urdf.rviz')
 
-    gui_arg = DeclareLaunchArgument(name='gui', default_value='true', choices=['true', 'false'],
-                                    description='Flag to enable joint_state_publisher_gui')
-    package_name_arg = DeclareLaunchArgument(name='package', default_value=str(default_package_name),
-                                        description='Robot description package name, overrides KAIA_BOT_PACKAGE')
-    model_name_arg = DeclareLaunchArgument(name='model', default_value=str(default_model_name),
-                                      description='Robot model name, overrides KAIA_BOT_MODEL')
-    rviz_arg = DeclareLaunchArgument(name='rvizconfig', default_value=str(default_rviz_config_path),
-                                     description='Absolute path to rviz config file')
+    return [
+        Node(
+            package='robot_state_publisher',
+            executable='robot_state_publisher',
+            parameters=[{'robot_description': robot_description}]
+        ),
+        Node(
+            package='rviz2',
+            executable='rviz2',
+            name='rviz2',
+            output='screen',
+            arguments=['-d', rviz_config_path],
+        )
+    ]
+
+
+def generate_launch_description():
+    default_description_name = os.getenv('KAIA_ROBOT_DESCRIPTION', default='kaia_snoopy_description')
 
     # Depending on gui parameter, either launch joint_state_publisher or joint_state_publisher_gui
-    joint_state_publisher_node = Node(
-        package='joint_state_publisher',
-        executable='joint_state_publisher',
-        condition=UnlessCondition(LaunchConfiguration('gui'))
-    )
-
-    joint_state_publisher_gui_node = Node(
-        package='joint_state_publisher_gui',
-        executable='joint_state_publisher_gui',
-        condition=IfCondition(LaunchConfiguration('gui'))
-    )
-
-    rviz_node = Node(
-        package='rviz2',
-        executable='rviz2',
-        name='rviz2',
-        output='screen',
-        arguments=['-d', LaunchConfiguration('rvizconfig')],
-    )
-
     return LaunchDescription([
-        gui_arg,
-        model_name_arg,
-        package_name_arg,
-        OpaqueFunction(function=make_robot_description_node, args=[
-            LaunchConfiguration('model'),
-            LaunchConfiguration('package')
+        DeclareLaunchArgument(
+            name='gui',
+            default_value='true',
+            choices=['true', 'false'],
+            description='Flag to enable joint_state_publisher_gui'
+        ),
+        DeclareLaunchArgument(
+            name='description',
+            default_value=default_description_name,
+            description='Robot description package name, overrides KAIA_ROBOT_DESCRIPTION'
+        ),
+        OpaqueFunction(function=make_nodes, args=[
+            LaunchConfiguration('description')
         ]),
-        rviz_arg,
-        joint_state_publisher_node,
-        joint_state_publisher_gui_node,
-        rviz_node
+        Node(
+            package='joint_state_publisher',
+            executable='joint_state_publisher',
+            condition=UnlessCondition(LaunchConfiguration('gui')
+        ),
+        Node(
+            package='joint_state_publisher_gui',
+            executable='joint_state_publisher_gui',
+            condition=IfCondition(LaunchConfiguration('gui')
+        )
     ])
