@@ -14,7 +14,6 @@
   <buildtool_depend>ament_cmake</buildtool_depend>
 
   <exec_depend>kaia_bringup</exec_depend>
-  <exec_depend>kaia_cartographer</exec_depend>
   <exec_depend>kaia_descriptions</exec_depend>
   <exec_depend>kaia_navigation</exec_depend>
   <exec_depend>kaia_teleop</exec_depend>
