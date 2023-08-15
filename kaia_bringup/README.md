@@ -27,7 +27,7 @@ the Kaia.ai ROS2 stack you have launched using the Docker image.
 ## Development
 If you are a developer adapting the Kaia.ai platform to your own robot, use this command to
 launch the [development](https://hub.docker.com/r/kaiaai/kaia-ros-dev) - as opposed to the
-[end user](https://hub.docker.com/r/kaiaai/kaia-ros)) - version of the Kaia.ai ROS2 stack:
+[end user](https://hub.docker.com/r/kaiaai/kaia-ros) - version of the Kaia.ai ROS2 stack:
 ```
 docker run --name kaia-ros-dev-iron -it --rm -p 8888:8888/udp -e DISPLAY=host.docker.internal:0.0 -e LIBGL_ALWAYS_INDIRECT=0 kaiaai/kaia-ros-dev:iron launch
 ```
