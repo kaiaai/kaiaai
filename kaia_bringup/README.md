@@ -37,17 +37,27 @@ The command below loads the Kaia.ai development Docker image, but does not autom
 docker run --name kaia-ros-dev-iron -it --rm -p 8888:8888/udp -e DISPLAY=host.docker.internal:0.0 -e LIBGL_ALWAYS_INDIRECT=0 kaiaai/kaia-ros-dev:iron launch
 ```
 
-Now you can launch the Kaia.ai ROS2 stack manually by typing
+Launch physical robot manually
+- launch the Kaia.ai ROS2 stack using the command below. Set `description` below to the
+robot model description of your physical robot
+- turn on your robot's power
+- make sure your robot connects to same WiFi where your Kaia.ai ROS2 stack PC is connected
+- at this point your robot should connect to the Kaia.ai ROS2 stack.
+You can verify the successful connection by monitoring ESP32 board LED blinking pattern.
+If the LED blinking pattern indicates an error, connect your PC to your robot's ESP32 board
+using a USB cable, launch Arduino IDE and open the Arduino IDE Serial Monitor by
+selecting Tools -> Serial Monitor menu items
+- once the WiFi and ROS2 PC connections have been established, your robot is ready for use
 ```
 ros2 launch kaia_bringup main.launch.py description:=kaia_snoopy_snoopy_description
-```
-
-### Inspect robot model - URDF
-```
-ros2 launch kaia_bringup inspect_urdf.launch.py description:=kaia_snoopy_description
 ```
 
 ### Monitor your robot in action
 ```
 ros2 launch kaia_bringup rviz2.launch.py description:=kaia_snoopy_description
+```
+
+### Optional: Inspect robot model - URDF
+```
+ros2 launch kaia_bringup inspect_urdf.launch.py description:=kaia_snoopy_description
 ```
