@@ -1,0 +1,10 @@
+builtin_interfaces/Time stamp
+uint32 seq
+float32 odom_pos_x
+float32 odom_pos_y
+float32 odom_pos_yaw
+float32 odom_vel_x
+float32 odom_vel_yaw
+float32[] joint_pos
+float32[] joint_vel
+uint8[] lds
