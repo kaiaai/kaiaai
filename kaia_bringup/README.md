@@ -17,12 +17,29 @@ your robot:
 - use your smartphone or PC to search for WiFi networks
 - find and connect to "KAIA-WIFI" network
 - using your smartphone or PC browser to open [http://192.168.4.1](http://192.168.4.1)
-- enter your WiFi network name (SSID), password and click Submit
-- your robot will attempt to connect to your WiFi network. If unsuccessful, the robot will re-start
-its KAIA-WIFI network, so you can retry entering the correct WIFI name and password
-
-Once connected to your WiFi, the robot will then attempt connecting to your to your PC that is running
-the Kaia.ai ROS2 stack you have launched using the Docker image.
+- enter your WiFi network name (SSID), password and click Submit  
+  - The WiFi network ESP32 is connecting to must be the same network where your Kaia.ai ROS2 PC
+is connected to
+  - The network also must not block its WiFi clients from connecting to each
+other. For example, your home WiFi network will likely work fine, but WiFi at a Starbucks
+will probably not work
+  - Important - your WiFi network must provide a strong and fast connection throughout
+your residence (or place of use). If your WiFi signal is not strong enough, consider
+using a WiFi repeater
+  - For security purposes, make sure your WiFi connection is encrypted using a strong
+password and a strong WiFi encryption protocol, e.g. WPA3 or WPA2.
+  - For best security, consider creating a dedicated WiFi network for your robot and
+your Kaia.ai ROS2 PC only, so that no other WiFi device (except the WiFi router) will
+receive robot network traffic - which, currently, runs unencrypted in ROS2 applications
+- your robot will attempt to connect to your WiFi  
+If unsuccessful, the robot will re-start its KAIA-WIFI network, so you can retry entering
+the correct WIFI name and password. Monitor your robot's ESP32 board LED blinking pattern
+to detect WiFi connection success or failure
+- Once connected to your WiFi, the robot will connect automatically to your to your PC
+running the Kaia.ai ROS2 stack that you have launched using the Docker image  
+If the connection fails, your EPS32 board will indicating the connection error using
+a corresponding LED blinking pattern and reboot after a delay. Please continue reading
+to learn how to debug ESP32 connection problems.
 
 ## Development
 If you are a developer adapting the Kaia.ai platform to your own robot, use this command to
