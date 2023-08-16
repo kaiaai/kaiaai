@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
+import os, re
 from ament_index_python.packages import get_package_share_path
 from launch import LaunchDescription, LaunchContext
 from launch.actions import DeclareLaunchArgument, OpaqueFunction
@@ -27,10 +27,11 @@ def make_robot_description_node(context: LaunchContext, description, use_sim_tim
     description_str = context.perform_substitution(description)
     use_sim_time_str = context.perform_substitution(use_sim_time)
 
+    model_name = re.sub(r'_description$', '', description_str)
     urdf_path_name = os.path.join(
       get_package_share_path(description_str),
       'urdf',
-      'robot.urdf')
+      model_name + '.urdf')
     print('URDF file name : {}'.format(urdf_path_name))
 
     # with open(urdf_path, 'r') as infp:

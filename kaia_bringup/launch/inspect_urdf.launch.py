@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
+import os, re
 from ament_index_python.packages import get_package_share_path
 from launch import LaunchDescription, LaunchContext
 from launch.actions import DeclareLaunchArgument, OpaqueFunction
@@ -26,10 +26,11 @@ from launch_ros.parameter_descriptions import ParameterValue
 def make_nodes(context: LaunchContext, description):
     description_str = context.perform_substitution(description)
 
+    model_name = re.sub(r'_description$', '', description_str)
     urdf_path_name = os.path.join(
       get_package_share_path(description_str),
       'urdf',
-      'robot.urdf')
+      model_name + '.urdf')
 
     print("URDF file name : {}".format(urdf_path_name))
     robot_description = ParameterValue(Command(['xacro ', urdf_path_name]), value_type=str)
