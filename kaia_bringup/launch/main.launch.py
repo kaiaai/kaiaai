@@ -53,6 +53,7 @@ def make_robot_description_node(context: LaunchContext, description, use_sim_tim
 
 def generate_launch_description():
     default_description_name = os.getenv('KAIA_ROBOT_DESCRIPTION', default='kaia_snoopy_description')
+    use_sim_time = LaunchConfiguration('use_sim_time', default='false')
 
     return LaunchDescription([
         Node(
@@ -76,7 +77,7 @@ def generate_launch_description():
         ),
         OpaqueFunction(function=make_robot_description_node, args=[
             LaunchConfiguration('description'),
-            LaunchConfiguration('use_sim_time')
+            use_sim_time
         ]),
         DeclareLaunchArgument(
             name='description',
