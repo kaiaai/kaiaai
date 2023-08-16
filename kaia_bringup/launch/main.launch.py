@@ -80,7 +80,7 @@ def generate_launch_description():
         ]),
         DeclareLaunchArgument(
             name='description',
-            default_value=str(default_description_name),
+            default_value=default_description_name,
             description='Robot description package name, overrides KAIA_ROBOT_DESCRIPTION'
         ),
         DeclareLaunchArgument(

@@ -73,11 +73,17 @@ def make_nodes(context: LaunchContext, description, use_sim_time, config_lua):
 
 
 def generate_launch_description():
+    default_description_name = os.getenv('KAIA_ROBOT_DESCRIPTION', default='kaia_snoopy_description')
     use_sim_time = LaunchConfiguration('use_sim_time', default='false')
     resolution = LaunchConfiguration('resolution', default='0.05')
     publish_period_sec = LaunchConfiguration('publish_period_sec', default='1.0')
 
     return LaunchDescription([
+        DeclareLaunchArgument(
+            name='description',
+            default_value=default_description_name,
+            description='Robot description package name, overrides KAIA_ROBOT_DESCRIPTION'
+        ),
         DeclareLaunchArgument(
             'config_lua',
             default_value='cartographer_lds_2d.lua',

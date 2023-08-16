@@ -43,7 +43,6 @@ def make_rviz2_node(context: LaunchContext, description):
         )
     ]
 
-
 def generate_launch_description():
     default_description_name = os.getenv('KAIA_ROBOT_DESCRIPTION', default='kaia_snoopy_description')
 
