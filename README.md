@@ -12,7 +12,7 @@
 ```
 ros2 launch kaia_bringup rviz2.launch.py description:=kaia_snoopy_description
 ros2 launch kaia_bringup inspect_urdf.launch.py description:=kaia_snoopy_description
-ros2 launch kaia_bringup main.launch.py description:=kaia_snoopy_snoopy_description
+ros2 launch kaia_bringup main.launch.py description:=kaia_snoopy_description
 
 ros2 launch kaia_gazebo kaia_world.launch.py description:=kaia_snoopy_description
 ros2 run kaia_teleop teleop_keyboard
