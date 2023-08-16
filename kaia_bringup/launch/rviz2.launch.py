@@ -31,6 +31,7 @@ def make_rviz2_node(context: LaunchContext, description):
         get_package_share_path(description_str),
         'rviz',
         'robot.rviz')
+    print("Rviz2 config file name : {}".format(rviz_config_path_str))
 
     return [
         Node(
