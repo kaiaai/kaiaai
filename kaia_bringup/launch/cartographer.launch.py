@@ -11,9 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-# ACKNOWLEDGEMENTS: This code is based on ROBOTIS Turtlebot3 and
-#   Open Source Robotics Foundation, Inc.
 
 import os
 from ament_index_python.packages import get_package_share_path
@@ -74,9 +71,6 @@ def make_nodes(context: LaunchContext, description, use_sim_time, config_lua):
 
 def generate_launch_description():
     default_description_name = os.getenv('KAIA_ROBOT_DESCRIPTION', default='kaia_snoopy_description')
-    use_sim_time = LaunchConfiguration('use_sim_time', default='false')
-    resolution = LaunchConfiguration('resolution', default='0.05')
-    publish_period_sec = LaunchConfiguration('publish_period_sec', default='1.0')
 
     return LaunchDescription([
         DeclareLaunchArgument(
@@ -97,18 +91,21 @@ def generate_launch_description():
         ),
         DeclareLaunchArgument(
             'resolution',
-            default_value=resolution,
+            default_value='0.05',
             description='Resolution of a grid cell in the published occupancy grid'
         ),
         DeclareLaunchArgument(
             'publish_period_sec',
-            default_value=publish_period_sec,
+            default_value='1.0',
             description='OccupancyGrid publishing period'
         ),
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource([ThisLaunchFileDir(), '/occupancy_grid.launch.py']),
-            launch_arguments={'use_sim_time': use_sim_time, 'resolution': resolution,
-                              'publish_period_sec': publish_period_sec}.items(),
+            launch_arguments={
+                'use_sim_time': LaunchConfiguration('use_sim_time'),
+                'resolution': LaunchConfiguration('resolution'),
+                'publish_period_sec': LaunchConfiguration('publish_period_sec')
+            }.items(),
         ),
         OpaqueFunction(function=make_nodes, args=[
             LaunchConfiguration('description'),

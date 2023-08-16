@@ -13,8 +13,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-# ACKNOWLEDGEMENTS: This code is based on ROS2 urdf_tutorial
 
 import os
 from ament_index_python.packages import get_package_share_path
@@ -61,7 +59,6 @@ def make_nodes(context: LaunchContext, description):
 def generate_launch_description():
     default_description_name = os.getenv('KAIA_ROBOT_DESCRIPTION', default='kaia_snoopy_description')
 
-    # Depending on gui parameter, either launch joint_state_publisher or joint_state_publisher_gui
     return LaunchDescription([
         DeclareLaunchArgument(
             name='gui',

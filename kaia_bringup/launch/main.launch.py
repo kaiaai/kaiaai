@@ -53,9 +53,19 @@ def make_robot_description_node(context: LaunchContext, description, use_sim_tim
 
 def generate_launch_description():
     default_description_name = os.getenv('KAIA_ROBOT_DESCRIPTION', default='kaia_snoopy_description')
-    use_sim_time = LaunchConfiguration('use_sim_time', default='false')
 
     return LaunchDescription([
+        DeclareLaunchArgument(
+            name='description',
+            default_value=default_description_name,
+            description='Robot description package name, overrides KAIA_ROBOT_DESCRIPTION'
+        ),
+        DeclareLaunchArgument(
+            name='use_sim_time',
+            default_value='false',
+            choices=['true', 'false'],
+            description='Use simulation (Gazebo) clock if true'
+        )
         Node(
             package="kaia_telemetry",
             executable="telem",
@@ -77,17 +87,6 @@ def generate_launch_description():
         ),
         OpaqueFunction(function=make_robot_description_node, args=[
             LaunchConfiguration('description'),
-            use_sim_time
+            LaunchConfiguration('use_sim_time')
         ]),
-        DeclareLaunchArgument(
-            name='description',
-            default_value=default_description_name,
-            description='Robot description package name, overrides KAIA_ROBOT_DESCRIPTION'
-        ),
-        DeclareLaunchArgument(
-            name='use_sim_time',
-            default_value='false',
-            choices=['true', 'false'],
-            description='Use simulation (Gazebo) clock if true'
-        )
     ])
