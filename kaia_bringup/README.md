@@ -42,7 +42,7 @@ Launch physical robot manually
 robot model description of your physical robot
 - turn on your robot's power
 - make sure your robot connects to same WiFi where your Kaia.ai ROS2 stack PC is connected
-- at this point your robot should connect to the Kaia.ai ROS2 stack.
+- at this point your robot should connect to the Kaia.ai ROS2 stack automatically  
 You can verify the successful connection by monitoring ESP32 board LED blinking pattern.
 If the LED blinking pattern indicates an error, connect your PC to your robot's ESP32 board
 using a USB cable, launch Arduino IDE and open the Arduino IDE Serial Monitor by
