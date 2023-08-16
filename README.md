@@ -19,13 +19,13 @@ ros2 run kaia_teleop teleop_keyboard
 ros2 run kaia_gazebo kaia_self_drive
 ros2 launch kaia_bringup rviz2.launch.py description:=kaia_snoopy_description
 
-ros2 launch kaia_gazebo kaia_world.launch.py
-ros2 launch kaia_cartographer cartographer.launch.py use_sim_time:=True
+ros2 launch kaia_gazebo world.launch.py
+ros2 launch kaia_bringup cartographer.launch.py use_sim_time:=True
 ros2 run kaia_gazebo kaia_self_drive
 ros2 run nav2_map_server map_saver_cli -f $HOME/my_map
 
-ros2 launch kaia_gazebo kaia_world.launch.py
-ros2 launch kaia_navigation nav2.launch.py use_sim_time:=True map:=$HOME/my_map.yaml
+ros2 launch kaia_gazebo world.launch.py
+ros2 launch kaia_bringup nav2.launch.py use_sim_time:=True map:=$HOME/my_map.yaml
 ```
 
 ## Acknowledgements
