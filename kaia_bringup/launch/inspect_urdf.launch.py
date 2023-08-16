@@ -40,6 +40,7 @@ def make_nodes(context: LaunchContext, description):
         get_package_share_path(description_str),
         'rviz',
         'inspect_urdf.rviz')
+    print("Rviz2 config file name : {}".format(rviz_config_path))
 
     return [
         Node(

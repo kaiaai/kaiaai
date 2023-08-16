@@ -16,74 +16,97 @@
 #   Open Source Robotics Foundation, Inc.
 
 import os
-from ament_index_python.packages import get_package_share_directory
-from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
-from launch_ros.actions import Node
-from launch.substitutions import LaunchConfiguration
-from launch.actions import IncludeLaunchDescription
+from ament_index_python.packages import get_package_share_path
+from launch import LaunchDescription, LaunchContext
+from launch.actions import DeclareLaunchArgument, OpaqueFunction
+from launch.conditions import IfCondition, UnlessCondition
+from launch.substitutions import Command, LaunchConfiguration, ThisLaunchFileDir
+from launch_ros.actions import Node, IncludeLaunchDescription
+from launch_ros.parameter_descriptions import ParameterValue
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import ThisLaunchFileDir
 
 
-def generate_launch_description():
-    use_sim_time = LaunchConfiguration('use_sim_time', default='false')
-    kaia_cartographer_prefix = get_package_share_directory('kaia_cartographer')
-    cartographer_config_dir = LaunchConfiguration('cartographer_config_dir', default=os.path.join(
-                                                  kaia_cartographer_prefix, 'config'))
-    configuration_basename = LaunchConfiguration('configuration_basename',
-                                                 default='kaia_lds_2d.lua')
+def make_nodes(context: LaunchContext, description, use_sim_time, config_lua):
+    description_str = context.perform_substitution(description)
+    use_sim_time_str = context.perform_substitution(use_sim_time)
+    config_lua_str = context.perform_substitution(config_lua)
 
-    resolution = LaunchConfiguration('resolution', default='0.05')
-    publish_period_sec = LaunchConfiguration('publish_period_sec', default='1.0')
+    urdf_path_name = os.path.join(
+      get_package_share_path(description_str),
+      'urdf',
+      'robot.urdf')
 
-    rviz_config_dir = os.path.join(get_package_share_directory('kaia_cartographer'),
-                                   'rviz', 'kaia_cartographer.rviz')
+    print("URDF file name : {}".format(urdf_path_name))
+    robot_description = ParameterValue(Command(['xacro ', urdf_path_name]), value_type=str)
 
-    return LaunchDescription([
-        DeclareLaunchArgument(
-            'cartographer_config_dir',
-            default_value=cartographer_config_dir,
-            description='Full path to config file to load'),
-        DeclareLaunchArgument(
-            'configuration_basename',
-            default_value=configuration_basename,
-            description='Name of lua file for cartographer'),
-        DeclareLaunchArgument(
-            'use_sim_time',
-            default_value='false',
-            description='Use simulation (Gazebo) clock if true'),
+    cartographer_config_path = os.path.join(
+        get_package_share_path(description_str),
+        'config')
+    print("Cartographer config path : {}".format(cartographer_config_path))
+    print("Cartographer config file : {}".format(config_lua))
 
+    rviz_config_path = os.path.join(
+        get_package_share_path(description_str),
+        'rviz',
+        'cartographer.rviz')
+    print("Rviz2 config file name : {}".format(rviz_config_path))
+
+    return [
         Node(
             package='cartographer_ros',
             executable='cartographer_node',
             name='cartographer_node',
             output='screen',
-            parameters=[{'use_sim_time': use_sim_time}],
-            arguments=['-configuration_directory', cartographer_config_dir,
-                       '-configuration_basename', configuration_basename]),
+            parameters=[{'use_sim_time': use_sim_time_str}],
+            arguments=['-configuration_directory', cartographer_config_path,
+                       '-config_lua', config_lua]
+        ),
+        Node(
+            package='rviz2',
+            executable='rviz2',
+            name='rviz2',
+            output='screen',
+            arguments=['-d', rviz_config_path],
+            parameters=[{'use_sim_time': use_sim_time_str}],
+        )
+    ]
 
+
+def generate_launch_description():
+    use_sim_time = LaunchConfiguration('use_sim_time', default='false')
+    resolution = LaunchConfiguration('resolution', default='0.05')
+    publish_period_sec = LaunchConfiguration('publish_period_sec', default='1.0')
+
+    return LaunchDescription([
+        DeclareLaunchArgument(
+            'config_lua',
+            default_value='cartographer_lds_2d.lua',
+            description='Name of Lua configuration file for cartographer'
+        ),
+        DeclareLaunchArgument(
+            'use_sim_time',
+            default_value='false',
+            choices=['true', 'false'],
+            description='Use simulation (Gazebo) clock if true'
+        ),
         DeclareLaunchArgument(
             'resolution',
             default_value=resolution,
-            description='Resolution of a grid cell in the published occupancy grid'),
-
+            description='Resolution of a grid cell in the published occupancy grid'
+        ),
         DeclareLaunchArgument(
             'publish_period_sec',
             default_value=publish_period_sec,
-            description='OccupancyGrid publishing period'),
-
+            description='OccupancyGrid publishing period'
+        ),
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource([ThisLaunchFileDir(), '/occupancy_grid.launch.py']),
             launch_arguments={'use_sim_time': use_sim_time, 'resolution': resolution,
                               'publish_period_sec': publish_period_sec}.items(),
         ),
-
-        Node(
-            package='rviz2',
-            executable='rviz2',
-            name='rviz2',
-            arguments=['-d', rviz_config_dir],
-            parameters=[{'use_sim_time': use_sim_time}],
-            output='screen'),
+        OpaqueFunction(function=make_nodes, args=[
+            LaunchConfiguration('description'),
+            LaunchConfiguration('use_sim_time'),
+            LaunchConfiguration('config_lua')
+        ]),
     ])

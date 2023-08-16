@@ -27,11 +27,11 @@ from launch.substitutions import LaunchConfiguration
 def make_rviz2_node(context: LaunchContext, description):
     description_str = context.perform_substitution(description)
 
-    rviz_config_path_str = os.path.join(
+    rviz_config_path = os.path.join(
         get_package_share_path(description_str),
         'rviz',
         'robot.rviz')
-    print("Rviz2 config file name : {}".format(rviz_config_path_str))
+    print("Rviz2 config file name : {}".format(rviz_config_path))
 
     return [
         Node(
