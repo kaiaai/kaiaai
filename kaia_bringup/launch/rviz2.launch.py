@@ -38,7 +38,7 @@ def make_rviz2_node(context: LaunchContext, description):
             package='rviz2',
             executable='rviz2',
             name='rviz2',
-            arguments=['-d', rviz_config_path_str],
+            arguments=['-d', rviz_config_path],
             output='screen'
         )
     ]
