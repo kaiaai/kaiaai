@@ -69,7 +69,7 @@ selecting Tools -> Serial Monitor menu items
 ros2 launch kaia_bringup main.launch.py description:=kaia_snoopy_snoopy_description
 ```
 
-### Monitor your robot in action
+### Monitor your robot links, sensors
 ```
 ros2 launch kaia_bringup rviz2.launch.py description:=kaia_snoopy_description
 ```
