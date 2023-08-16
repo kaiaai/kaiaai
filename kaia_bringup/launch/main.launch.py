@@ -44,7 +44,7 @@ def make_robot_description_node(context: LaunchContext, description, use_sim_tim
             name='robot_state_publisher',
             output='screen',
             parameters=[{
-                'use_sim_time': use_sim_time_str,
+                'use_sim_time': use_sim_time_str == 'true',
                 'robot_description': robot_description
             }]
         )
