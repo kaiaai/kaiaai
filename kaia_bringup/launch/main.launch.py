@@ -65,7 +65,7 @@ def generate_launch_description():
             default_value='false',
             choices=['true', 'false'],
             description='Use simulation (Gazebo) clock if true'
-        )
+        ),
         Node(
             package="kaia_telemetry",
             executable="telem",
