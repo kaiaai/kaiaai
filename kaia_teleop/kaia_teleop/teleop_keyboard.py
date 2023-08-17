@@ -22,8 +22,6 @@ from rclpy.node import Node
 from rclpy.parameter import Parameter
 from ament_index_python.packages import get_package_share_path
 from geometry_msgs.msg import Twist
-# https://roboticsbackend.com/ros2-yaml-params/
-# https://roboticsbackend.com/rclpy-params-tutorial-get-set-ros2-params-with-python/
 
 if os.name == 'nt':
     import msvcrt
