@@ -18,7 +18,7 @@ import os
 from ament_index_python.packages import get_package_share_path
 from launch import LaunchDescription, LaunchContext
 from launch_ros.actions import Node
-from launch.actions import DeclareLaunchArgument, OpaqueFunction, ExecuteProcess
+from launch.actions import DeclareLaunchArgument, OpaqueFunction
 from launch.substitutions import LaunchConfiguration
 # https://roboticsbackend.com/ros2-yaml-params/
 
@@ -34,23 +34,14 @@ def make_teleop_node(context: LaunchContext, description):
     print('YAML file name : {}'.format(yaml_path_name))
 
     return [
-        ExecuteProcess(
-            cmd=[[
-                'ros2 run ',
-                'kaia_teleop ',
-                'teleop_keyboard'
-            ]],
-            shell=True
+        Node(
+            package = 'kaia_teleop',
+            name = 'teleop_keyboard_node',
+            executable = 'teleop_keyboard',
+            output='screen',
+            emulate_tty=True,
+            parameters = [yaml_path_name]
         )
-
-#        Node(
-#            package = 'kaia_teleop',
-#            name = 'teleop_keyboard_node',
-#            executable = 'teleop_keyboard',
-#            output='screen',
-#            emulate_tty=True,
-#            parameters = [yaml_path_name]
-#        )
     ]
 
 
