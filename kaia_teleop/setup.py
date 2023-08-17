@@ -1,4 +1,3 @@
-from setuptools import find_packages
 from setuptools import setup
 
 package_name = 'kaia_teleop'
@@ -6,14 +5,13 @@ package_name = 'kaia_teleop'
 setup(
     name=package_name,
     version='0.0.0',
-    packages=find_packages(exclude=[]),
+    packages=[package_name],
     data_files=[
-        ('share/ament_index/resource_index/packages', ['resource/' + package_name]),
+        ('share/ament_index/resource_index/packages',
+            ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
     ],
-    install_requires=[
-        'setuptools',
-    ],
+    install_requires=['setuptools'],
     zip_safe=True,
     author='Ilia O.',
     author_email='iliao@remake.ai',
@@ -26,14 +24,12 @@ setup(
         'Programming Language :: Python',
         'Topic :: Software Development',
     ],
-    description=(
-        'Teleoperation node using keyboard for Kaia.ai bots'
-    ),
+    description=('Control Kaia.ai robots using a keyboard'),
     license='Apache License, Version 2.0',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'teleop_keyboard = kaia_teleop.script.teleop_keyboard:main'
+            'teleop_keyboard = kaia_teleop.teleop_keyboard:main'
         ],
     },
 )

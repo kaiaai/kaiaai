@@ -19,10 +19,11 @@ from ament_index_python.packages import get_package_share_path
 from launch import LaunchDescription, LaunchContext
 from launch_ros.actions import Node
 from launch.actions import DeclareLaunchArgument, OpaqueFunction
+from launch.substitutions import LaunchConfiguration
 # https://roboticsbackend.com/ros2-yaml-params/
 
 
-def make_robot_description_node(context: LaunchContext, description, use_sim_time):
+def make_teleop_node(context: LaunchContext, description):
     description_str = context.perform_substitution(description)
 
     yaml_path_name = os.path.join(
@@ -38,6 +39,7 @@ def make_robot_description_node(context: LaunchContext, description, use_sim_tim
             name = 'teleop_keyboard_node',
             executable = 'teleop_keyboard',
             output='screen',
+            emulate_tty=True,
             parameters = [yaml_path_name]
         )
     ]
@@ -55,4 +57,4 @@ def generate_launch_description():
         OpaqueFunction(function=make_teleop_node, args=[
             LaunchConfiguration('description')
         ])
-    )
+    ])

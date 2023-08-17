@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Copyright 2023 REMAKE.AI
 #
@@ -29,8 +29,10 @@ class TeleopKeyboardNode(Node):
                 ('lin_vel_step_size', 0.01),
                 ('ang_vel_step_size', 0.1)
             ])
+        print('hello')
 
 def main(args=None):
+    print('hello2')
     rclpy.init(args=args)
     node = TeleopKeyboardNode()
     rclpy.spin(node)
