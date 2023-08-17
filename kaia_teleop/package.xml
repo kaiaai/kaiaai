@@ -3,7 +3,7 @@
 <package format="3">
   <name>kaia_teleop</name>
   <version>0.0.0</version>
-  <description>Teleoperation node using keyboard for Kaia.ai robots</description>
+  <description>Control Kaia.ai robots using a keyboard</description>
 
   <maintainer email="iliao@remake.ai">Ilia O.</maintainer>
   <license>Apache 2.0</license>
