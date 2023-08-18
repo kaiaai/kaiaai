@@ -27,24 +27,8 @@
 #include "tf2_ros/transform_broadcaster.h"
 #include "tf2/LinearMath/Quaternion.h"
 
-#define LASER_SCAN_BUF_LEN 561 // 561pts*9 FPS=5,049; 505pts*10FPS=5,050
 #define DEG_TO_RAD 0.017453292519943295769236907684886
-#define LASER_SCAN_ANGLE_MIN 0
-#define LASER_SCAN_ANGLE_MAX 6.283185307179586476925286766559 // TWO_PI
-#define LASER_SCAN_RANGE_MIN 0.1 // X4, meters
-#define LASER_SCAN_RANGE_MAX 12.0 // X4, meters
-#define LASER_SCAN_ANGLE_INCREMENT ((LASER_SCAN_ANGLE_MAX - LASER_SCAN_ANGLE_MIN) \
-  / (LASER_SCAN_BUF_LEN - 1))
-#define TOPIC_NAME_PUB_TELEM "telemetry"
-#define TOPIC_NAME_PUB_ODOM "odom"
-#define TOPIC_NAME_PUB_LASER_SCAN "scan"
-#define TOPIC_NAME_PUB_JOINT_STATES "joint_states"
 #define NODE_NAME "kaia_telemetry_node"
-#define FRAME_ID_LASER_SCAN "lds"
-#define FRAME_ID_ODOM "odom"
-#define FRAME_ID_ODOM_CHILD "base_footprint"
-#define FRAME_ID_TF "world"
-#define FRAME_ID_TF_CHILD "base_footprint" // Bot name if multiple bots
 
 #define RESULT_OK      0
 #define RESULT_TIMEOUT -1
@@ -104,14 +88,42 @@ public:
   KaiaTelemetry()
   : Node(NODE_NAME)
   {
-    // https://github.com/ros2/demos/blob/master/demo_nodes_cpp/src/topics/listener_best_effort.cpp
+    this->declare_parameter("laser_scan.buf_len", 561);
+    this->declare_parameter("laser_scan.angle_min", 0.0);
+    this->declare_parameter("laser_scan.angle_max", 6.283185307179586476925286766559);
+    this->declare_parameter("laser_scan.range_min", 0.1);
+    this->declare_parameter("laser_scan.range_max", 12.0);
+    this->declare_parameter("laser_scan.topic_name_pub", "scan");
+    this->declare_parameter("laser_scan.frame_id", "ldf");
+
+    this->declare_parameter("telemetry.topic_name_sub", "telemetry");
+
+    this->declare_parameter("tf.frame_id", "world");
+    this->declare_parameter("tf.child_frame_id", "base_footprint");
+
+    this->declare_parameter("joint_states.topic_name_pub", "joint_states");
+
+    this->declare_parameter("odometry.frame_id", "world");
+    this->declare_parameter("odometry.child_frame_id", "base_footprint");
+
+    this->declare_parameter("odometry.topic_name_pub", "odom");
+
     telem_sub_ = this->create_subscription<kaia_msgs::msg::KaiaTelemetry>(
-      TOPIC_NAME_PUB_TELEM, rclcpp::SensorDataQoS(), std::bind(&KaiaTelemetry::topic_callback, this, _1));
-    odom_pub_ = this->create_publisher<nav_msgs::msg::Odometry>(TOPIC_NAME_PUB_ODOM, 10);
-    joint_state_pub_ = this->create_publisher<sensor_msgs::msg::JointState>(TOPIC_NAME_PUB_JOINT_STATES, 10);
-    laser_scan_pub_ = this->create_publisher<sensor_msgs::msg::LaserScan>(TOPIC_NAME_PUB_LASER_SCAN, 10);
+      this->get_parameter("telemetry.topic_name_sub").as_string(),
+      rclcpp::SensorDataQoS(), std::bind(&KaiaTelemetry::topic_callback, this, _1));
+    odom_pub_ = this->create_publisher<nav_msgs::msg::Odometry>(
+      this->get_parameter("odom.topic_name_pub").as_string(), 10);
+    joint_state_pub_ = this->create_publisher<sensor_msgs::msg::JointState>(
+      this->get_parameter("joint_states.topic_name_pub").as_string(), 10);
+    laser_scan_pub_ = this->create_publisher<sensor_msgs::msg::LaserScan>(
+      this->get_parameter("laser_scan.topic_name_pub").as_string(), 10);
     tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
-    ranges_.resize(LASER_SCAN_BUF_LEN);
+    // 561 default, 561pts*9 FPS=5,049; 505pts*10FPS=5,050
+    ranges_.resize(this->get_parameter("laser_scan.buf_len").as_int());
+
+    if (this->get_parameter("laser_scan.buf_len").as_int() == 561)
+      RCLCPP_INFO(this->get_logger(), "561");
+
     clear_ranges_buffer();
     seq_last_ = 0;
 
@@ -148,8 +160,8 @@ private:
     RCLCPP_INFO(this->get_logger(), "Seq %u (%ld) len %lu", telem_msg.seq, seq_diff, telem_msg.lds.size());
 
     auto odom_msg = nav_msgs::msg::Odometry();
-    odom_msg.header.frame_id = FRAME_ID_ODOM;
-    odom_msg.child_frame_id = FRAME_ID_ODOM_CHILD;
+    odom_msg.header.frame_id = this->get_parameter("odom.frame_id").as_string();
+    odom_msg.child_frame_id = this->get_parameter("odom.child_frame_id").as_string();
     odom_msg.header.stamp = telem_msg.stamp;
     odom_msg.pose.pose.position.x = telem_msg.odom_pos_x;
     odom_msg.pose.pose.position.y = telem_msg.odom_pos_y;
@@ -201,8 +213,8 @@ private:
     // https://docs.ros.org/en/humble/Tutorials/Intermediate/Tf2/Writing-A-Tf2-Broadcaster-Cpp.html
     geometry_msgs::msg::TransformStamped tf_stamped_msg;
     tf_stamped_msg.header.stamp = telem_msg.stamp;
-    tf_stamped_msg.header.frame_id = FRAME_ID_TF;
-    tf_stamped_msg.child_frame_id = FRAME_ID_TF_CHILD;
+    tf_stamped_msg.header.frame_id = this->get_parameter("tf.frame_id").as_string();
+    tf_stamped_msg.child_frame_id = this->get_parameter("tf.child_frame_id").as_string();
 
     tf_stamped_msg.transform.translation.x = odom_msg.pose.pose.position.x;
     tf_stamped_msg.transform.translation.y = odom_msg.pose.pose.position.y;
@@ -273,7 +285,13 @@ private:
     angle_deg = angle_deg >= 360 ? angle_deg - 360 : angle_deg;
     angle_deg = angle_deg < 0 ? angle_deg + 360 : angle_deg;
     float angle_rad = DEG_TO_RAD * angle_deg;
-    int idx = floor((angle_rad - LASER_SCAN_ANGLE_MIN) / LASER_SCAN_ANGLE_INCREMENT);
+
+    double laser_scan_angle_min = this->get_parameter("laser_scan.angle_min").as_double();
+    double laser_scan_angle_max = this->get_parameter("laser_scan.angle_max").as_double();
+    int laser_scan_buf_len = this->get_parameter("laser_scan.buf_len").as_int();
+    double laser_scan_angle_increment = ((laser_scan_angle_max - laser_scan_angle_min) / (laser_scan_buf_len - 1));
+
+    int idx = floor((angle_rad - laser_scan_angle_min) / laser_scan_angle_increment);
 
     if (idx >= 0 && idx < ((long int)ranges_.size()))
     {
@@ -302,15 +320,20 @@ private:
 
     auto laser_scan_msg = sensor_msgs::msg::LaserScan();
 
+    double laser_scan_angle_min = this->get_parameter("laser_scan.angle_min").as_double();
+    double laser_scan_angle_max = this->get_parameter("laser_scan.angle_max").as_double();
+    int laser_scan_buf_len = this->get_parameter("laser_scan.buf_len").as_int();
+    double laser_scan_angle_increment = ((laser_scan_angle_max - laser_scan_angle_min) / (laser_scan_buf_len - 1));
+
     laser_scan_msg.ranges = ranges_;
 
     laser_scan_msg.header.stamp = telem_msg.stamp;
-    laser_scan_msg.header.frame_id = FRAME_ID_LASER_SCAN;
-    laser_scan_msg.angle_min = LASER_SCAN_ANGLE_MIN;
-    laser_scan_msg.angle_max = LASER_SCAN_ANGLE_MAX;
-    laser_scan_msg.angle_increment = LASER_SCAN_ANGLE_INCREMENT;
-    laser_scan_msg.range_min = LASER_SCAN_RANGE_MIN;
-    laser_scan_msg.range_max = LASER_SCAN_RANGE_MAX;
+    laser_scan_msg.header.frame_id = this->get_parameter("laser_scan.frame_id").as_string();
+    laser_scan_msg.angle_min = laser_scan_angle_min;
+    laser_scan_msg.angle_max = laser_scan_angle_max;
+    laser_scan_msg.angle_increment = laser_scan_angle_increment;
+    laser_scan_msg.range_min = this->get_parameter("laser_scan.range_min").as_double();
+    laser_scan_msg.range_max = this->get_parameter("laser_scan.range_max").as_double();
     laser_scan_msg.time_increment = 0;
     //float32 scan_time
     //float32[] intensities
@@ -488,18 +511,22 @@ state2:
         node.distance_q2 = package.packageSampleDistance[package_Sample_Index];
 
         if(node.distance_q2/4 != 0){
-          AngleCorrectForDistance = (int32_t)((atan(((21.8*(155.3 - (node.distance_q2*0.25f)) )/155.3)/(node.distance_q2*0.25f)))*3666.93);
+          AngleCorrectForDistance = (int32_t)((atan(((21.8*(155.3 -
+            (node.distance_q2*0.25f)) )/155.3)/(node.distance_q2*0.25f)))*3666.93);
         }else{
           AngleCorrectForDistance = 0;
         }
         float sampleAngle = IntervalSampleAngle*package_Sample_Index;
         if((FirstSampleAngle + sampleAngle + AngleCorrectForDistance) < 0){
-          node.angle_q6_checkbit = (((uint16_t)(FirstSampleAngle + sampleAngle + AngleCorrectForDistance + 23040))<<LIDAR_RESP_MEASUREMENT_ANGLE_SHIFT) + LIDAR_RESP_MEASUREMENT_CHECKBIT;
+          node.angle_q6_checkbit = (((uint16_t)(FirstSampleAngle + sampleAngle +
+            AngleCorrectForDistance + 23040))<<LIDAR_RESP_MEASUREMENT_ANGLE_SHIFT) + LIDAR_RESP_MEASUREMENT_CHECKBIT;
         }else{
           if((FirstSampleAngle + sampleAngle + AngleCorrectForDistance) > 23040){
-            node.angle_q6_checkbit = ((uint16_t)((FirstSampleAngle + sampleAngle + AngleCorrectForDistance - 23040))<<LIDAR_RESP_MEASUREMENT_ANGLE_SHIFT) + LIDAR_RESP_MEASUREMENT_CHECKBIT;
+            node.angle_q6_checkbit = ((uint16_t)((FirstSampleAngle + sampleAngle +
+              AngleCorrectForDistance - 23040))<<LIDAR_RESP_MEASUREMENT_ANGLE_SHIFT) + LIDAR_RESP_MEASUREMENT_CHECKBIT;
           }else{
-            node.angle_q6_checkbit = ((uint16_t)((FirstSampleAngle + sampleAngle + AngleCorrectForDistance))<<LIDAR_RESP_MEASUREMENT_ANGLE_SHIFT) + LIDAR_RESP_MEASUREMENT_CHECKBIT;
+            node.angle_q6_checkbit = ((uint16_t)((FirstSampleAngle + sampleAngle +
+              AngleCorrectForDistance))<<LIDAR_RESP_MEASUREMENT_ANGLE_SHIFT) + LIDAR_RESP_MEASUREMENT_CHECKBIT;
           }
         }
       }else{
