@@ -36,20 +36,19 @@ def make_nodes(context: LaunchContext, description, use_sim_time, config_lua):
       'urdf',
       model_name + '.urdf')
 
-    print("URDF file name : {}".format(urdf_path_name))
+    print('URDF file name : {}'.format(urdf_path_name))
     robot_description = ParameterValue(Command(['xacro ', urdf_path_name]), value_type=str)
 
     cartographer_config_path = os.path.join(
         get_package_share_path(description_str),
         'config')
-    print("Cartographer config path : {}".format(cartographer_config_path))
-    print("Cartographer config file : {}".format(config_lua))
+    print('Cartographer config file : {}/{}'.format(config_lua_str, cartographer_config_path))
 
     rviz_config_path = os.path.join(
         get_package_share_path(description_str),
         'rviz',
         'cartographer.rviz')
-    print("Rviz2 config file name : {}".format(rviz_config_path))
+    print('Rviz2 config file name : {}'.format(rviz_config_path))
 
     return [
         Node(
@@ -59,7 +58,7 @@ def make_nodes(context: LaunchContext, description, use_sim_time, config_lua):
             output='screen',
             parameters=[{'use_sim_time': use_sim_time_str}],
             arguments=['-configuration_directory', cartographer_config_path,
-                       '-config_lua', config_lua]
+                       '-config_lua', config_lua_str]
         ),
         Node(
             package='rviz2',

@@ -39,9 +39,9 @@
 #define TOPIC_NAME_PUB_ODOM "odom"
 #define TOPIC_NAME_PUB_LASER_SCAN "scan"
 #define TOPIC_NAME_PUB_JOINT_STATES "joint_states"
-#define NODE_NAME "kaia_telemetry"
+#define NODE_NAME "kaia_telemetry_node"
 #define FRAME_ID_LASER_SCAN "lds"
-#define FRAME_ID_ODOM "lds"
+#define FRAME_ID_ODOM "odom"
 #define FRAME_ID_ODOM_CHILD "base_footprint"
 #define FRAME_ID_TF "world"
 #define FRAME_ID_TF_CHILD "base_footprint" // Bot name if multiple bots
