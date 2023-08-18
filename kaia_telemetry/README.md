@@ -31,7 +31,7 @@ docker exec -it kaia-ros-dev-iron
 ```
 - at the newly opened bash prompt, run the telemetry node that subscribes to the raw telemetry
 data on /telemetry topic, converts the raw telemetry data to proper ROS2 messages re-publishes those on
-/scan, /joint_states, /odom and /tf topics:
+/scan, /joint_states, /odom and /tf topics.
 ```
 ros2 run kaia_telemetry telem
 ```
@@ -45,24 +45,38 @@ ros2 topic echo /odom
 ros2 topic echo /joint_states
 ros2 topic echo /tf
 ```
-
 If you need to recreate the ROS2 workspace and re-populate the package source code, run these commands
 before proceeding with the build, install and launch (see above):
 ```
 cd ~ && rm -rf /ros_ws
 mkdir -p /ros_ws/src && cd /ros_ws/src
 git clone https://github.com/kaiaai/kaia
-git clone https://github.com/kaiaai/kaia_msgs
 git clone https://github.com/kaiaai/kaia_simulations
+git clone https://github.com/kaiaai/kaia_descriptions
+git clone https://github.com/kaiaai/kaia_cli
 ```
-
 If you don't have a robot handy, you can also run the test node that publishes some fake telemetry
 data directly to /telemetry, bypassing Micro-ROS
 ```
 ros2 run kaia_telemetry test_pub
 ```
-
 Once you are ready to test and deploy your modifications into the end user Docker image, follow and
 modify the instructions on rebuilding the
 [end user Docker image](https://github.com/kaiaai/kaia_docker/tree/main/kaia-ros) to your liking to
 build an end user Docker image for your own robot design.
+
+## Modding the default robot
+The telemetry launch commands described above default to `kaia_snoopy` robot, which defined in the
+`kaia_snoopy_description` robot description package. To create a new robot named `waldo`, start
+by clon an existing robot description package `kaia_snoopy_description` into `waldo_description`
+and proceed with modding `waldo_description` files. The file containing telemetry parameters
+for `waldo` is `/ros_ws/src/waldo_description/config/telem.yaml`
+```
+cd /ros_ws/src
+cp -r kaia_descriptions/kaia_snoopy_description waldo_description
+# mod waldo_description files as needed, including waldo_description/config/telem.yaml
+```
+Now you can run telemetry on `waldo` with `waldo`-specific telemetry parameters as follows:
+```
+ros2 run kaia_telemetry telem description:=waldo_description
+```
