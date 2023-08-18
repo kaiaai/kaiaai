@@ -18,6 +18,7 @@ import os
 import select
 import sys
 import rclpy
+import re
 from rclpy.node import Node
 from rclpy.parameter import Parameter
 from ament_index_python.packages import get_package_share_path
@@ -31,13 +32,16 @@ else:
 
 
 class TeleopKeyboardNode(Node):
-    def __init__(self):
-        super().__init__('teleop_keyboard_node')
+    def __init__(self, start_parameter_services=False):
+        super().__init__(
+            'teleop_keyboard_node',
+            start_parameter_services=start_parameter_services
+        )
         self.declare_parameters(
             namespace='',
             parameters=[
                 ('max_lin_vel', 0.22),
-                ('max_ang_vel', 2.84),
+                ('max_ang_vel', 12.84),
                 ('lin_vel_step_size', 0.01),
                 ('ang_vel_step_size', 0.1)
             ])
@@ -45,6 +49,7 @@ class TeleopKeyboardNode(Node):
         self.max_ang_vel = self.get_parameter('max_ang_vel').value
         self.lin_vel_step_size = self.get_parameter('lin_vel_step_size').value
         self.ang_vel_step_size = self.get_parameter('ang_vel_step_size').value
+        print(self.max_ang_vel)
 
         self.tty_attr = None if os.name == 'nt' else termios.tcgetattr(sys.stdin)
 
@@ -54,13 +59,6 @@ class TeleopKeyboardNode(Node):
         self.target_angular_velocity = 0.0
         self.control_linear_velocity = 0.0
         self.control_angular_velocity = 0.0
-
-        yaml_path_name = os.path.join(
-            get_package_share_path('kaia_snoopy_description'),
-            'config',
-            'teleop_keyboard.yaml'
-            )
-        print('YAML file name : {}'.format(yaml_path_name))
 
         print('Control Kaia.ai Robot')
         print('---------------------')
@@ -193,8 +191,30 @@ class TeleopKeyboardNode(Node):
 
 
 def main(args=None):
+    if (len(sys.argv) == 4 and sys.argv[1] == '--ros-args'):
+        yaml_path_name = sys.argv[3]
+    else:
+        if (len(sys.argv) == 2 and sys.argv[1].startswith('description:=')):
+            description = sys.argv[1][13:]
+        else:
+            description = os.getenv('KAIA_ROBOT_DESCRIPTION', 'kaia_snoopy_description')
+
+        yaml_path_name = os.path.join(
+            get_package_share_path(description),
+            'config',
+            'teleop_keyboard.yaml'
+            )
+
+        args = [
+            '--ros-args',
+            '--params-file',
+            yaml_path_name
+        ]
+
+    print('YAML file name : {}'.format(yaml_path_name))
+
     rclpy.init(args=args)
-    node = TeleopKeyboardNode()
+    node = TeleopKeyboardNode(start_parameter_services=False)
 
     while(node.perform()):
         rclpy.spin_once(node, timeout_sec=0.001)
