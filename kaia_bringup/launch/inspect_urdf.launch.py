@@ -25,21 +25,23 @@ from launch_ros.parameter_descriptions import ParameterValue
 
 def make_nodes(context: LaunchContext, description):
     description_str = context.perform_substitution(description)
+    description_package_path = get_package_share_path(description_str)
 
     model_name = re.sub(r'_description$', '', description_str)
     urdf_path_name = os.path.join(
-      get_package_share_path(description_str),
+      description_package_path,
       'urdf',
       model_name + '.urdf')
 
-    print("URDF file name : {}".format(urdf_path_name))
     robot_description = ParameterValue(Command(['xacro ', urdf_path_name]), value_type=str)
 
     rviz_config_path = os.path.join(
-        get_package_share_path(description_str),
+        description_package_path,
         'rviz',
         'inspect_urdf.rviz')
-    print("Rviz2 config file name : {}".format(rviz_config_path))
+
+    print("URDF file    : {}".format(urdf_path_name))
+    print("Rviz2 config : {}".format(rviz_config_path))
 
     return [
         Node(
