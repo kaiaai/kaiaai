@@ -112,7 +112,7 @@ public:
       this->get_parameter("telemetry.topic_name_sub").as_string(),
       rclcpp::SensorDataQoS(), std::bind(&KaiaTelemetry::topic_callback, this, _1));
     odom_pub_ = this->create_publisher<nav_msgs::msg::Odometry>(
-      this->get_parameter("odom.topic_name_pub").as_string(), 10);
+      this->get_parameter("odometry.topic_name_pub").as_string(), 10);
     joint_state_pub_ = this->create_publisher<sensor_msgs::msg::JointState>(
       this->get_parameter("joint_states.topic_name_pub").as_string(), 10);
     laser_scan_pub_ = this->create_publisher<sensor_msgs::msg::LaserScan>(
@@ -160,8 +160,8 @@ private:
     RCLCPP_INFO(this->get_logger(), "Seq %u (%ld) len %lu", telem_msg.seq, seq_diff, telem_msg.lds.size());
 
     auto odom_msg = nav_msgs::msg::Odometry();
-    odom_msg.header.frame_id = this->get_parameter("odom.frame_id").as_string();
-    odom_msg.child_frame_id = this->get_parameter("odom.child_frame_id").as_string();
+    odom_msg.header.frame_id = this->get_parameter("odometry.frame_id").as_string();
+    odom_msg.child_frame_id = this->get_parameter("odometry.child_frame_id").as_string();
     odom_msg.header.stamp = telem_msg.stamp;
     odom_msg.pose.pose.position.x = telem_msg.odom_pos_x;
     odom_msg.pose.pose.position.y = telem_msg.odom_pos_y;
