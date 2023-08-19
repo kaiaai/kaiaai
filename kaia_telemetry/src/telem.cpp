@@ -121,9 +121,6 @@ public:
     // 561 default, 561pts*9 FPS=5,049; 505pts*10FPS=5,050
     ranges_.resize(this->get_parameter("laser_scan.buf_len").as_int());
 
-    if (this->get_parameter("laser_scan.buf_len").as_int() == 561)
-      RCLCPP_INFO(this->get_logger(), "561");
-
     clear_ranges_buffer();
     seq_last_ = 0;
 
@@ -157,7 +154,7 @@ private:
   {
     long int seq_diff = (long int)telem_msg.seq - (long int)seq_last_;
     seq_last_ = telem_msg.seq;
-    RCLCPP_INFO(this->get_logger(), "Seq %u (%ld) len %lu", telem_msg.seq, seq_diff, telem_msg.lds.size());
+    //RCLCPP_INFO(this->get_logger(), "Seq %u (%ld) len %lu", telem_msg.seq, seq_diff, telem_msg.lds.size());
 
     auto odom_msg = nav_msgs::msg::Odometry();
     odom_msg.header.frame_id = this->get_parameter("odometry.frame_id").as_string();
