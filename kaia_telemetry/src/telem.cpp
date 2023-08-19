@@ -156,6 +156,9 @@ private:
     seq_last_ = telem_msg.seq;
     //RCLCPP_INFO(this->get_logger(), "Seq %u (%ld) len %lu", telem_msg.seq, seq_diff, telem_msg.lds.size());
 
+    if (seq_diff > 1)
+      RCLCPP_INFO(this->get_logger(), "%ld message(s) lost", seq_diff-1);
+
     auto odom_msg = nav_msgs::msg::Odometry();
     odom_msg.header.frame_id = this->get_parameter("odometry.frame_id").as_string();
     odom_msg.child_frame_id = this->get_parameter("odometry.child_frame_id").as_string();
