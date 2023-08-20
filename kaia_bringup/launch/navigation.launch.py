@@ -38,7 +38,7 @@ def make_nodes(context: LaunchContext, description, map, use_sim_time):
     nav_config_path = os.path.join(
         description_package_path,
         'config',
-        'navigation.yaml'))
+        'navigation.yaml')
 
     print('Rviz2 config : {}'.format(rviz_config_path))
     print('Nav2  config : {}'.format(nav_config_path))
@@ -52,7 +52,7 @@ def make_nodes(context: LaunchContext, description, map, use_sim_time):
             ]),
             launch_arguments={
                 'map': map_path_str,
-                'use_sim_time': use_sim_time_str.lower() == 'true',
+                'use_sim_time': use_sim_time_str,
                 'params_file': nav_config_path}.items(),
         ),
         Node(
@@ -61,7 +61,7 @@ def make_nodes(context: LaunchContext, description, map, use_sim_time):
             name='rviz2',
             output='screen',
             arguments=['-d', rviz_config_path],
-            parameters=[{'use_sim_time': use_sim_time_str}],
+            parameters=[{'use_sim_time': use_sim_time_str.lower() == 'true'}],
         )
     ]
 
@@ -79,7 +79,7 @@ def generate_launch_description():
             default_value=os.path.join(
                 get_package_share_path(default_description_name),
                 'map',
-                'kaia_world.yaml'))
+                'kaia_world.yaml'),
             description='Full path to map file to load'
         ),
         DeclareLaunchArgument(
