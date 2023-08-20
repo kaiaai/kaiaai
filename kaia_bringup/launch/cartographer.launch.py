@@ -59,7 +59,7 @@ def make_nodes(context: LaunchContext, description, use_sim_time, configuration_
             executable='cartographer_node',
             name='cartographer_node',
             output='screen',
-            parameters=[{'use_sim_time': use_sim_time_str}],
+            parameters=[{'use_sim_time': use_sim_time_str.lower() == 'true'}],
             arguments=['-configuration_directory', cartographer_config_path,
                        '-configuration_basename', configuration_basename_str]
         ),
@@ -69,7 +69,7 @@ def make_nodes(context: LaunchContext, description, use_sim_time, configuration_
             name='rviz2',
             output='screen',
             arguments=['-d', rviz_config_path],
-            parameters=[{'use_sim_time':  use_sim_time_str.lower() == 'true'}],
+            parameters=[{'use_sim_time': use_sim_time_str.lower() == 'true'}],
         )
     ]
 

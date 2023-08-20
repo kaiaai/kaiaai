@@ -22,8 +22,9 @@ from launch.actions import DeclareLaunchArgument, OpaqueFunction
 from launch.substitutions import LaunchConfiguration
 
 
-def make_rviz2_node(context: LaunchContext, description):
+def make_rviz2_node(context: LaunchContext, description, use_sim_time):
     description_str = context.perform_substitution(description)
+    use_sim_time_str = context.perform_substitution(use_sim_time)
 
     model_name = re.sub(r'_description$', '', description_str)
     rviz_config_path = os.path.join(
@@ -38,6 +39,7 @@ def make_rviz2_node(context: LaunchContext, description):
             executable='rviz2',
             name='rviz2',
             arguments=['-d', rviz_config_path],
+            parameters=[{'use_sim_time': use_sim_time_str.lower() == 'true'}],
             output='screen'
         )
     ]
@@ -51,7 +53,13 @@ def generate_launch_description():
             default_value=default_description_name,
             description='Robot description package name, overrides KAIA_ROBOT_DESCRIPTION'
         ),
+        DeclareLaunchArgument(
+            'use_sim_time',
+            default_value='false',
+            description='Use simulation (Gazebo) clock if true'
+        ),
         OpaqueFunction(function=make_rviz2_node, args=[
-            LaunchConfiguration('description')
+            LaunchConfiguration('description'),
+            LaunchConfiguration('use_sim_time'),
         ])
     ])
