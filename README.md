@@ -20,7 +20,7 @@ ros2 launch kaia_bringup main.launch.py
 # Monitor robot's sensors
 ros2 launch kaia_bringup rviz2.launch.py
 
-# Launch the robot in a simulation - drive manually or let it self-drive itself
+# Launch the robot in a simulation - drive manually or let it self-drive
 ros2 launch kaia_gazebo world.launch.py
 ros2 run kaia_teleop teleop_keyboard
 ros2 launch kaia_gazebo self_drive_gazebo.launch.py
@@ -50,7 +50,7 @@ ros2 launch kaia_bringup main.launch.py description:=r2d2_description
 # Monitor robot's sensors
 ros2 launch kaia_bringup rviz2.launch.py description:=r2d2_description
 
-# Launch the robot in a simulation - drive manually or let it self-drive itself
+# Launch the robot in a simulation - drive manually or let it self-drive
 ros2 launch kaia_gazebo world.launch.py description:=r2d2_description
 ros2 run kaia_teleop teleop_keyboard description:=r2d2_description
 ros2 launch kaia_gazebo self_drive_gazebo.launch.py description:=r2d2_description
