@@ -28,13 +28,13 @@ ros2 launch kaia_bringup rviz2.launch.py
 
 # Launch the robot in a simulation - create, save a map
 ros2 launch kaia_gazebo world.launch.py
-ros2 launch kaia_bringup cartographer.launch.py use_sim_time:=True
+ros2 launch kaia_bringup cartographer.launch.py use_sim_time:=true
 ros2 launch kaia_gazebo self_drive_gazebo.launch.py
 ros2 run nav2_map_server map_saver_cli -f $HOME/my_map
 
 # Launch the robot in a simulation - let it navigate automatically using an existing map
 ros2 launch kaia_gazebo world.launch.py
-ros2 launch kaia_bringup nav2.launch.py use_sim_time:=True map:=$HOME/my_map.yaml
+ros2 launch kaia_bringup nav2.launch.py use_sim_time:=true map:=$HOME/my_map.yaml
 
 # Inspect robot's URDF model - useful when modding a robot
 ros2 launch kaia_bringup inspect_urdf.launch.py
@@ -58,13 +58,13 @@ ros2 launch kaia_bringup rviz2.launch.py description:=r2d2_description
 
 # Launch the robot in a simulation - create, save a map
 ros2 launch kaia_gazebo world.launch.py description:=r2d2_description
-ros2 launch kaia_bringup cartographer.launch.py use_sim_time:=True description:=r2d2_description
+ros2 launch kaia_bringup cartographer.launch.py use_sim_time:=true description:=r2d2_description
 ros2 launch kaia_gazebo self_drive_gazebo.launch.py description:=r2d2_description
 ros2 run nav2_map_server map_saver_cli -f $HOME/my_map
 
 # Launch the robot in a simulation - let it navigate automatically using an existing map
 ros2 launch kaia_gazebo world.launch.py description:=r2d2_description
-ros2 launch kaia_bringup nav2.launch.py use_sim_time:=True map:=$HOME/my_map.yaml description:=r2d2_description
+ros2 launch kaia_bringup nav2.launch.py use_sim_time:=true map:=$HOME/my_map.yaml description:=r2d2_description
 
 # Inspect robot's URDF model - useful when modding a robot
 ros2 launch kaia_bringup inspect_urdf.launch.py description:=r2d2_description
