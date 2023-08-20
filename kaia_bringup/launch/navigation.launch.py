@@ -52,7 +52,7 @@ def make_nodes(context: LaunchContext, description, map, use_sim_time):
             ]),
             launch_arguments={
                 'map': map_path_str,
-                'use_sim_time': use_sim_time_str,
+                'use_sim_time': use_sim_time_str.lower() == 'true',
                 'params_file': nav_config_path}.items(),
         ),
         Node(

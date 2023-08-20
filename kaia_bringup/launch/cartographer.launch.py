@@ -18,17 +18,18 @@ import os, re
 from ament_index_python.packages import get_package_share_path
 from launch import LaunchDescription, LaunchContext
 from launch.actions import DeclareLaunchArgument, OpaqueFunction
+from launch.actions import IncludeLaunchDescription
 from launch.conditions import IfCondition, UnlessCondition
 from launch.substitutions import Command, LaunchConfiguration, ThisLaunchFileDir
-from launch_ros.actions import Node, IncludeLaunchDescription
-from launch_ros.parameter_descriptions import ParameterValue
 from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch_ros.parameter_descriptions import ParameterValue
+from launch_ros.actions import Node
 
 
-def make_nodes(context: LaunchContext, description, use_sim_time, config_lua):
+def make_nodes(context: LaunchContext, description, use_sim_time, configuration_basename):
     description_str = context.perform_substitution(description)
     use_sim_time_str = context.perform_substitution(use_sim_time)
-    config_lua_str = context.perform_substitution(config_lua)
+    configuration_basename_str = context.perform_substitution(configuration_basename)
     description_package_path = get_package_share_path(description_str)
 
     model_name = re.sub(r'_description$', '', description_str)
@@ -49,7 +50,7 @@ def make_nodes(context: LaunchContext, description, use_sim_time, config_lua):
         'cartographer.rviz')
 
     print('URDF file           : {}'.format(urdf_path_name))
-    print('Cartographer config : {}/{}'.format(config_lua_str, cartographer_config_path))
+    print('Cartographer config : {}/{}'.format(cartographer_config_path, configuration_basename_str))
     print('Rviz2 config        : {}'.format(rviz_config_path))
 
     return [
@@ -60,7 +61,7 @@ def make_nodes(context: LaunchContext, description, use_sim_time, config_lua):
             output='screen',
             parameters=[{'use_sim_time': use_sim_time_str}],
             arguments=['-configuration_directory', cartographer_config_path,
-                       '-config_lua', config_lua_str]
+                       '-configuration_basename', configuration_basename_str]
         ),
         Node(
             package='rviz2',
@@ -68,7 +69,7 @@ def make_nodes(context: LaunchContext, description, use_sim_time, config_lua):
             name='rviz2',
             output='screen',
             arguments=['-d', rviz_config_path],
-            parameters=[{'use_sim_time': use_sim_time_str}],
+            parameters=[{'use_sim_time':  use_sim_time_str.lower() == 'true'}],
         )
     ]
 
@@ -83,7 +84,7 @@ def generate_launch_description():
             description='Robot description package name, overrides KAIA_ROBOT_DESCRIPTION'
         ),
         DeclareLaunchArgument(
-            'config_lua',
+            'configuration_basename',
             default_value='cartographer_lds_2d.lua',
             description='Name of Lua configuration file for cartographer'
         ),
@@ -114,6 +115,6 @@ def generate_launch_description():
         OpaqueFunction(function=make_nodes, args=[
             LaunchConfiguration('description'),
             LaunchConfiguration('use_sim_time'),
-            LaunchConfiguration('config_lua')
+            LaunchConfiguration('configuration_basename')
         ]),
     ])
