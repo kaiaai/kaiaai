@@ -36,8 +36,9 @@ ros2 run nav2_map_server map_saver_cli -f $HOME/my_map
 ros2 launch kaia_gazebo world.launch.py
 ros2 launch kaia_bringup navigation.launch.py use_sim_time:=true map:=$HOME/my_map.yaml
 
-# Inspect robot's URDF model - useful when modding a robot
+# Inspect or edit robot's URDF model - useful when modding a robot
 ros2 launch kaia_bringup inspect_urdf.launch.py
+ros2 launch kaia_bringup edit_urdf.launch.py
 ```
 
 ## Command cheat sheet - for a modded robot
@@ -66,8 +67,9 @@ ros2 run nav2_map_server map_saver_cli -f $HOME/my_map
 ros2 launch kaia_gazebo world.launch.py description:=r2d2_description
 ros2 launch kaia_bringup navigation.launch.py use_sim_time:=true map:=$HOME/my_map.yaml description:=r2d2_description
 
-# Inspect robot's URDF model - useful when modding a robot
-ros2 launch kaia_bringup inspect_urdf.launch.py description:=r2d2_description
+# Inspect or edit robot's URDF model - useful when modding a robot
+ros2 launch kaia_bringup inspect_urdf.launch.py description:=r2d2_description model:=my_model.urdf
+ros2 launch kaia_bringup edit_urdf.launch.py description:=r2d2_description model:=my_model.urdf
 ```
 
 ## Acknowledgements
