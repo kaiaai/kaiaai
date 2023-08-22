@@ -74,7 +74,25 @@ ros2 launch kaia_bringup main.launch.py description:=kaia_snoopy_description
 ros2 launch kaia_bringup rviz2.launch.py description:=kaia_snoopy_description
 ```
 
-### Optional: Inspect robot model - URDF
+### Optional: Inspect or edit the default robot model - URDF
 ```
-ros2 launch kaia_bringup inspect_urdf.launch.py description:=kaia_snoopy_description
+ros2 launch kaia_bringup inspect_urdf.launch.py
+ros2 launch kaia_bringup edit_urdf.launch.py
 ```
+### Optional: Mod a robot model - URDF
+Let's say you'd like to build your own R2D2 robot. Start by
+- cloning a default robot description, e.g. into `r2d2_description`
+- editing `r2d2_description/package.xml` and `r2d2_description/CMakeLists.txt` to change the
+package name
+- renaming `r2d2_description/urdf/kaia_snoopy.urdf` and `kaia_snoopy.gazebo.urdf` files to
+`r2d2.urdf` and `r2d2.gazebo.urdf`
+- editing and inspecting your `r2d2.urdf` robot model
+```
+ros2 launch kaia_bringup inspect_urdf.launch.py description:=r2d2_description model:=r2d2.urdf
+ros2 launch kaia_bringup edit_urdf.launch.py description:=r2d2_description model:=r2d2.urdf
+```
+You can edit `*.urdf` files using any text editor, e.g. `nano`. Saving the edited file in the
+text editor will automatically update your model's in Rviz2 viewer. If your URDF file contains
+a syntax mistake, your model may stop showing in the Rviz2 vieweer. In this case, kill (CTRL-C)
+your `edit_urdf.launch.py`, launch `inspect_urdf.launch.py` to inspect the error message,
+correct the mistake, save the corrected URDF file and re-run `edit_urdf.launch.py` again.
