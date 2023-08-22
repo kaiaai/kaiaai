@@ -1,6 +1,6 @@
 # [Kaia.ai](https://kaia.ai) ROS2 pet robots
 
-[Kaia.ai](https://kaiaai) is a platform for 3D-printable pet robots. Please sign up for an early launch invite [here](https://remake.ai).
+[Kaia.ai](https://kaia.ai) is a platform for 3D-printable pet robots. Please sign up for an early launch invite [here](https://remake.ai).
 
 Kaia.ai DIY 3D-printable pet robots platform consists of these parts:
 - 3D printable models of [Kaia.ai](https://kaia.ai) DIY pet robots [repo](https://github.com/kaiaai/3d_printables)
