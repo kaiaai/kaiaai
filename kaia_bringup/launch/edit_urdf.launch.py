@@ -24,9 +24,10 @@ from launch.substitutions import Command, LaunchConfiguration
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
 
-def make_nodes(context: LaunchContext, description, model):
+def make_nodes(context: LaunchContext, description, model, gui):
     description_str = context.perform_substitution(description)
     model_str = context.perform_substitution(model)
+    gui_str = context.perform_substitution(gui)
     description_package_path = get_package_share_path(description_str)
 
     if model_str == '':
@@ -43,13 +44,17 @@ def make_nodes(context: LaunchContext, description, model):
         'inspect_urdf.rviz')
 
     print("Rviz2 config : {}".format(rviz_config_path))
+    print("URDF  config : {}".format(urdf_path_name))
 
     return [
         ExecuteProcess(
             cmd=[[
                 'ros2 run kaia_bringup watch_urdf.sh ',
                 urdf_path_name,
+                ' ',
+                gui_str,
             ]],
+            output='screen',
             shell=True
         ),
         Node(
@@ -76,8 +81,15 @@ def generate_launch_description():
             default_value='',
             description='URDF model file name'
         ),
+        DeclareLaunchArgument(
+            name='gui',
+            default_value='false',
+            choices=['true', 'false'],
+            description='Enable joint state publisher GUI'
+        ),
         OpaqueFunction(function=make_nodes, args=[
             LaunchConfiguration('description'),
             LaunchConfiguration('model'),
+            LaunchConfiguration('gui'),
         ])
     ])

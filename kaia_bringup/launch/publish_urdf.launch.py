@@ -57,7 +57,8 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument(
             name='gui',
-            default_value='false',
+            # default_value='false',
+            default_value='true',
             choices=['true', 'false'],
             description='Enable joint state publisher GUI'
         ),
