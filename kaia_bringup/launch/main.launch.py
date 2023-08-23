@@ -33,7 +33,7 @@ def make_nodes(context: LaunchContext, description, use_sim_time):
     urdf_path_name = os.path.join(
       description_package_path,
       'urdf',
-      model_name + '.urdf')
+      model_name + '.urdf.xacro')
 
     # with open(urdf_path, 'r') as infp:
     #     robot_desc = infp.read()

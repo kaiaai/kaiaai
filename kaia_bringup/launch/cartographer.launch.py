@@ -36,7 +36,7 @@ def make_nodes(context: LaunchContext, description, use_sim_time, configuration_
     urdf_path_name = os.path.join(
       description_package_path,
       'urdf',
-      model_name + '.urdf')
+      model_name + '.urdf.xacro')
 
     robot_description = ParameterValue(Command(['xacro ', urdf_path_name]), value_type=str)
 

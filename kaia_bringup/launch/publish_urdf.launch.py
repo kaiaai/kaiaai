@@ -32,7 +32,7 @@ def make_node(context: LaunchContext, description, model):
     else:
         description_package_path = get_package_share_path(description_str)
         if model_str == '':
-            model_str = re.sub(r'_description$', '', description_str) + '.urdf'
+            model_str = re.sub(r'_description$', '', description_str) + '.urdf.xacro'
         urdf_path_name = os.path.join(
           description_package_path,
           'urdf',
