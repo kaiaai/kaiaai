@@ -70,6 +70,11 @@ ros2 launch kaia_bringup navigation.launch.py use_sim_time:=true map:=$HOME/my_m
 # Inspect or edit robot's URDF model - useful when modding a robot
 ros2 launch kaia_bringup inspect_urdf.launch.py description:=r2d2_description model:=my_model.urdf
 ros2 launch kaia_bringup edit_urdf.launch.py description:=r2d2_description model:=my_model.urdf
+
+# Convert URDF robot model file into SDF Gazebo simulation model file
+cd /ros_ws/src/r2d2_description/urdf
+ros2 run kaia_gazebo urdf2sdf.sh . r2d2
+cd /ros_ws && colcon build --symlink-install --packages-select r2d2_description
 ```
 
 ## Acknowledgements
