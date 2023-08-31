@@ -72,7 +72,7 @@ ros2 launch kaia_bringup inspect_urdf.launch.py description:=r2d2_description mo
 ros2 launch kaia_bringup edit_urdf.launch.py description:=r2d2_description model:=my_model.urdf
 
 # Convert URDF robot model file into SDF Gazebo simulation model file
-ros2 run kaia_gazebo urdf2sdf.sh /ros_ws/src/r2d2_description/urdf/ r2d2
+ros2 run kaia_snoopy_description urdf2sdf.sh /ros_ws/src/r2d2_description/urdf/ r2d2
 cd /ros_ws && colcon build --symlink-install --packages-select r2d2_description
 ```
 
