@@ -76,22 +76,21 @@ ros2 launch kaia_bringup rviz2.launch.py description:=kaia_snoopy_description
 
 ### Optional: Inspect or edit the default robot model - URDF
 ```
-ros2 launch kaia_bringup inspect_urdf.launch.py
-ros2 launch kaia_bringup edit_urdf.launch.py
+ros2 launch kaia_bringup inspect_urdf.launch.py description:=kaia_snoopy_description
+ros2 launch kaia_bringup edit_urdf.launch.py description:=kaia_snoopy_description
 ```
-### Optional: Mod a robot model - URDF
-Let's say you'd like to build your own R2D2 robot. Start by
-- cloning a default robot description, e.g. into `r2d2_description`
-- editing `r2d2_description/package.xml` and `r2d2_description/CMakeLists.txt` to change the
-package name
-- renaming `r2d2_description/urdf/kaia_snoopy.urdf` and `kaia_snoopy.gazebo.urdf` files to
-`r2d2.urdf` and `r2d2.gazebo.urdf`
-- editing and inspecting your `r2d2.urdf` robot model
+
+### Mod your robot model - URDF
+- Copy your `kaia_snoopy.urdf.xacro` to another file to play with, e.g., `kaia_snoopy_mod.urdf.xacro`.
+- Edit your `kaia_snoopy_mod.urdf.xacro` robot model
+- run commands below to inspect your `kaia_snoopy_mod.urdf.xacro` model visually
 ```
-ros2 launch kaia_bringup inspect_urdf.launch.py description:=r2d2_description model:=r2d2.urdf
-ros2 launch kaia_bringup edit_urdf.launch.py description:=r2d2_description model:=r2d2.urdf
+ros2 launch kaia_bringup inspect_urdf.launch.py description:=r2d2_description model:=kaia_snoopy_mod
+ros2 launch kaia_bringup edit_urdf.launch.py description:=r2d2_description model:=kaia_snoopy_mod
 ```
-You can edit `*.urdf` files using any text editor, e.g. `nano`. Saving the edited file in the
+You can also inspect and edit 
+
+You can edit `*.urdf.xacro` files using any text editor, e.g. `nano`. Saving the edited file in the
 text editor will automatically update your model's in Rviz2 viewer. If your URDF file contains
 a syntax mistake, your model may stop showing in the Rviz2 vieweer. In this case, kill (CTRL-C)
 your `edit_urdf.launch.py`, launch `inspect_urdf.launch.py` to inspect the error message,
