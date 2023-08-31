@@ -29,4 +29,8 @@ install(
   PROGRAMS script/watch_urdf.sh
   DESTINATION lib/${PROJECT_NAME})
 
+install(
+  PROGRAMS script/upload_robot_description_github.sh
+  DESTINATION lib/${PROJECT_NAME})
+
 ament_package()
