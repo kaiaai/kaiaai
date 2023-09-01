@@ -26,5 +26,5 @@ capture keyboard strokes.
 - you can also specify an arbitrary path and file name of the YAML configuration file when launching
 `teleop_keyboard` as shown in the example below. This can be useful during development.
 ```
-ros2 run kaia_teleop teleop_keyboard --ros-args --params-file `ros2 pkg prefix --share waldo_description`/config/teleop_keyboard_test.yaml
+ros2 run kaia_teleop teleop_keyboard --ros-args --params-file `ros2 pkg prefix --share waldo_description`/config/teleop_keyboard.yaml
 ```
