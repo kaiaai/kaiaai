@@ -3,13 +3,13 @@
 [Kaia.ai](https://kaia.ai) is a platform for 3D-printable pet robots. Please sign up for an early launch invite [here](https://remake.ai).
 
 Kaia.ai DIY 3D-printable pet robots platform consists of these parts:
-- 3D printable models of [Kaia.ai](https://kaia.ai) DIY pet robots [repo](https://github.com/kaiaai/3d_printables)
+- 3D printable models of [Kaia.ai](https://kaia.ai) DIY pet robots [repo](https://github.com/makerspet/3d_printables)
 - Arduino ESP32 robot firmware [repo](https://github.com/kaiaai/arduino_fw/)
 - Micro-ROS Arduino library for Kaia.ai robots [repo](https://github.com/kaiaai/micro_ros_arduino_kaia/)
 - End-user and development ROS2 Docker images [repo](https://github.com/kaiaai/docker/)
 - Robot simulation ROS2 packages [repo](https://github.com/kaiaai/kaia_simulations/)
 - Robot operation ROS2 packages in this repo - including SLAM mapping, navigation, etc.
-- DIY electronic hardware, PCB designs for Kaia.ai robots [repo](https://github.com/kaiaai/electronics/)
+- DIY electronic hardware, PCB designs for Kaia.ai robots [repo](https://github.com/makerspet/electronics/)
 
 ## Command cheat sheet
 Use these commands to operate the default Kaia.ai `snoopy` robot:
