@@ -11,6 +11,10 @@ Kaia.ai DIY 3D-printable pet robots platform consists of these parts:
 - Robot operation ROS2 packages in this repo - including SLAM mapping, navigation, etc.
 - DIY electronic hardware, PCB designs for Kaia.ai robots [repo](https://github.com/makerspet/electronics/)
 
+
+## Kaia.ai compatible robots
+Here is a [list of robots](https://github.com/topics/kaia-ai-robot) compatible with Kaia.ai software platform.
+
 ## Command cheat sheet
 Use these commands to operate the default Kaia.ai `snoopy` robot:
 ```
