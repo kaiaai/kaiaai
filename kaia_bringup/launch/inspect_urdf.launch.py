@@ -29,7 +29,8 @@ def make_nodes(context: LaunchContext, description, model):
     description_package_path = get_package_share_path(description_str)
 
     if model_str == '':
-       model_str = re.sub(r'_description$', '', description_str) + '.urdf.xacro'
+       model_str = description_str + '.urdf.xacro'
+       # model_str = re.sub(r'_description$', '', description_str) + '.urdf.xacro'
     urdf_path_name = os.path.join(
       description_package_path,
       'urdf',
@@ -62,7 +63,7 @@ def make_nodes(context: LaunchContext, description, model):
 
 
 def generate_launch_description():
-    default_description_name = os.getenv('KAIA_ROBOT_DESCRIPTION', default='kaia_snoopy_description')
+    default_description_name = os.getenv('KAIAAI_ROBOT', default='kaiaai_snoopy')
 
     return LaunchDescription([
         DeclareLaunchArgument(
@@ -74,7 +75,7 @@ def generate_launch_description():
         DeclareLaunchArgument(
             name='description',
             default_value=default_description_name,
-            description='Robot description package name, overrides KAIA_ROBOT_DESCRIPTION'
+            description='Robot description package name, overrides KAIAAI_ROBOT'
         ),
         DeclareLaunchArgument(
             name='model',

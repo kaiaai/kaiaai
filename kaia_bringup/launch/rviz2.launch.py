@@ -26,11 +26,11 @@ def make_rviz2_node(context: LaunchContext, description, use_sim_time):
     description_str = context.perform_substitution(description)
     use_sim_time_str = context.perform_substitution(use_sim_time)
 
-    model_name = re.sub(r'_description$', '', description_str)
+    # model_name = re.sub(r'_description$', '', description_str)
     rviz_config_path = os.path.join(
         get_package_share_path(description_str),
         'rviz',
-        model_name + '.rviz')
+        description_str + '.rviz')
     print("Rviz2 config : {}".format(rviz_config_path))
 
     return [
@@ -45,13 +45,13 @@ def make_rviz2_node(context: LaunchContext, description, use_sim_time):
     ]
 
 def generate_launch_description():
-    default_description_name = os.getenv('KAIA_ROBOT_DESCRIPTION', default='kaia_snoopy_description')
+    default_description_name = os.getenv('KAIAAI_ROBOT', default='kaiaai_snoopy')
 
     return LaunchDescription([
         DeclareLaunchArgument(
             name='description',
             default_value=default_description_name,
-            description='Robot description package name, overrides KAIA_ROBOT_DESCRIPTION'
+            description='Robot description package name, overrides KAIAAI_ROBOT'
         ),
         DeclareLaunchArgument(
             'use_sim_time',
