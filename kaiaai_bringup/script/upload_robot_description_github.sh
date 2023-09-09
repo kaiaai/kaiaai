@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Clone the robot description (where the script resides) into a new one
-#   ros2 run kaia_snoopy_description clone_robot_description.sh /ros_ws/src/kaia_fido_description
+#   ros2 run kaiaai_snoopy clone_robot_description.sh /ros_ws/src/kaiaai_fido
 [ -z "$1" ] && { echo "Description path missing" ; exit 1; }
 [ ! -d "$1" ] && { echo "Description path invalid" ; exit 1; }
 [ -z "$2" ] && { echo "Github username missing" ; exit 1; }

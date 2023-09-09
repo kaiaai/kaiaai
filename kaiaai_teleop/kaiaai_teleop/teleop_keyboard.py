@@ -60,7 +60,7 @@ class TeleopKeyboardNode(Node):
         self.control_linear_velocity = 0.0
         self.control_angular_velocity = 0.0
 
-        print('Control Kaia.ai Robot')
+        print('Control Kaia.ai-compatible Robot')
         print('---------------------')
         print('Moving around:')
         print('        w')
@@ -197,7 +197,7 @@ def main(args=None):
         if (len(sys.argv) == 2 and sys.argv[1].startswith('description:=')):
             description = sys.argv[1][13:]
         else:
-            description = os.getenv('KAIA_ROBOT_DESCRIPTION', 'kaia_snoopy_description')
+            description = os.getenv('KAIAAI_ROBOT', 'kaiaai_snoopy')
 
         yaml_path_name = os.path.join(
             get_package_share_path(description),

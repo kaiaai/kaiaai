@@ -50,7 +50,7 @@ def make_nodes(context: LaunchContext, description, model, gui):
     return [
         ExecuteProcess(
             cmd=[[
-                'ros2 run kaia_bringup watch_urdf.sh ',
+                'ros2 run kaiaai_bringup watch_urdf.sh ',
                 urdf_path_name,
                 ' ',
                 gui_str,

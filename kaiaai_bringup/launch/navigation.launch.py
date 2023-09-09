@@ -79,7 +79,7 @@ def generate_launch_description():
             default_value=os.path.join(
                 get_package_share_path(default_description_name),
                 'map',
-                'kaia_world.yaml'),
+                'kaiaai_world.yaml'),
             description='Full path to map file to load'
         ),
         DeclareLaunchArgument(

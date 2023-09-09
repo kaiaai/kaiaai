@@ -17,7 +17,7 @@
 #include <string>
 
 #include "rclcpp/rclcpp.hpp"
-#include "kaia_msgs/msg/kaia_telemetry.hpp"
+#include "kaiaai_msgs/msg/kaiaai_telemetry.hpp"
 #include <builtin_interfaces/msg/time.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>
@@ -28,7 +28,7 @@
 #include "tf2/LinearMath/Quaternion.h"
 
 #define DEG_TO_RAD 0.017453292519943295769236907684886
-#define NODE_NAME "kaia_telemetry_node"
+#define NODE_NAME "kaiaai_telemetry_node"
 
 #define RESULT_OK      0
 #define RESULT_TIMEOUT -1
@@ -108,7 +108,7 @@ public:
 
     this->declare_parameter("odometry.topic_name_pub", "odom");
 
-    telem_sub_ = this->create_subscription<kaia_msgs::msg::KaiaTelemetry>(
+    telem_sub_ = this->create_subscription<kaiaai_msgs::msg::KaiaTelemetry>(
       this->get_parameter("telemetry.topic_name_sub").as_string(),
       rclcpp::SensorDataQoS(), std::bind(&KaiaTelemetry::topic_callback, this, _1));
     odom_pub_ = this->create_publisher<nav_msgs::msg::Odometry>(
@@ -150,7 +150,7 @@ public:
   }
 
 private:
-  void topic_callback(const kaia_msgs::msg::KaiaTelemetry & telem_msg) // const
+  void topic_callback(const kaiaai_msgs::msg::KaiaTelemetry & telem_msg) // const
   {
     long int seq_diff = (long int)telem_msg.seq - (long int)seq_last_;
     seq_last_ = telem_msg.seq;
@@ -231,7 +231,7 @@ private:
       process_lds_data(telem_msg);
   }
 
-  void process_lds_data(const kaia_msgs::msg::KaiaTelemetry & telem_msg)
+  void process_lds_data(const kaiaai_msgs::msg::KaiaTelemetry & telem_msg)
   {
     lds_data_idx_ = 0;
     lds_msg_count_++;
@@ -257,7 +257,7 @@ private:
     }
   }
 
-  int get_lds_byte(const kaia_msgs::msg::KaiaTelemetry & telem_msg)
+  int get_lds_byte(const kaiaai_msgs::msg::KaiaTelemetry & telem_msg)
   {
     if (lds_data_idx_ >= telem_msg.lds.size())
       return -1;
@@ -266,7 +266,7 @@ private:
     return telem_msg.lds[lds_data_idx_++];
   }
 
-  void process_scan_point(const kaia_msgs::msg::KaiaTelemetry & telem_msg,
+  void process_scan_point(const kaiaai_msgs::msg::KaiaTelemetry & telem_msg,
     uint8_t quality, float angle_deg, float distance_mm, bool startBit)
   {
     (void)quality; // Suppress unused parameter warning
@@ -311,7 +311,7 @@ private:
     lds_data_length_ = 0;
   }
 
-  void publish_scan(const kaia_msgs::msg::KaiaTelemetry & telem_msg)
+  void publish_scan(const kaiaai_msgs::msg::KaiaTelemetry & telem_msg)
 //  void process_scan_data(const std::vector<uint8_t> & lds)
   {
 //    RCLCPP_INFO(this->get_logger(), "publish_scan() total %u valid %u fail %u crc %u msg %u len %u",
@@ -341,7 +341,7 @@ private:
     laser_scan_pub_->publish(laser_scan_msg);
   }
 
-  int decode_lds_data(const kaia_msgs::msg::KaiaTelemetry & telem_msg)
+  int decode_lds_data(const kaiaai_msgs::msg::KaiaTelemetry & telem_msg)
   {
     switch(state) {
       case 1:
@@ -564,7 +564,7 @@ state2:
     return RESULT_OK;
   }
 
-  rclcpp::Subscription<kaia_msgs::msg::KaiaTelemetry>::SharedPtr telem_sub_;
+  rclcpp::Subscription<kaiaai_msgs::msg::KaiaTelemetry>::SharedPtr telem_sub_;
   rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_pub_;
   rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr joint_state_pub_;
   rclcpp::Publisher<sensor_msgs::msg::LaserScan>::SharedPtr laser_scan_pub_;

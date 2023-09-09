@@ -18,7 +18,7 @@
 #include <string>
 
 #include "rclcpp/rclcpp.hpp"
-#include "kaia_msgs/msg/kaia_telemetry.hpp"
+#include "kaiaai_msgs/msg/kaiaai_telemetry.hpp"
 
 using namespace std::chrono_literals;
 
@@ -26,9 +26,9 @@ class TestPublisher : public rclcpp::Node
 {
 public:
   TestPublisher()
-  : Node("kaia_telemetry_test_pub"), count_(0)
+  : Node("kaiaai_telemetry_test_pub"), count_(0)
   {
-    publisher_ = this->create_publisher<kaia_msgs::msg::KaiaTelemetry>("telemetry", 10);
+    publisher_ = this->create_publisher<kaiaai_msgs::msg::KaiaTelemetry>("telemetry", 10);
     timer_ = this->create_wall_timer(
       500ms, std::bind(&TestPublisher::timer_callback, this));
   }
@@ -36,7 +36,7 @@ public:
 private:
   void timer_callback()
   {
-    auto msg = kaia_msgs::msg::KaiaTelemetry();
+    auto msg = kaiaai_msgs::msg::KaiaTelemetry();
     msg.seq = count_++;
 
     msg.odom_pos_x = float(msg.seq);
@@ -71,7 +71,7 @@ private:
   }
 
   rclcpp::TimerBase::SharedPtr timer_;
-  rclcpp::Publisher<kaia_msgs::msg::KaiaTelemetry>::SharedPtr publisher_;
+  rclcpp::Publisher<kaiaai_msgs::msg::KaiaTelemetry>::SharedPtr publisher_;
   size_t count_;
 };
 

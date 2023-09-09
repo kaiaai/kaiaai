@@ -1,6 +1,6 @@
 from setuptools import setup
 
-package_name = 'kaia_teleop'
+package_name = 'kaiaai_teleop'
 
 setup(
     name=package_name,
@@ -24,12 +24,12 @@ setup(
         'Programming Language :: Python',
         'Topic :: Software Development',
     ],
-    description=('Control Kaia.ai robots using a keyboard'),
+    description=('Control Kaia.ai-compatible robots using a keyboard'),
     license='Apache License, Version 2.0',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'teleop_keyboard = kaia_teleop.teleop_keyboard:main'
+            'teleop_keyboard = kaiaai_teleop.teleop_keyboard:main'
         ],
     },
 )

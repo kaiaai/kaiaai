@@ -49,7 +49,7 @@ def make_nodes(context: LaunchContext, description, use_sim_time):
 
     return [
         Node(
-            package="kaia_telemetry",
+            package="kaiaai_telemetry",
             executable="telem",
             output="screen",
             parameters = [param_path_name]

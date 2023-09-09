@@ -1,14 +1,14 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>kaia_teleop</name>
+  <name>kaiaai_teleop</name>
   <version>0.0.0</version>
-  <description>Control Kaia.ai robots using a keyboard</description>
+  <description>Control Kaia.ai-compatible robots using a keyboard</description>
   <maintainer email="iliao@remake.ai">Ilia O.</maintainer>
   <license>Apache 2.0</license>
   <url type="website">https://kaia.ai</url>
-  <url type="repository">https://github.com/kaiaai/kaia</url>
-  <url type="bugtracker">https://github.com/kaiaai/kaia/issues</url>
+  <url type="repository">https://github.com/kaiaai/kaiaai</url>
+  <url type="bugtracker">https://github.com/kaiaai/kaiaai/issues</url>
   <author email="iliao@remake.ai">Ilia O.</author>
 
   <depend>rclpy</depend>
