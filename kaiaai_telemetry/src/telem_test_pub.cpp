@@ -28,7 +28,7 @@ public:
   TestPublisher()
   : Node("kaiaai_telemetry_test_pub"), count_(0)
   {
-    publisher_ = this->create_publisher<kaiaai_msgs::msg::KaiaTelemetry>("telemetry", 10);
+    publisher_ = this->create_publisher<kaiaai_msgs::msg::KaiaaiTelemetry>("telemetry", 10);
     timer_ = this->create_wall_timer(
       500ms, std::bind(&TestPublisher::timer_callback, this));
   }
@@ -36,7 +36,7 @@ public:
 private:
   void timer_callback()
   {
-    auto msg = kaiaai_msgs::msg::KaiaTelemetry();
+    auto msg = kaiaai_msgs::msg::KaiaaiTelemetry();
     msg.seq = count_++;
 
     msg.odom_pos_x = float(msg.seq);
