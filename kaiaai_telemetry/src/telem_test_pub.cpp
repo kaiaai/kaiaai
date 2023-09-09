@@ -71,7 +71,7 @@ private:
   }
 
   rclcpp::TimerBase::SharedPtr timer_;
-  rclcpp::Publisher<kaiaai_msgs::msg::KaiaTelemetry>::SharedPtr publisher_;
+  rclcpp::Publisher<kaiaai_msgs::msg::KaiaaiTelemetry>::SharedPtr publisher_;
   size_t count_;
 };
 
