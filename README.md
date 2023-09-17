@@ -27,7 +27,7 @@ ros2 launch kaiaai_bringup main.launch.py
 ros2 launch kaiaai_bringup rviz2.launch.py
 
 # Launch the robot in a simulation - drive manually or let it self-drive
-ros2 launch kaiaai_gazebo world.launch.py
+ros2 launch kaiaai_gazebo kaiaai_world.launch.py
 ros2 run kaiaai_teleop teleop_keyboard
 ros2 launch kaiaai_gazebo self_drive_gazebo.launch.py
 ros2 launch kaiaai_bringup rviz2.launch.py
@@ -60,7 +60,7 @@ ros2 launch kaiaai_bringup main.launch.py description:=awesome_droid
 ros2 launch kaiaai_bringup rviz2.launch.py description:=awesome_droid
 
 # Launch the robot in a simulation - drive manually or let it self-drive
-ros2 launch kaiaai_gazebo world.launch.py description:=awesome_droid
+ros2 launch kaiaai_gazebo kaiaai_world.launch.py description:=awesome_droid
 ros2 run kaiaai_teleop teleop_keyboard description:=awesome_droid
 ros2 launch kaiaai_gazebo self_drive_gazebo.launch.py description:=awesome_droid
 ros2 launch kaiaai_bringup rviz2.launch.py description:=awesome_droid
