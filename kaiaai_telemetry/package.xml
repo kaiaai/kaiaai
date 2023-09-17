@@ -3,7 +3,7 @@
 <package format="3">
   <name>kaiaai_telemetry</name>
   <version>0.0.0</version>
-  <description>Kaia.ai-compatible robots ESP32 Micro-ROS telemetry</description>
+  <description>Micro-ROS telemetry for Kaia.ai software platform compatible robots</description>
   <maintainer email="ilia.o@remake.ai">Ilia O.</maintainer>
   <license>Apache-2.0</license>
   <url type="website">https://kaia.ai</url>

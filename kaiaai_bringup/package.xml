@@ -3,7 +3,7 @@
 <package format="3">
   <name>kaiaai_bringup</name>
   <version>0.0.0</version>
-  <description>ROS2 scripts to start Kaia.ai-compatible robots</description>
+  <description>ROS2 scripts to start Kaia.ai software platform compatible robots</description>
 
   <maintainer email="iliao@remake.ai">Ilia O.</maintainer>
   <license>Apache 2.0</license>
