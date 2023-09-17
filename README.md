@@ -17,10 +17,13 @@ In particular, these two models are supported:
 - Maker's Pet [Loki](https://github.com/makerspet/makerspet_loki) 3D-printable pet robot
 
 ## Command cheat sheets
-Before running these commands, set up your development PC following these
-[instructions](https://github.com/kaiaai/kaiaai_simulations#your-pc-setup), [launch](https://github.com/kaiaai/kaiaai_simulations/blob/main/README.md#launch-the-development-docker-image)
-the Kaia.ai development Docker image, power up your robot and
-[connect](https://github.com/makerspet/makerspet_snoopy/tree/main/firmware) your robot to your WiFi.
+Before running these commands:
+- set up your development PC following these
+[instructions](https://github.com/kaiaai/kaiaai_simulations#your-pc-setup)
+- [launch](https://github.com/kaiaai/kaiaai_simulations/blob/main/README.md#launch-the-development-docker-image)
+the Kaia.ai development Docker image
+- [power up](https://github.com/makerspet/makerspet_snoopy/tree/main/firmware) your robot and
+- [connect](https://github.com/makerspet/makerspet_snoopy/tree/main/firmware) your robot to your WiFi.
 
 <details>
 <summary>Operate the default Maker's Pet Snoopy pet robot</summary>
