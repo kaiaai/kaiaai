@@ -17,6 +17,9 @@ In particular, these two models are supported:
 - Maker's Pet [Loki](https://github.com/makerspet/makerspet_loki) 3D-printable pet robot
 
 ## Command cheat sheets
+Before running these commands, set up your development PC following these
+[instructions](https://github.com/kaiaai/kaiaai_simulations#your-pc-setup).
+
 <details>
 <summary>Operate the default Maker's Pet Snoopy pet robot</summary>
 
