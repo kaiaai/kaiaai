@@ -75,7 +75,7 @@ def make_nodes(context: LaunchContext, description, use_sim_time, configuration_
 
 
 def generate_launch_description():
-    default_description_name = os.getenv('KAIAAI_ROBOT', default='kaiaai_snoopy')
+    default_description_name = os.getenv('KAIAAI_ROBOT', default='makerspet_snoopy')
 
     return LaunchDescription([
         DeclareLaunchArgument(

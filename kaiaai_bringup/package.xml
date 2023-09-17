@@ -17,8 +17,8 @@
   <exec_depend>hls_lfcd_lds_driver</exec_depend>
   <exec_depend>robot_state_publisher</exec_depend>
   <exec_depend>rviz2</exec_depend>
-  <exec_depend>kaiaai_snoopy</exec_depend>
-  <exec_depend>kaiaai_loki</exec_depend>
+  <exec_depend>makerspet_snoopy</exec_depend>
+  <exec_depend>makerspet_loki</exec_depend>
   <exec_depend>kaiaai_node</exec_depend>
   <exec_depend>ros2launch</exec_depend>
   <exec_depend>kaiaai_telemetry</exec_depend>

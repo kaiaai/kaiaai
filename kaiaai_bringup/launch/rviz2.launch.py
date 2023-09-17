@@ -45,7 +45,7 @@ def make_rviz2_node(context: LaunchContext, description, use_sim_time):
     ]
 
 def generate_launch_description():
-    default_description_name = os.getenv('KAIAAI_ROBOT', default='kaiaai_snoopy')
+    default_description_name = os.getenv('KAIAAI_ROBOT', default='makerspet_snoopy')
 
     return LaunchDescription([
         DeclareLaunchArgument(
