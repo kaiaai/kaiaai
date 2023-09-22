@@ -1,6 +1,6 @@
-# [Kaia.ai](https://kaia.ai) ROS2 pet robots
+# [Kaia.ai](https://kaia.ai) ROS2 home robots
 
-[Kaia.ai](https://kaia.ai) is a platform for 3D-printable pet robots. Please sign up for an early launch invite [here](https://remake.ai).
+[Kaia.ai](https://kaia.ai) is a platform for DIY home robots. Please sign up for an early launch invite [here](https://remake.ai).
 
 Kaia.ai robotics software platform consists of these parts:
 - Micro-ROS Arduino library for Kaia.ai robots [repo](https://github.com/kaiaai/micro_ros_arduino_kaia)
@@ -10,7 +10,7 @@ Kaia.ai robotics software platform consists of these parts:
 - Cloud software infrastructure
 
 ## Kaia.ai compatible robots
-Here is a [list of robots](https://github.com/topics/kaia-ai-robot) compatible with Kaia.ai software platform.
+Here is a [list of robots](https://github.com/topics/kaiaai-robot) compatible with Kaia.ai software platform.
 
 In particular, these two models are supported:
 - Maker's Pet [Snoopy](https://github.com/makerspet/makerspet_snoopy) 3D-printable pet robot
