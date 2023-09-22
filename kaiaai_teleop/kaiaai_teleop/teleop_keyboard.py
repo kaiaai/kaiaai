@@ -63,13 +63,13 @@ class TeleopKeyboardNode(Node):
         print('Control Kaia.ai-compatible Robot')
         print('---------------------')
         print('Moving around:')
-        print('        w')
-        print('   a    s    d')
-        print('        x')
-        print('w/x : increase/decrease linear  velocity')
-        print('a/d : increase/decrease angular velocity')
-        print()
-        print('Space key, s : force stop')
+        print('      w')
+        print(' a    s    d')
+        print('      x')
+        print('w/x   : increase/decrease linear  velocity')
+        print('a/d   : increase/decrease angular velocity')
+        print('s     : keep straight')
+        print('Space : force stop')
         print('CTRL-C to quit')
 
 
@@ -137,7 +137,10 @@ class TeleopKeyboardNode(Node):
             self.target_angular_velocity = \
                 self.check_angular_limit_velocity(self.target_angular_velocity - self.ang_vel_step_size)
             self.print_vels()
-        elif key == ' ' or key == 's':
+        elif key == 's':
+            self.target_angular_velocity = 0
+            self.print_vels()
+        elif key == ' ':
             self.target_linear_velocity = 0.0
             self.control_linear_velocity = 0.0
             self.target_angular_velocity = 0.0
