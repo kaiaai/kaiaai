@@ -138,7 +138,8 @@ class TeleopKeyboardNode(Node):
                 self.check_angular_limit_velocity(self.target_angular_velocity - self.ang_vel_step_size)
             self.print_vels()
         elif key == 's':
-            self.target_angular_velocity = 0
+            self.target_angular_velocity = 0.0
+            self.control_angular_velocity = 0.0
             self.print_vels()
         elif key == ' ':
             self.target_linear_velocity = 0.0
