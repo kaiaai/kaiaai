@@ -55,10 +55,8 @@ class TeleopKeyboardNode(Node):
 
         self.publisher_ = self.create_publisher(Twist, 'cmd_vel', 10)
 
-        self.target_linear_velocity = 0.0
-        self.target_angular_velocity = 0.0
-        self.control_linear_velocity = 0.0
-        self.control_angular_velocity = 0.0
+        self.linear_velocity = 0.0
+        self.angular_velocity = 0.0
 
         print('Control Kaia.ai-compatible Robot')
         print('---------------------')
@@ -87,20 +85,9 @@ class TeleopKeyboardNode(Node):
 
     def print_vels(self):
         print('Linear velocity {:.3f}\tAngular velocity {:.3f}'.format(
-            round(self.target_linear_velocity, 3),
-            round(self.target_angular_velocity, 3))
+            round(self.linear_velocity, 3),
+            round(self.angular_velocity, 3))
         )
-
-    @staticmethod
-    def make_simple_profile(output, input, slop):
-        if input > output:
-            output = min(input, output + slop)
-        elif input < output:
-            output = max(input, output - slop)
-        else:
-            output = input
-
-        return output
 
     @staticmethod
     def constrain(input_vel, low_bound, high_bound):
@@ -122,30 +109,27 @@ class TeleopKeyboardNode(Node):
     def perform(self):
         key = self.get_key()
         if key == 'w':
-            self.target_linear_velocity = \
-                self.check_linear_limit_velocity(self.target_linear_velocity + self.lin_vel_step_size)
+            self.linear_velocity = \
+                self.check_linear_limit_velocity(self.linear_velocity + self.lin_vel_step_size)
             self.print_vels()
         elif key == 'x':
-            self.target_linear_velocity = \
-                self.check_linear_limit_velocity(self.target_linear_velocity - self.lin_vel_step_size)
+            self.linear_velocity = \
+                self.check_linear_limit_velocity(self.linear_velocity - self.lin_vel_step_size)
             self.print_vels()
         elif key == 'a':
-            self.target_angular_velocity = \
-                self.check_angular_limit_velocity(self.target_angular_velocity + self.ang_vel_step_size)
+            self.angular_velocity = \
+                self.check_angular_limit_velocity(self.angular_velocity + self.ang_vel_step_size)
             self.print_vels()
         elif key == 'd':
-            self.target_angular_velocity = \
-                self.check_angular_limit_velocity(self.target_angular_velocity - self.ang_vel_step_size)
+            self.angular_velocity = \
+                self.check_angular_limit_velocity(self.angular_velocity - self.ang_vel_step_size)
             self.print_vels()
         elif key == 's':
-            self.target_angular_velocity = 0.0
-            self.control_angular_velocity = 0.0
+            self.angular_velocity = 0.0
             self.print_vels()
         elif key == ' ':
-            self.target_linear_velocity = 0.0
-            self.control_linear_velocity = 0.0
-            self.target_angular_velocity = 0.0
-            self.control_angular_velocity = 0.0
+            self.linear_velocity = 0.0
+            self.angular_velocity = 0.0
             self.print_vels()
         elif (key == '\x03'):
             print('Stopping the robot and exiting on CTRL-C press')
@@ -168,27 +152,13 @@ class TeleopKeyboardNode(Node):
 
         twist = Twist()
 
-        self.control_linear_velocity = \
-            self.make_simple_profile(
-                self.control_linear_velocity,
-                self.target_linear_velocity,
-                (self.lin_vel_step_size / 2.0)
-            )
-
-        twist.linear.x = self.control_linear_velocity
+        twist.linear.x = self.linear_velocity
         twist.linear.y = 0.0
         twist.linear.z = 0.0
 
-        self.control_angular_velocity = \
-            self.make_simple_profile(
-                self.control_angular_velocity,
-                self.target_angular_velocity,
-                (self.ang_vel_step_size / 2.0)
-        )
-
         twist.angular.x = 0.0
         twist.angular.y = 0.0
-        twist.angular.z = self.control_angular_velocity
+        twist.angular.z = self.angular_velocity
 
         self.publisher_.publish(twist)
         return True
