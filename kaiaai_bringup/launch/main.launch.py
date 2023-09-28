@@ -89,13 +89,13 @@ def generate_launch_description():
             output="screen",
             arguments=["udp4", "-p", "8888"]  # , "-v6"
         ),
-        Node(
-            package = "tf2_ros",
-            executable = "static_transform_publisher",
-            output="screen",
-            arguments = ["--frame-id", "map", "--child-frame-id", "lds"]
-            # arguments = ["0", "0", "0", "0", "0", "0", "map", "lds"]
-        ),
+        # Node(
+        #     package = "tf2_ros",
+        #     executable = "static_transform_publisher",
+        #     output="screen",
+        #     arguments = ["--frame-id", "map", "--child-frame-id", "lds"]
+        #     # arguments = ["0", "0", "0", "0", "0", "0", "map", "lds"]
+        # ),
         OpaqueFunction(function=make_nodes, args=[
             LaunchConfiguration('description'),
             LaunchConfiguration('use_sim_time')

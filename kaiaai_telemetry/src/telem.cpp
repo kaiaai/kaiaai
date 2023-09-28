@@ -101,11 +101,12 @@ public:
     this->declare_parameter("tf.frame_id", "world");
     this->declare_parameter("tf.child_frame_id", "base_footprint");
 
-    this->declare_parameter("joint_states.topic_name_pub", "joint_states");
+    this->declare_parameter("joints.topic_name_pub", "joint_states");
+    this->declare_parameter("joints.wheel.right", "wheel_right_joint");
+    this->declare_parameter("joints.wheel.left", "wheel_left_joint");
 
     this->declare_parameter("odometry.frame_id", "world");
     this->declare_parameter("odometry.child_frame_id", "base_footprint");
-
     this->declare_parameter("odometry.topic_name_pub", "odom");
 
     telem_sub_ = this->create_subscription<kaiaai_msgs::msg::KaiaaiTelemetry>(
@@ -114,7 +115,7 @@ public:
     odom_pub_ = this->create_publisher<nav_msgs::msg::Odometry>(
       this->get_parameter("odometry.topic_name_pub").as_string(), 10);
     joint_state_pub_ = this->create_publisher<sensor_msgs::msg::JointState>(
-      this->get_parameter("joint_states.topic_name_pub").as_string(), 10);
+      this->get_parameter("joints.topic_name_pub").as_string(), 10);
     laser_scan_pub_ = this->create_publisher<sensor_msgs::msg::LaserScan>(
       this->get_parameter("laser_scan.topic_name_pub").as_string(), 10);
     tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
@@ -189,8 +190,9 @@ private:
     auto joint_state_msg = sensor_msgs::msg::JointState();
     std::vector<std::string> name;
     name.resize(2);
-    name[0] = "wheel_left_joint";
-    name[1] = "wheel_right_joint";
+    name[0] = this->get_parameter("joints.wheel.left").as_string();
+    name[1] = this->get_parameter("joints.wheel.right").as_string();
+
     joint_state_msg.name = name;  // Makes a deep copy of name
 
     std::vector<double> position;
