@@ -55,7 +55,7 @@ class TeleopKeyboardNode(Node):
         self.ang_vel_step = self.get_parameter('ang_vel_step_large').value
 
         print('Max linear velocity {:.3f}\t Max angular velocity {:.3f}'.format(
-            round(self.max_ang_lin, 3),
+            round(self.max_lin_vel, 3),
             round(self.max_ang_vel, 3))
         )
 
