@@ -18,7 +18,8 @@ import os, re
 from ament_index_python.packages import get_package_share_path
 from launch import LaunchDescription, LaunchContext
 from launch.actions import DeclareLaunchArgument, OpaqueFunction
-from launch.conditions import IfCondition, UnlessCondition
+#from launch.conditions import IfCondition, UnlessCondition
+from launch.conditions import LaunchConfigurationEquals
 from launch.substitutions import Command, LaunchConfiguration
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
@@ -67,10 +68,10 @@ def generate_launch_description():
 
     return LaunchDescription([
         DeclareLaunchArgument(
-            name='gui',
-            default_value='true',
-            choices=['true', 'false'],
-            description='Flag to enable joint_state_publisher_gui'
+            name='joints',
+            default_value='gui',
+            choices=['gui', 'nogui', 'none'],
+            description='Control joints using GUI, no GUI or don''t launch joint_state_publisher at all'
         ),
         DeclareLaunchArgument(
             name='description',
@@ -89,11 +90,13 @@ def generate_launch_description():
         Node(
             package='joint_state_publisher',
             executable='joint_state_publisher',
-            condition=UnlessCondition(LaunchConfiguration('gui'))
+#            condition=UnlessCondition(LaunchConfiguration('gui'))
+            condition=LaunchConfigurationEquals('joints', 'nogui')
         ),
         Node(
             package='joint_state_publisher_gui',
             executable='joint_state_publisher_gui',
-            condition=IfCondition(LaunchConfiguration('gui'))
+#            condition=IfCondition(LaunchConfiguration('gui'))
+            condition=LaunchConfigurationEquals('joints', 'gui')
         )
     ])
