@@ -98,14 +98,14 @@ public:
 
     this->declare_parameter("telemetry.topic_name_sub", "telemetry");
 
-    this->declare_parameter("tf.frame_id", "world");
+    this->declare_parameter("tf.frame_id", "odom");
     this->declare_parameter("tf.child_frame_id", "base_footprint");
 
     this->declare_parameter("joints.topic_name_pub", "joint_states");
     this->declare_parameter("joints.wheel.right", "wheel_right_joint");
     this->declare_parameter("joints.wheel.left", "wheel_left_joint");
 
-    this->declare_parameter("odometry.frame_id", "world");
+    this->declare_parameter("odometry.frame_id", "odom");
     this->declare_parameter("odometry.child_frame_id", "base_footprint");
     this->declare_parameter("odometry.topic_name_pub", "odom");
 
