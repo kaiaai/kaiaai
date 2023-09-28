@@ -42,14 +42,22 @@ class TeleopKeyboardNode(Node):
             parameters=[
                 ('max_lin_vel', 0.22),
                 ('max_ang_vel', 12.84),
-                ('lin_vel_step_size', 0.01),
-                ('ang_vel_step_size', 0.1)
+                ('lin_vel_step', 0.01),
+                ('ang_vel_step', 0.1),
+                ('lin_vel_step_large', 0.05),
+                ('ang_vel_step_large', 0.5),
             ])
         self.max_lin_vel = self.get_parameter('max_lin_vel').value
         self.max_ang_vel = self.get_parameter('max_ang_vel').value
-        self.lin_vel_step_size = self.get_parameter('lin_vel_step_size').value
-        self.ang_vel_step_size = self.get_parameter('ang_vel_step_size').value
-        print(self.max_ang_vel)
+        self.lin_vel_step = self.get_parameter('lin_vel_step').value
+        self.ang_vel_step = self.get_parameter('ang_vel_step_large').value
+        self.lin_vel_step = self.get_parameter('lin_vel_step').value
+        self.ang_vel_step = self.get_parameter('ang_vel_step_large').value
+
+        print('Max linear velocity {:.3f}\t Max angular velocity {:.3f}'.format(
+            round(self.max_ang_lin, 3),
+            round(self.max_ang_vel, 3))
+        )
 
         self.tty_attr = None if os.name == 'nt' else termios.tcgetattr(sys.stdin)
 
@@ -59,7 +67,7 @@ class TeleopKeyboardNode(Node):
         self.angular_velocity = 0.0
 
         print('Control Kaia.ai-compatible Robot')
-        print('---------------------')
+        print('--------------------------------')
         print('Moving around:')
         print('      w')
         print(' a    s    d')
@@ -67,6 +75,7 @@ class TeleopKeyboardNode(Node):
         print('w/x   : increase/decrease linear  velocity')
         print('a/d   : increase/decrease angular velocity')
         print('s     : keep straight')
+        print('CAPS  : large step')
         print('Space : force stop')
         print('CTRL-C to quit')
 
@@ -110,21 +119,37 @@ class TeleopKeyboardNode(Node):
         key = self.get_key()
         if key == 'w':
             self.linear_velocity = \
-                self.check_linear_limit_velocity(self.linear_velocity + self.lin_vel_step_size)
+                self.check_linear_limit_velocity(self.linear_velocity + self.lin_vel_step)
+            self.print_vels()
+        elif key == 'W':
+            self.linear_velocity = \
+                self.check_linear_limit_velocity(self.linear_velocity + self.lin_vel_step_large)
             self.print_vels()
         elif key == 'x':
             self.linear_velocity = \
-                self.check_linear_limit_velocity(self.linear_velocity - self.lin_vel_step_size)
+                self.check_linear_limit_velocity(self.linear_velocity - self.lin_vel_step)
+            self.print_vels()
+        elif key == 'X':
+            self.linear_velocity = \
+                self.check_linear_limit_velocity(self.linear_velocity - self.lin_vel_step_large)
             self.print_vels()
         elif key == 'a':
             self.angular_velocity = \
-                self.check_angular_limit_velocity(self.angular_velocity + self.ang_vel_step_size)
+                self.check_angular_limit_velocity(self.angular_velocity + self.ang_vel_step)
+            self.print_vels()
+        elif key == 'A':
+            self.angular_velocity = \
+                self.check_angular_limit_velocity(self.angular_velocity + self.ang_vel_step_large)
             self.print_vels()
         elif key == 'd':
             self.angular_velocity = \
-                self.check_angular_limit_velocity(self.angular_velocity - self.ang_vel_step_size)
+                self.check_angular_limit_velocity(self.angular_velocity - self.ang_vel_step)
             self.print_vels()
-        elif key == 's':
+        elif key == 'D':
+            self.angular_velocity = \
+                self.check_angular_limit_velocity(self.angular_velocity - self.ang_vel_step_large)
+            self.print_vels()
+        elif key == 's' or key == 'S':
             self.angular_velocity = 0.0
             self.print_vels()
         elif key == ' ':
