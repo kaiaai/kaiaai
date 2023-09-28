@@ -42,9 +42,9 @@ class TeleopKeyboardNode(Node):
             parameters=[
                 ('max_lin_vel', 0.22),
                 ('max_ang_vel', 12.84),
-                ('lin_vel_step', 0.01),
+                ('lin_vel_step', 0.05),
                 ('ang_vel_step', 0.1),
-                ('lin_vel_step_large', 0.05),
+                ('lin_vel_step_large', 0.25),
                 ('ang_vel_step_large', 0.5),
             ])
         self.max_lin_vel = self.get_parameter('max_lin_vel').value
