@@ -13,8 +13,9 @@ Kaia.ai robotics software platform consists of these parts:
 Here is a [list of robots](https://github.com/topics/kaiaai-robot) compatible with Kaia.ai software platform.
 
 In particular, these two models are supported:
-- Maker's Pet [Snoopy](https://github.com/makerspet/makerspet_snoopy) 3D-printable pet robot
-- Maker's Pet [Loki](https://github.com/makerspet/makerspet_loki) 3D-printable pet robot
+- Maker's Pet [Loki](https://github.com/makerspet/makerspet_loki) 200mm 3D-printable pet robot
+- Maker's Pet [Fido](https://github.com/makerspet/makerspet_fido) 250mm 3D-printable pet robot
+- Maker's Pet [Snoopy](https://github.com/makerspet/makerspet_snoopy) 300mm 3D-printable pet robot
 
 ## Setup
 - Set up your development PC following these
@@ -26,75 +27,65 @@ the Kaia.ai development Docker image.
 
 
 ## Command cheat sheets
-<details>
-<summary>Operate the default Maker's Pet Snoopy pet robot</summary>
+
+Example: operate [makerspet_loki](https://github.com/makerspet/makerspet_loki) robot using commands below.
+
+Operate other compatible robot models by making these changes:
+- operate Maker's Pet [Fido](https://github.com/makerspet/makerspet_fido) robot by replacing `makerspet_loki`
+with `makerspet_fido`
+- operate Maker's Pet [Snoopy](https://github.com/makerspet/makerspet_fido) robot by replacing `makerspet_loki`
+with `makerspet_snoopy` or simply omitting `description:=...`
+
+## Operate a physical robot
 
 ```
-# Launch the physical robot
-ros2 launch kaiaai_bringup main.launch.py
+# Launch the physical robot and drive it manually
+ros2 launch kaiaai_bringup main.launch.py description:=makerspet_loki
+ros2 run kaiaai_teleop teleop_keyboard description:=makerspet_loki
 
-# Monitor robot's sensors
-ros2 launch kaiaai_bringup rviz2.launch.py
+# Launch the physical robot and monitor its sensors
+ros2 launch kaiaai_bringup main.launch.py description:=makerspet_loki
+ros2 launch kaiaai_bringup rviz2.launch.py description:=makerspet_loki
 
+# Launch the physical robot, monitor its sensors and drive it manually to create and save a map
+ros2 launch kaiaai_bringup main.launch.py description:=makerspet_loki
+ros2 launch kaiaai_bringup rviz2.launch.py description:=makerspet_loki
+ros2 run kaiaai_teleop teleop_keyboard description:=makerspet_loki
+ros2 launch kaiaai_bringup cartographer.launch.py use_sim_time:=true description:=makerspet_loki
+ros2 run nav2_map_server map_saver_cli -f $HOME/my_map
+```
+
+### Operate a simulated robot
+
+```
 # Launch the robot in a simulation - drive manually or let it self-drive
-ros2 launch kaiaai_gazebo world.launch.py
-ros2 run kaiaai_teleop teleop_keyboard
-ros2 launch kaiaai_gazebo self_drive_gazebo.launch.py
-ros2 launch kaiaai_bringup rviz2.launch.py
+ros2 launch kaiaai_gazebo world.launch.py description:=makerspet_loki
+ros2 run kaiaai_teleop teleop_keyboard description:=makerspet_loki
+ros2 launch kaiaai_gazebo self_drive_gazebo.launch.py description:=makerspet_loki
+ros2 launch kaiaai_bringup rviz2.launch.py description:=makerspet_loki
 
 # Launch the robot in a simulation - create, save a map
-ros2 launch kaiaai_gazebo world.launch.py
-ros2 launch kaiaai_bringup cartographer.launch.py use_sim_time:=true
-ros2 launch kaiaai_gazebo self_drive_gazebo.launch.py
+ros2 launch kaiaai_gazebo world.launch.py description:=makerspet_loki
+ros2 launch kaiaai_bringup cartographer.launch.py use_sim_time:=true description:=makerspet_loki
+ros2 launch kaiaai_gazebo self_drive_gazebo.launch.py description:=makerspet_loki
 ros2 run nav2_map_server map_saver_cli -f $HOME/my_map
 
 # Launch the robot in a simulation - let it navigate automatically using an existing map
-ros2 launch kaiaai_gazebo world.launch.py
-ros2 launch kaiaai_bringup navigation.launch.py use_sim_time:=true map:=$HOME/my_map.yaml
-
-# Inspect or edit robot's URDF model - useful when modding a robot
-ros2 launch kaiaai_bringup inspect_urdf.launch.py
-ros2 launch kaiaai_bringup edit_urdf.launch.py
+ros2 launch kaiaai_gazebo world.launch.py description:=makerspet_loki
+ros2 launch kaiaai_bringup navigation.launch.py use_sim_time:=true map:=$HOME/my_map.yaml description:=makerspet_loki
 ```
 
-</details>
-
-<details>
-<summary>Operate a modded pet robot residing `awesome_droid` repo:</summary>
+### Add your own modifications to an existing robot
 
 ```
-# Launch the physical robot
-ros2 launch kaiaai_bringup main.launch.py description:=awesome_droid
-
-# Monitor robot's sensors
-ros2 launch kaiaai_bringup rviz2.launch.py description:=awesome_droid
-
-# Launch the robot in a simulation - drive manually or let it self-drive
-ros2 launch kaiaai_gazebo world.launch.py description:=awesome_droid
-ros2 run kaiaai_teleop teleop_keyboard description:=awesome_droid
-ros2 launch kaiaai_gazebo self_drive_gazebo.launch.py description:=awesome_droid
-ros2 launch kaiaai_bringup rviz2.launch.py description:=awesome_droid
-
-# Launch the robot in a simulation - create, save a map
-ros2 launch kaiaai_gazebo world.launch.py description:=awesome_droid
-ros2 launch kaiaai_bringup cartographer.launch.py use_sim_time:=true description:=awesome_droid
-ros2 launch kaiaai_gazebo self_drive_gazebo.launch.py description:=awesome_droid
-ros2 run nav2_map_server map_saver_cli -f $HOME/my_map
-
-# Launch the robot in a simulation - let it navigate automatically using an existing map
-ros2 launch kaiaai_gazebo world.launch.py description:=awesome_droid
-ros2 launch kaiaai_bringup navigation.launch.py use_sim_time:=true map:=$HOME/my_map.yaml description:=awesome_droid
-
 # Inspect or edit robot's URDF model - useful when modding a robot
-ros2 launch kaiaai_bringup inspect_urdf.launch.py description:=awesome_droid model:=my_model
-ros2 launch kaiaai_bringup edit_urdf.launch.py description:=awesome_droid model:=my_model
+ros2 launch kaiaai_bringup inspect_urdf.launch.py description:=makerspet_loki model:=my_model
+ros2 launch kaiaai_bringup edit_urdf.launch.py description:=makerspet_loki model:=my_model
 
 # Convert URDF robot model file into SDF Gazebo simulation model file
-ros2 run kaiaai_gazebo urdf2sdf.sh /ros_ws/src/awesome_droid/urdf/ r2d2
-cd /ros_ws && colcon build --symlink-install --packages-select awesome_droid
+ros2 run kaiaai_gazebo urdf2sdf.sh /ros_ws/src/makerspet_loki/urdf/ my_own_robot
+cd /ros_ws && colcon build --symlink-install --packages-select makerspet_loki
 ```
-
-</details>
 
 ## Acknowledgements
 Initial versions of packages in this repo are based on ROBOTIS
