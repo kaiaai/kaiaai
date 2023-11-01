@@ -88,11 +88,17 @@ ros2 launch kaia_bringup edit_urdf.launch.py robot_model:=makerspet_snoopy
 
 ### Mod your robot model - URDF
 - Clone an existing robot model, e.g. [makerspet_loki](https://github.com/makerspet/makerspet_loki)
-- Let's assume your new robot model's name is `jack45_waldo`, where `jack45` is your GitHub user name
+  - Let's assume your new robot model's name is `jack45_waldo`, where `jack45` is your GitHub user name
 and `waldo` is your robot's name
-- Edit `package.xml` and `CMakeLists.txt` in `jack45_waldo` to replace `makerspet_loki` with `jack45_waldo`
-- Rename `makerspet_loki.urdf.xacro` in `jack45_waldo/urdf` to `jack45_waldo.urdf.xacro`
-- Inspect other text files in `jack45_waldo/urdf` using a text editor and replace all occurences of `makerspet_loki` with `jack45_waldo`
+
+```
+cp -r /ros_ws/src/makerspet_loki /ros_ws/src/jack45_waldo
+```
+
+- Edit `package.xml` and `CMakeLists.txt` in `/ros_ws/src/jack45_waldo` to replace `makerspet_loki` with `jack45_waldo`
+- Rename `makerspet_loki.urdf.xacro` in `/ros_ws/src/jack45_waldo/urdf` to `jack45_waldo.urdf.xacro`
+- Inspect other text files in `/ros_ws/src/jack45_waldo/urdf` using a text editor and
+replace all occurences of `makerspet_loki` with `jack45_waldo`
 - Edit your `jack45_waldo.urdf.xacro` robot model to your liking
 - Edit other robot configuration files to your liking, including those in `config`, `sdf` and other folders
 - run commands below to inspect your `jack45_waldo.urdf.xacro` model visually
