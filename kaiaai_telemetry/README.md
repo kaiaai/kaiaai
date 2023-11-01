@@ -66,10 +66,10 @@ by cloning an existing robot description package `makerspet_snoopy` into `jack45
 and proceed with modding `jack45_waldo` files. The file containing telemetry parameters
 for `jack45_waldo` is `/ros_ws/src/jack45_waldo/config/telem.yaml`
 ```
-cd /ros_ws/src
-cp -r makerspet_loki jack45_waldo
-# mod jack45_waldo files as needed, including jack45_waldo/config/telem.yaml
+cp -r /ros_ws/src/makerspet_loki /ros_ws/src/jack45_waldo
 ```
+Modify files in `/ros_ws/src/jack45_waldo/` as needed, including `/ros_ws/src/jack45_waldo/config/telem.yaml`
+
 Now you can run telemetry on `jack45_waldo` with `jack45_waldo`-specific telemetry parameters as follows:
 ```
 ros2 run kaiaai_telemetry telem robot_model:=jack45_waldo
