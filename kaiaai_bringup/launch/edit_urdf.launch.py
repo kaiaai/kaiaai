@@ -24,20 +24,15 @@ from launch.substitutions import Command, LaunchConfiguration
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
 
-def make_nodes(context: LaunchContext, description, model, gui):
+def make_nodes(context: LaunchContext, description, gui):
     description_str = context.perform_substitution(description)
-    model_str = context.perform_substitution(model)
     gui_str = context.perform_substitution(gui)
     description_package_path = get_package_share_path(description_str)
-
-    if model_str == '':
-       model_str = description_str + '.urdf.xacro'
-       # model_str = re.sub(r'_description$', '', description_str) + '.urdf.xacro'
 
     urdf_path_name = os.path.join(
       description_package_path,
       'urdf',
-      model_str)
+      description_str + '.urdf.xacro')
 
     rviz_config_path = os.path.join(
         description_package_path,
@@ -78,11 +73,6 @@ def generate_launch_description():
             description='Robot description package name, overrides KAIAAI_ROBOT'
         ),
         DeclareLaunchArgument(
-            name='model',
-            default_value='',
-            description='URDF model file name'
-        ),
-        DeclareLaunchArgument(
             name='gui',
             default_value='false',
             choices=['true', 'false'],
@@ -90,7 +80,6 @@ def generate_launch_description():
         ),
         OpaqueFunction(function=make_nodes, args=[
             LaunchConfiguration('description'),
-            LaunchConfiguration('model'),
             LaunchConfiguration('gui'),
         ])
     ])

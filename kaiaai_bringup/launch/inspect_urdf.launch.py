@@ -18,24 +18,19 @@ import os, re
 from ament_index_python.packages import get_package_share_path
 from launch import LaunchDescription, LaunchContext
 from launch.actions import DeclareLaunchArgument, OpaqueFunction
-#from launch.conditions import IfCondition, UnlessCondition
 from launch.conditions import LaunchConfigurationEquals
 from launch.substitutions import Command, LaunchConfiguration
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
 
-def make_nodes(context: LaunchContext, description, model):
+def make_nodes(context: LaunchContext, description):
     description_str = context.perform_substitution(description)
-    model_str = context.perform_substitution(model)
     description_package_path = get_package_share_path(description_str)
 
-    if model_str == '':
-       model_str = description_str + '.urdf.xacro'
-       # model_str = re.sub(r'_description$', '', description_str) + '.urdf.xacro'
     urdf_path_name = os.path.join(
       description_package_path,
       'urdf',
-      model_str)
+      description_str + '.urdf.xacro')
 
     robot_description = ParameterValue(Command(['xacro ', urdf_path_name]), value_type=str)
 
@@ -78,14 +73,8 @@ def generate_launch_description():
             default_value=default_description_name,
             description='Robot description package name, overrides KAIAAI_ROBOT'
         ),
-        DeclareLaunchArgument(
-            name='model',
-            default_value='',
-            description='URDF model file name'
-        ),
         OpaqueFunction(function=make_nodes, args=[
             LaunchConfiguration('description'),
-            LaunchConfiguration('model'),
         ]),
         Node(
             package='joint_state_publisher',
