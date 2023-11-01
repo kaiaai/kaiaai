@@ -29,7 +29,7 @@ def make_rviz2_node(context: LaunchContext, robot_model, use_sim_time):
     rviz_config_path = os.path.join(
         get_package_share_path(robot_model_str),
         'rviz',
-        robot_model_str + '.rviz')
+        'monitor_sensors.rviz')
     print("Rviz2 config : {}".format(rviz_config_path))
 
     return [
