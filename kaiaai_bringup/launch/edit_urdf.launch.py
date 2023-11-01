@@ -24,15 +24,15 @@ from launch.substitutions import Command, LaunchConfiguration
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
 
-def make_nodes(context: LaunchContext, description, gui):
-    description_str = context.perform_substitution(description)
+def make_nodes(context: LaunchContext, robot_model, gui):
+    robot_model_str = context.perform_substitution(robot_model)
     gui_str = context.perform_substitution(gui)
-    description_package_path = get_package_share_path(description_str)
+    description_package_path = get_package_share_path(robot_model_str)
 
     urdf_path_name = os.path.join(
       description_package_path,
       'urdf',
-      description_str + '.urdf.xacro')
+      robot_model_str + '.urdf.xacro')
 
     rviz_config_path = os.path.join(
         description_package_path,
@@ -64,12 +64,12 @@ def make_nodes(context: LaunchContext, description, gui):
 
 
 def generate_launch_description():
-    default_description_name = os.getenv('KAIAAI_ROBOT', default='makerspet_snoopy')
+    default_robot_model_name = os.getenv('KAIAAI_ROBOT', default='makerspet_snoopy')
 
     return LaunchDescription([
         DeclareLaunchArgument(
-            name='description',
-            default_value=default_description_name,
+            name='robot_model',
+            default_value=default_robot_model_name,
             description='Robot description package name, overrides KAIAAI_ROBOT'
         ),
         DeclareLaunchArgument(
@@ -79,7 +79,7 @@ def generate_launch_description():
             description='Enable joint state publisher GUI'
         ),
         OpaqueFunction(function=make_nodes, args=[
-            LaunchConfiguration('description'),
+            LaunchConfiguration('robot_model'),
             LaunchConfiguration('gui'),
         ])
     ])

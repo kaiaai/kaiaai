@@ -23,14 +23,14 @@ from launch.substitutions import Command, LaunchConfiguration
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
 
-def make_nodes(context: LaunchContext, description):
-    description_str = context.perform_substitution(description)
-    description_package_path = get_package_share_path(description_str)
+def make_nodes(context: LaunchContext, robot_model):
+    robot_model_str = context.perform_substitution(robot_model)
+    description_package_path = get_package_share_path(robot_model_str)
 
     urdf_path_name = os.path.join(
       description_package_path,
       'urdf',
-      description_str + '.urdf.xacro')
+      robot_model_str + '.urdf.xacro')
 
     robot_description = ParameterValue(Command(['xacro ', urdf_path_name]), value_type=str)
 
@@ -59,7 +59,7 @@ def make_nodes(context: LaunchContext, description):
 
 
 def generate_launch_description():
-    default_description_name = os.getenv('KAIAAI_ROBOT', default='makerspet_snoopy')
+    default_robot_model_name = os.getenv('KAIAAI_ROBOT', default='makerspet_snoopy')
 
     return LaunchDescription([
         DeclareLaunchArgument(
@@ -69,12 +69,12 @@ def generate_launch_description():
             description='Control joints using GUI, no GUI or don''t launch joint_state_publisher at all'
         ),
         DeclareLaunchArgument(
-            name='description',
-            default_value=default_description_name,
+            name='robot_model',
+            default_value=default_robot_model_name,
             description='Robot description package name, overrides KAIAAI_ROBOT'
         ),
         OpaqueFunction(function=make_nodes, args=[
-            LaunchConfiguration('description'),
+            LaunchConfiguration('robot_model'),
         ]),
         Node(
             package='joint_state_publisher',

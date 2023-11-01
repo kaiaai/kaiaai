@@ -23,21 +23,14 @@ from launch.substitutions import Command, LaunchConfiguration
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
 
-def make_node(context: LaunchContext, description, model):
-    description_str = context.perform_substitution(description)
-    model_str = context.perform_substitution(model)
+def make_node(context: LaunchContext, robot_model):
+    robot_model_str = context.perform_substitution(robot_model)
 
-    if description_str == 'false':
-        urdf_path_name = model_str
-    else:
-        description_package_path = get_package_share_path(description_str)
-        if model_str == '':
-            model_str = description_str + '.urdf.xacro'
-            # model_str = re.sub(r'_description$', '', description_str) + '.urdf.xacro'
-        urdf_path_name = os.path.join(
-          description_package_path,
-          'urdf',
-          model_str)
+    description_package_path = get_package_share_path(robot_model_str)
+    urdf_path_name = os.path.join(
+        description_package_path,
+        'urdf',
+        robot_model_str + '.urdf.xacro')
 
     robot_description = ParameterValue(Command(['xacro ', urdf_path_name]), value_type=str)
 
@@ -53,7 +46,7 @@ def make_node(context: LaunchContext, description, model):
 
 
 def generate_launch_description():
-    default_description_name = os.getenv('KAIAAI_ROBOT', default='makerspet_snoopy')
+    default_robot_model_name = os.getenv('KAIAAI_ROBOT', default='makerspet_snoopy')
 
     return LaunchDescription([
         DeclareLaunchArgument(
@@ -64,23 +57,12 @@ def generate_launch_description():
             description='Enable joint state publisher GUI'
         ),
         DeclareLaunchArgument(
-            name='description',
-            default_value=default_description_name,
+            name='robot_model',
+            default_value=default_robot_model_name,
             description='Robot description package name, overrides KAIAAI_ROBOT'
         ),
-        DeclareLaunchArgument(
-            name='model',
-            default_value='',
-            description='URDF model file name'
-        ),
-        DeclareLaunchArgument(
-            name='model',
-            default_value='',
-            description='URDF model file name'
-        ),
         OpaqueFunction(function=make_node, args=[
-            LaunchConfiguration('description'),
-            LaunchConfiguration('model'),
+            LaunchConfiguration('robot_model'),
         ]),
         Node(
             package='joint_state_publisher',

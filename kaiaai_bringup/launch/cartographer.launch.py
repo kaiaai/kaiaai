@@ -26,17 +26,17 @@ from launch_ros.parameter_descriptions import ParameterValue
 from launch_ros.actions import Node
 
 
-def make_nodes(context: LaunchContext, description, use_sim_time, configuration_basename):
-    description_str = context.perform_substitution(description)
+def make_nodes(context: LaunchContext, robot_model, use_sim_time, configuration_basename):
+    robot_model_str = context.perform_substitution(robot_model)
     use_sim_time_str = context.perform_substitution(use_sim_time)
     configuration_basename_str = context.perform_substitution(configuration_basename)
-    description_package_path = get_package_share_path(description_str)
+    description_package_path = get_package_share_path(robot_model_str)
 
     #model_name = re.sub(r'_description$', '', description_str)
     urdf_path_name = os.path.join(
       description_package_path,
       'urdf',
-      description_str + '.urdf.xacro')
+      robot_model_str + '.urdf.xacro')
 
     robot_description = ParameterValue(Command(['xacro ', urdf_path_name]), value_type=str)
 
@@ -75,12 +75,12 @@ def make_nodes(context: LaunchContext, description, use_sim_time, configuration_
 
 
 def generate_launch_description():
-    default_description_name = os.getenv('KAIAAI_ROBOT', default='makerspet_snoopy')
+    default_robot_model_name = os.getenv('KAIAAI_ROBOT', default='makerspet_snoopy')
 
     return LaunchDescription([
         DeclareLaunchArgument(
-            name='description',
-            default_value=default_description_name,
+            name='robot_model',
+            default_value=default_robot_model_name,
             description='Robot description package name, overrides KAIAAI_ROBOT'
         ),
         DeclareLaunchArgument(
@@ -113,7 +113,7 @@ def generate_launch_description():
             }.items(),
         ),
         OpaqueFunction(function=make_nodes, args=[
-            LaunchConfiguration('description'),
+            LaunchConfiguration('robot_model'),
             LaunchConfiguration('use_sim_time'),
             LaunchConfiguration('configuration_basename')
         ]),
