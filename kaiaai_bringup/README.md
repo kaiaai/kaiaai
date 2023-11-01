@@ -94,6 +94,7 @@ and `waldo` is your robot's name
 - Rename `makerspet_loki.urdf.xacro` in `jack45_waldo/urdf` to `jack45_waldo.urdf.xacro`
 - Inspect other text files in `jack45_waldo/urdf` using a text editor and replace all occurences of `makerspet_loki` with `jack45_waldo`
 - Edit your `jack45_waldo.urdf.xacro` robot model to your liking
+- Edit other robot configuration files to your liking, including those in `config`, `sdf` and other folders
 - run commands below to inspect your `jack45_waldo.urdf.xacro` model visually
 ```
 ros2 launch kaia_bringup inspect_urdf.launch.py robot_model:=jack45_waldo
