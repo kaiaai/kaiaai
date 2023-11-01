@@ -78,12 +78,12 @@ ros2 launch kaiaai_bringup navigation.launch.py use_sim_time:=true map:=$HOME/my
 ### Add your own modifications to an existing robot
 
 ```
-# Inspect or edit robot's URDF model - useful when modding a robot
-ros2 launch kaiaai_bringup inspect_urdf.launch.py description:=makerspet_loki model:=my_model
-ros2 launch kaiaai_bringup edit_urdf.launch.py description:=makerspet_loki model:=my_model
+# Inspect, edit robot's URDF model
+ros2 launch kaiaai_bringup inspect_urdf.launch.py description:=makerspet_loki
+ros2 launch kaiaai_bringup edit_urdf.launch.py description:=makerspet_loki
 
 # Convert URDF robot model file into SDF Gazebo simulation model file
-ros2 run kaiaai_gazebo urdf2sdf.sh /ros_ws/src/makerspet_loki/urdf/ my_own_robot
+ros2 run kaiaai_gazebo urdf2sdf.sh /ros_ws/src/makerspet_loki/urdf/makerspet_loki.urdf.xacro
 cd /ros_ws && colcon build --symlink-install --packages-select makerspet_loki
 ```
 
