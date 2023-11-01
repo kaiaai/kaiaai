@@ -8,7 +8,7 @@ Run the [end user](https://hub.docker.com/r/kaiaai/kaia-ros) Docker image by typ
 at your Windows or Linux prompt. The `launch` option will make the [Kaia.ai](https://kaia.ai)
 ROS2 stack will launch automatically. Make sure that you have installed Docker for Windows or Docker for Linux.
 ```
-docker run --name kaia-ros-iron -it --rm -p 8888:8888/udp kaiaai/kaia-ros:iron launch
+docker run --name kaiaai-ros-iron -it --rm -p 8888:8888/udp kaiaai/kaiaai-ros:iron launch
 ```
 
 Now you can power up your Kaia.ai robot. If this is the first time you have powered up
@@ -46,16 +46,16 @@ If you are a developer adapting the Kaia.ai platform to your own robot, use this
 launch the [development](https://hub.docker.com/r/kaiaai/kaia-ros-dev) - as opposed to the
 [end user](https://hub.docker.com/r/kaiaai/kaia-ros) - version of the Kaia.ai ROS2 stack:
 ```
-docker run --name kaia-ros-dev-iron -it --rm -p 8888:8888/udp -e DISPLAY=host.docker.internal:0.0 -e LIBGL_ALWAYS_INDIRECT=0 kaiaai/kaia-ros-dev:iron launch
+docker run --name kaiaai-ros-dev-iron -it --rm -p 8888:8888/udp -e DISPLAY=host.docker.internal:0.0 -e LIBGL_ALWAYS_INDIRECT=0 kaiaai/kaiaai-ros-dev:iron launch
 ```
 
 The command below loads the Kaia.ai development Docker image, but does not automatically launch the ROS2 stack:
 ```
-docker run --name kaia-ros-dev-iron -it --rm -p 8888:8888/udp -e DISPLAY=host.docker.internal:0.0 -e LIBGL_ALWAYS_INDIRECT=0 kaiaai/kaia-ros-dev:iron launch
+docker run --name kaiaai-ros-dev-iron -it --rm -p 8888:8888/udp -e DISPLAY=host.docker.internal:0.0 -e LIBGL_ALWAYS_INDIRECT=0 kaiaai/kaiaai-ros-dev:iron launch
 ```
 
 Launch physical robot manually
-- launch the Kaia.ai ROS2 stack using the command below. Set `description` below to the
+- launch the Kaia.ai ROS2 stack using the command below. Set `robot_model` below to the
 robot model description of your physical robot
 - turn on your robot's power
 - make sure your robot connects to same WiFi where your Kaia.ai ROS2 stack PC is connected
@@ -66,38 +66,51 @@ using a USB cable, launch Arduino IDE and open the Arduino IDE Serial Monitor by
 selecting Tools -> Serial Monitor menu items
 - once the WiFi and ROS2 PC connections have been established, your robot is ready for use
 ```
-ros2 launch kaia_bringup main.launch.py description:=kaia_snoopy_description
+ros2 launch kaia_bringup main.launch.py robot_model:=makerspet_snoopy
 ```
 
 ### Monitor your robot links, sensors
 ```
-ros2 launch kaia_bringup rviz2.launch.py description:=kaia_snoopy_description
+ros2 launch kaia_bringup rviz2.launch.py robot_model:=makerspet_snoopy
 ```
 
 ### Check in a newly-cloned robot description to Github
-Create an EMPTY public Github repo, clone an existin robot description into `waldo_description` and run
+Create an EMPTY public Github repo, clone an existin robot description into `jacks_waldo` and run
 ```
-ros2 run kaia_bringup upload_robot_description_github.sh /ros_ws/src/waldo_description your-github-user-name
+ros2 run kaia_bringup upload_robot_description_github.sh /ros_ws/src/jacks_waldo your-github-user-name
 ```
 
 ### Optional: Inspect or edit the default robot model - URDF
 ```
-ros2 launch kaia_bringup inspect_urdf.launch.py description:=kaia_snoopy_description
-ros2 launch kaia_bringup edit_urdf.launch.py description:=kaia_snoopy_description
+ros2 launch kaia_bringup inspect_urdf.launch.py robot_model:=makerspet_snoopy
+ros2 launch kaia_bringup edit_urdf.launch.py robot_model:=makerspet_snoopy
 ```
 
 ### Mod your robot model - URDF
-- Copy your `kaia_snoopy.urdf.xacro` to another file to play with, e.g., `kaia_snoopy_mod.urdf.xacro`.
-- Edit your `kaia_snoopy_mod.urdf.xacro` robot model
-- run commands below to inspect your `kaia_snoopy_mod.urdf.xacro` model visually
-```
-ros2 launch kaia_bringup inspect_urdf.launch.py description:=r2d2_description model:=kaia_snoopy_mod
-ros2 launch kaia_bringup edit_urdf.launch.py description:=r2d2_description model:=kaia_snoopy_mod
-```
-You can also inspect and edit 
+- Clone an existing robot model, e.g. [makerspet_loki](https://github.com/makerspet/makerspet_loki)
+  - Let's assume your new robot model's name is `jack45_waldo`, where `jack45` is your GitHub user name
+and `waldo` is your robot's name
 
-You can edit `*.urdf.xacro` files using any text editor, e.g. `nano`. Saving the edited file in the
-text editor will automatically update your model's in Rviz2 viewer. If your URDF file contains
-a syntax mistake, your model may stop showing in the Rviz2 vieweer. In this case, kill (CTRL-C)
-your `edit_urdf.launch.py`, launch `inspect_urdf.launch.py` to inspect the error message,
-correct the mistake, save the corrected URDF file and re-run `edit_urdf.launch.py` again.
+```
+cp -r /ros_ws/src/makerspet_loki /ros_ws/src/jack45_waldo
+```
+
+- Edit `package.xml` and `CMakeLists.txt` in `/ros_ws/src/jack45_waldo` to replace `makerspet_loki` with `jack45_waldo`
+- Rename `makerspet_loki.urdf.xacro` in `/ros_ws/src/jack45_waldo/urdf` to `jack45_waldo.urdf.xacro`
+- Inspect other text files in `/ros_ws/src/jack45_waldo/urdf` using a text editor and
+replace all occurences of `makerspet_loki` with `jack45_waldo`
+- Edit your `jack45_waldo.urdf.xacro` robot model to your liking
+- Edit other robot configuration files to your liking, including those in `config`, `sdf` and other folders
+- run commands below to inspect your `jack45_waldo.urdf.xacro` model visually
+```
+ros2 launch kaia_bringup inspect_urdf.launch.py robot_model:=jack45_waldo
+ros2 launch kaia_bringup edit_urdf.launch.py robot_model:=jack45_waldo
+```
+
+Note:
+- Saving the edited `jack45_waldo.urdf.xacro` file in the text editor will automatically
+update your model's in Rviz2 viewer.
+- If your URDF file contains a syntax mistake, your model may stop showing in the Rviz2
+viewer. In this case, kill (CTRL-C) your `edit_urdf.launch.py` and launch `inspect_urdf.launch.py`
+to inspect the error message. Correct the mistake, save the corrected URDF file and
+re-run `edit_urdf.launch.py` again.
