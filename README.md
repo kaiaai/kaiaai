@@ -13,9 +13,9 @@ Kaia.ai robotics software platform consists of these parts:
 Here is a [list of robots](https://github.com/topics/kaiaai-robot) compatible with Kaia.ai software platform.
 
 In particular, these two models are supported:
-- Maker's Pet [Snoopy](https://github.com/makerspet/makerspet_snoopy) 300mm 3D-printable pet robot
-- Maker's Pet [Fido](https://github.com/makerspet/makerspet_fido) 250mm 3D-printable pet robot
 - Maker's Pet [Loki](https://github.com/makerspet/makerspet_loki) 200mm 3D-printable pet robot
+- Maker's Pet [Fido](https://github.com/makerspet/makerspet_fido) 250mm 3D-printable pet robot
+- Maker's Pet [Snoopy](https://github.com/makerspet/makerspet_snoopy) 300mm 3D-printable pet robot
 
 ## Setup
 - Set up your development PC following these
