@@ -40,11 +40,12 @@ def make_node(context: LaunchContext, urdf_path):
 
 
 def generate_launch_description():
-    default_robot_model = os.getenv('KAIAAI_ROBOT', default='makerspet_snoopy')
+
     default_urdf_path = os.path.join(
-        get_package_share_path(default_robot_model),
+        get_package_share_path('makerspet_snoopy'),
         'urdf',
-        default_robot_model + '.urdf.xacro')
+#        default_robot_model + '.urdf.xacro')
+        'robot.urdf.xacro')
 
     return LaunchDescription([
         DeclareLaunchArgument(

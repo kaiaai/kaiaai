@@ -30,7 +30,8 @@ def make_nodes(context: LaunchContext, robot_model):
     urdf_path_name = os.path.join(
       description_package_path,
       'urdf',
-      robot_model_str + '.urdf.xacro')
+#      robot_model_str + '.urdf.xacro')
+      'robot.urdf.xacro')
 
     robot_description = ParameterValue(Command(['xacro ', urdf_path_name]), value_type=str)
 
@@ -59,7 +60,6 @@ def make_nodes(context: LaunchContext, robot_model):
 
 
 def generate_launch_description():
-    default_robot_model_name = os.getenv('KAIAAI_ROBOT', default='makerspet_snoopy')
 
     return LaunchDescription([
         DeclareLaunchArgument(
@@ -70,8 +70,8 @@ def generate_launch_description():
         ),
         DeclareLaunchArgument(
             name='robot_model',
-            default_value=default_robot_model_name,
-            description='Robot description package name, overrides KAIAAI_ROBOT'
+            default_value='makerspet_snoopy',
+            description='Robot description package name'
         ),
         OpaqueFunction(function=make_nodes, args=[
             LaunchConfiguration('robot_model'),

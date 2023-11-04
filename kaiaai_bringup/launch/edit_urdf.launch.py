@@ -32,7 +32,8 @@ def make_nodes(context: LaunchContext, robot_model, gui):
     urdf_path_name = os.path.join(
       description_package_path,
       'urdf',
-      robot_model_str + '.urdf.xacro')
+#      robot_model_str + '.urdf.xacro')
+      'robot.urdf.xacro')
 
     rviz_config_path = os.path.join(
         description_package_path,
@@ -64,13 +65,12 @@ def make_nodes(context: LaunchContext, robot_model, gui):
 
 
 def generate_launch_description():
-    default_robot_model_name = os.getenv('KAIAAI_ROBOT', default='makerspet_snoopy')
 
     return LaunchDescription([
         DeclareLaunchArgument(
             name='robot_model',
-            default_value=default_robot_model_name,
-            description='Robot description package name, overrides KAIAAI_ROBOT'
+            default_value='makerspet_snoopy',
+            description='Robot description package name'
         ),
         DeclareLaunchArgument(
             name='gui',
