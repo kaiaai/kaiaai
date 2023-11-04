@@ -83,7 +83,7 @@ ros2 launch kaiaai_bringup inspect_urdf.launch.py robot_model:=makerspet_loki
 ros2 launch kaiaai_bringup edit_urdf.launch.py robot_model:=makerspet_loki
 
 # Convert URDF robot model file into SDF Gazebo simulation model file
-ros2 run kaiaai_gazebo urdf2sdf.sh /ros_ws/src/makerspet_loki/urdf/makerspet_loki.urdf.xacro
+ros2 run kaiaai_gazebo urdf2sdf.sh /ros_ws/src/makerspet_loki
 cd /ros_ws && colcon build --symlink-install --packages-select makerspet_loki
 ```
 
