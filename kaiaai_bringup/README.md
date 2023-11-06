@@ -66,7 +66,7 @@ using a USB cable, launch Arduino IDE and open the Arduino IDE Serial Monitor by
 selecting Tools -> Serial Monitor menu items
 - once the WiFi and ROS2 PC connections have been established, your robot is ready for use
 ```
-ros2 launch kaia_bringup main.launch.py robot_model:=makerspet_snoopy
+ros2 launch kaia_bringup physical.launch.py robot_model:=makerspet_snoopy
 ```
 
 ### Monitor your robot links, sensors
