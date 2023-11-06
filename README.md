@@ -40,15 +40,15 @@ with `makerspet_snoopy` or simply omitting `robot_model:=...`
 
 ```
 # Launch the physical robot and drive it manually
-ros2 launch kaiaai_bringup main.launch.py robot_model:=makerspet_loki
+ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki
 ros2 run kaiaai_teleop teleop_keyboard robot_model:=makerspet_loki
 
 # Launch the physical robot and monitor its sensors
-ros2 launch kaiaai_bringup main.launch.py robot_model:=makerspet_loki
+ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki
 ros2 launch kaiaai_bringup monitor_robot.launch.py robot_model:=makerspet_loki
 
 # Launch the physical robot, monitor its sensors and drive it manually to create and save a map
-ros2 launch kaiaai_bringup main.launch.py robot_model:=makerspet_loki
+ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki
 ros2 launch kaiaai_bringup monitor_robot.launch.py robot_model:=makerspet_loki
 ros2 run kaiaai_teleop teleop_keyboard robot_model:=makerspet_loki
 ros2 launch kaiaai_bringup cartographer.launch.py use_sim_time:=true robot_model:=makerspet_loki
