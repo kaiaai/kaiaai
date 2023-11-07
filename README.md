@@ -38,6 +38,8 @@ with `makerspet_snoopy` or simply omitting `robot_model:=...`
 
 ### Launch Docker image to operate your robot
 
+The Docker image contains ROS2 and micro-ROS pre-configured with additional Kaia.ai ROS2 packages.
+
 Open a Windows command shell or Windows PowerShell window and type the command below. This should give you a bash prompt.
 ```
 docker run --name makerspet -it --rm -p 8888:8888/udp -e DISPLAY=host.docker.internal:0.0 -e LIBGL_ALWAYS_INDIRECT=0 kaiaai/kaiaai-ros-dev:iron
