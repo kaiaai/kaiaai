@@ -36,7 +36,19 @@ with `makerspet_fido`
 - operate Maker's Pet [Snoopy](https://github.com/makerspet/makerspet_fido) robot by replacing `makerspet_loki`
 with `makerspet_snoopy` or simply omitting `robot_model:=...`
 
-## Operate a physical robot
+### Launch Docker image to operate your robot
+
+Open a Windows command shell or Windows PowerShell window and type the command below. This should give you a bash prompt.
+```
+docker run --name makerspet -it --rm -p 8888:8888/udp -e DISPLAY=host.docker.internal:0.0 -e LIBGL_ALWAYS_INDIRECT=0 kaiaai/kaiaai-ros-dev:iron
+```
+
+To get an aditional bash prompt, open another Windows command shell or Windows PowerShell window and type:
+```
+docker exec -it makerspet bash
+```
+
+### Operate a physical robot
 
 ```
 # Launch the physical robot and drive it manually
