@@ -67,16 +67,18 @@ def make_nodes(context: LaunchContext, robot_model, map, use_sim_time):
 
 def generate_launch_description():
 
+    default_robot_model = 'makerspet_snoopy'
+
     return LaunchDescription([
         DeclareLaunchArgument(
             name='robot_model',
-            default_value='makerspet_snoopy',
+            default_value=default_robot_model,
             description='Robot description package name'
         ),
         DeclareLaunchArgument(
             'map',
             default_value=os.path.join(
-                get_package_share_path(default_robot_model_name),
+                get_package_share_path(default_robot_model),
                 'map',
                 'kaiaai_world.yaml'),
             description='Full path to map file to load'
