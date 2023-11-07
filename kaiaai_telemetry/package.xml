@@ -4,12 +4,12 @@
   <name>kaiaai_telemetry</name>
   <version>0.0.0</version>
   <description>Micro-ROS telemetry for Kaia.ai software platform compatible robots</description>
-  <maintainer email="ilia.o@remake.ai">Ilia O.</maintainer>
+  <maintainer email="ilia.o@kaia.ai">Ilia O.</maintainer>
   <license>Apache-2.0</license>
   <url type="website">https://kaia.ai</url>
   <url type="repository">https://github.com/kaiaai/kaiaai</url>
   <url type="bugtracker">https://github.com/kaiaai/kaiaai/issues</url>
-  <author email="iliao@remake.ai">Ilia O.</author>
+  <author email="iliao@kaia.ai">Ilia O.</author>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
   <depend>rclcpp</depend>
