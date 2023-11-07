@@ -4,7 +4,7 @@
   <name>kaiaai_telemetry</name>
   <version>0.0.0</version>
   <description>Micro-ROS telemetry for Kaia.ai software platform compatible robots</description>
-  <maintainer email="ilia.o@kaia.ai">Ilia O.</maintainer>
+  <maintainer email="iliao@kaia.ai">Ilia O.</maintainer>
   <license>Apache-2.0</license>
   <url type="website">https://kaia.ai</url>
   <url type="repository">https://github.com/kaiaai/kaiaai</url>
