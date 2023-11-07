@@ -193,10 +193,10 @@ def main(args=None):
     if (len(sys.argv) == 4 and sys.argv[1] == '--ros-args'):
         yaml_path_name = sys.argv[3]
     else:
-        if (len(sys.argv) == 2 and sys.argv[1].startswith('description:=')):
+        if (len(sys.argv) == 2 and sys.argv[1].startswith('robot_model:=')):
             description = sys.argv[1][13:]
         else:
-            description = os.getenv('KAIAAI_ROBOT', 'kaiaai_snoopy')
+            description = 'makerspet_snoopy'
 
         yaml_path_name = os.path.join(
             get_package_share_path(description),
