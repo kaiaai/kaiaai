@@ -57,16 +57,18 @@ docker exec -it makerspet bash
 ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki
 ros2 run kaiaai_teleop teleop_keyboard robot_model:=makerspet_loki
 
-# Launch the physical robot and monitor its sensors
-ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki
+# Monitor robot sensors
 ros2 launch kaiaai_bringup monitor_robot.launch.py robot_model:=makerspet_loki
 
-# Launch the physical robot, monitor its sensors and drive it manually to create and save a map
-ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki
-ros2 launch kaiaai_bringup monitor_robot.launch.py robot_model:=makerspet_loki
+# Drive robot manually to create and save a map
 ros2 run kaiaai_teleop teleop_keyboard robot_model:=makerspet_loki
-ros2 launch kaiaai_bringup cartographer.launch.py use_sim_time:=true robot_model:=makerspet_loki
+
+# Create and save a map
+ros2 launch kaiaai_bringup cartographer.launch.py robot_model:=makerspet_loki
 ros2 run nav2_map_server map_saver_cli -f $HOME/my_map
+
+# Robot self-drives using an existing map
+ros2 launch kaiaai_bringup navigation.launch.py robot_model:=makerspet_loki map:=$HOME/my_map
 ```
 
 ### Operate a simulated robot
