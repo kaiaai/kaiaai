@@ -64,7 +64,7 @@ ros2 run kaiaai_teleop teleop_keyboard robot_model:=makerspet_loki
 
 # Create and save a map
 ros2 launch kaiaai_bringup cartographer.launch.py robot_model:=makerspet_loki
-ros2 run nav2_map_server map_saver_cli -f $HOME/my_map
+ros2 run nav2_map_server map_saver_cli -f ~/map --ros-args -p save_map_timeout:=60.0
 
 # Robot self-drives using an existing map
 ros2 launch kaiaai_bringup navigation.launch.py robot_model:=makerspet_loki map:=$HOME/my_map
@@ -101,7 +101,7 @@ ros2 launch kaiaai_bringup monitor_robot.launch.py robot_model:=makerspet_loki
 ros2 launch kaiaai_gazebo world.launch.py robot_model:=makerspet_loki
 ros2 launch kaiaai_bringup cartographer.launch.py use_sim_time:=true robot_model:=makerspet_loki
 ros2 launch kaiaai_gazebo self_drive_gazebo.launch.py robot_model:=makerspet_loki
-ros2 run nav2_map_server map_saver_cli -f $HOME/living_room_map
+ros2 run nav2_map_server map_saver_cli -f ~/living_room_map --ros-args -p save_map_timeout:=60.0
 
 # Launch the robot in a simulation - let it navigate automatically using an existing map
 ros2 launch kaiaai_gazebo world.launch.py robot_model:=makerspet_loki
