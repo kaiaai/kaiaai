@@ -1,4 +1,4 @@
-# [Kaia.ai](https://kaia.ai) ROS2 home robots
+# Kaia.ai ROS2 home robots
 
 [Kaia.ai](https://kaia.ai) is a platform for DIY home robots. Please sign up for an early launch invite [here](https://remake.ai).
 
@@ -51,22 +51,41 @@ docker exec -it makerspet bash
 ```
 
 ### Operate a physical robot
-
 ```
 # Launch the physical robot and drive it manually
 ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki
 ros2 run kaiaai_teleop teleop_keyboard robot_model:=makerspet_loki
 
-# Launch the physical robot and monitor its sensors
-ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki
+# Monitor robot sensors
 ros2 launch kaiaai_bringup monitor_robot.launch.py robot_model:=makerspet_loki
 
-# Launch the physical robot, monitor its sensors and drive it manually to create and save a map
-ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki
-ros2 launch kaiaai_bringup monitor_robot.launch.py robot_model:=makerspet_loki
+# Drive robot manually to create and save a map
 ros2 run kaiaai_teleop teleop_keyboard robot_model:=makerspet_loki
-ros2 launch kaiaai_bringup cartographer.launch.py use_sim_time:=true robot_model:=makerspet_loki
+
+# Create and save a map
+ros2 launch kaiaai_bringup cartographer.launch.py robot_model:=makerspet_loki
 ros2 run nav2_map_server map_saver_cli -f $HOME/my_map
+
+# Robot self-drives using an existing map
+ros2 launch kaiaai_bringup navigation.launch.py robot_model:=makerspet_loki map:=$HOME/my_map
+```
+
+### View, set physical robot's parameters
+```
+# View parameters
+ros2 node list
+ros2 node info /MAKERSPET_LOKI
+ros2 param list /MAKERSPET_LOKI
+ros2 param dump /MAKERSPET_LOKI
+
+# Turn the robot's laser scanner motor off
+ros2 param set /MAKERSPET_LOKI lds.motor_speed 0.0
+
+# Turn the robot's laser scanner motor on, default speed
+ros2 param set /MAKERSPET_LOKI lds.motor_speed -1.0
+
+# Get laser scanner motor current speed
+ros2 param get /MAKERSPET_LOKI lds.motor_speed
 ```
 
 ### Operate a simulated robot
