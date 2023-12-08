@@ -24,10 +24,11 @@ from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
 
-def make_nodes(context: LaunchContext, robot_model, map, use_sim_time):
+def make_nodes(context: LaunchContext, robot_model, map, use_sim_time, slam):
     robot_model_str = context.perform_substitution(robot_model)
     map_path_str = context.perform_substitution(map)
     use_sim_time_str = context.perform_substitution(use_sim_time)
+    slam_str = context.perform_substitution(slam)
     description_package_path = get_package_share_path(robot_model_str)
 
     rviz_config_path = os.path.join(
@@ -53,6 +54,7 @@ def make_nodes(context: LaunchContext, robot_model, map, use_sim_time):
             launch_arguments={
                 'map': map_path_str,
                 'use_sim_time': use_sim_time_str,
+                'slam': slam_str,
                 'params_file': nav_config_path}.items(),
         ),
         Node(
@@ -86,9 +88,15 @@ def generate_launch_description():
             default_value='false',
             description='Use simulation (Gazebo) clock if true'
         ),
+        DeclareLaunchArgument(
+            'slam',
+            default_value='false',
+            description='Navigate while creating a new map'
+        ),
         OpaqueFunction(function=make_nodes, args=[
             LaunchConfiguration('robot_model'),
             LaunchConfiguration('map'),
             LaunchConfiguration('use_sim_time'),
+            LaunchConfiguration('slam'),
         ]),
     ])
