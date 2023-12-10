@@ -2,7 +2,7 @@
 
 ## Run keyboard teleop with default settings
 ```
-ros2 run kaia_teleop teleop_keyboard
+ros2 run kaiaai_teleop teleop_keyboard robot_model:=makerspet_loki
 ```
 
 ## Run keyboard teleop with a robot description package
