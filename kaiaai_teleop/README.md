@@ -12,7 +12,7 @@ keyboard teleoperation, including the maximum linear and angular speeds.
 
 The command below loads runs the `teleop_keyboard` node and loads `makerspet_loki`-specific settings.
 ```
-ros2 run kaia_teleop teleop_keyboard robot_model:=makerspet_loki
+ros2 run kaiaai_teleop teleop_keyboard robot_model:=makerspet_loki
 ```
 If you take updesigning your own robot hardware that uses [Kaia.ai](https://kaia.ai) platform as its software,
 you have to update `teleop_keyboard.yaml` file to match your particular robot hardware. Thankfully,
@@ -26,7 +26,7 @@ capture keyboard strokes.
 - you can also specify an arbitrary path and file name of the YAML configuration file when launching
 `teleop_keyboard` as shown in the example below. This can be useful during development.
 ```
-ros2 run kaia_teleop teleop_keyboard
-ros2 run kaia_teleop teleop_keyboard --ros-args --params-file /path/to/teleop_keyboard.yaml
-ros2 run kaia_teleop teleop_keyboard --ros-args --params-file `ros2 pkg prefix --share makerspet_loki`/config/teleop_keyboard.yaml
+ros2 run kaiaai_teleop teleop_keyboard
+ros2 run kaiaai_teleop teleop_keyboard --ros-args --params-file /path/to/teleop_keyboard.yaml
+ros2 run kaiaai_teleop teleop_keyboard --ros-args --params-file `ros2 pkg prefix --share makerspet_loki`/config/teleop_keyboard.yaml
 ```
