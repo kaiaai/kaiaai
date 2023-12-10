@@ -1,18 +1,18 @@
 # Control [Kaia.ai](https://kaia.ai) robots using a keyboard
 
 ## Run keyboard teleop with default settings
+The default settings assume you are using `makerspet_snoopy` robot.
 ```
-ros2 run kaiaai_teleop teleop_keyboard robot_model:=makerspet_loki
+ros2 run kaiaai_teleop teleop_keyboard
 ```
 
-## Run keyboard teleop with a robot description package
-Let's say you are using a `waldo` robot defined in a `waldo_description` robot description package.
-File `waldo_package/config/teleop_keyboard.yaml` is expected to contain `waldo`'s parameters for
-keyboard teleoperation, including `waldo`'s maximum linear and angular speeds.
+## Run keyboard teleop with another robot
+Let's say you are using a `makerspet_loki` robot. File `makerspet_loki/config/teleop_keyboard.yaml` is expected to contain parameters for
+keyboard teleoperation, including the maximum linear and angular speeds.
 
-The command below loads runs the `teleop_keyboard` node and loads `waldo`-specific settings.
+The command below loads runs the `teleop_keyboard` node and loads `makerspet_loki`-specific settings.
 ```
-ros2 run kaia_teleop teleop_keyboard description:=kaia_loki_description
+ros2 run kaia_teleop teleop_keyboard robot_model:=makerspet_loki
 ```
 If you take updesigning your own robot hardware that uses [Kaia.ai](https://kaia.ai) platform as its software,
 you have to update `teleop_keyboard.yaml` file to match your particular robot hardware. Thankfully,
@@ -28,5 +28,5 @@ capture keyboard strokes.
 ```
 ros2 run kaia_teleop teleop_keyboard
 ros2 run kaia_teleop teleop_keyboard --ros-args --params-file /path/to/teleop_keyboard.yaml
-ros2 run kaia_teleop teleop_keyboard --ros-args --params-file `ros2 pkg prefix --share waldo_description`/config/teleop_keyboard.yaml
+ros2 run kaia_teleop teleop_keyboard --ros-args --params-file `ros2 pkg prefix --share makerspet_loki`/config/teleop_keyboard.yaml
 ```
