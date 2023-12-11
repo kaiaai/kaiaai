@@ -53,22 +53,38 @@ docker exec -it makerspet bash
 
 ### Operate a physical robot
 ```
-# Launch the physical robot and drive it manually
+# Launch the physical robot
 ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki
+
+# Drive robot manually
 ros2 run kaiaai_teleop teleop_keyboard robot_model:=makerspet_loki
 
 # Monitor robot sensors
 ros2 launch kaiaai_bringup monitor_robot.launch.py robot_model:=makerspet_loki
 
-# Drive robot manually to create and save a map
-ros2 run kaiaai_teleop teleop_keyboard robot_model:=makerspet_loki
-
-# Create and save a map
+# Create a map while driving manually
 ros2 launch kaiaai_bringup cartographer.launch.py robot_model:=makerspet_loki
+
+# Save the newly-created map
 ros2 run nav2_map_server map_saver_cli -f ~/map --ros-args -p save_map_timeout:=60.0
 
 # Robot self-drives using an existing map
 ros2 launch kaiaai_bringup navigation.launch.py robot_model:=makerspet_loki map:=$HOME/my_map
+```
+
+Create a map automatically - no manual driving
+```
+# Launch the physical robot
+ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki
+
+# Launch SLAM (simultaneous localization and mapping) - navigate and map simultaneously
+ros2 launch kaiaai_bringup navigation.launch.py robot_model:=makerspet_loki slam:=True
+
+# Robot automatically seeks out, self-drives to unknown locations
+ros2 launch explore_lite explore.launch.py
+
+# Save the newly-created map
+ros2 run nav2_map_server map_saver_cli -f ~/map --ros-args -p save_map_timeout:=60.0
 ```
 
 ### View, set physical robot's parameters
