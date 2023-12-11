@@ -92,13 +92,18 @@ ros2 param get /MAKERSPET_LOKI lds.motor_speed
 ### Operate a simulated robot
 
 ```
-# Launch the robot in a simulation - drive manually or let it self-drive
+# Launch the robot in a simulation - drive manually
 ros2 launch kaiaai_gazebo world.launch.py robot_model:=makerspet_loki
 ros2 run kaiaai_teleop teleop_keyboard robot_model:=makerspet_loki
 ros2 launch kaiaai_gazebo self_drive_gazebo.launch.py robot_model:=makerspet_loki
 ros2 launch kaiaai_bringup monitor_robot.launch.py robot_model:=makerspet_loki
 
-# Launch the robot in a simulation - create, save a map
+# Launch the robot in a simulation - robot self-drives around
+ros2 launch kaiaai_gazebo world.launch.py robot_model:=makerspet_loki
+ros2 launch kaiaai_gazebo self_drive_gazebo.launch.py robot_model:=makerspet_loki
+ros2 launch kaiaai_bringup monitor_robot.launch.py robot_model:=makerspet_loki
+
+# Launch the robot in a simulation - create, save a map; robot self-drives around
 ros2 launch kaiaai_gazebo world.launch.py robot_model:=makerspet_loki
 ros2 launch kaiaai_bringup cartographer.launch.py use_sim_time:=true robot_model:=makerspet_loki
 ros2 launch kaiaai_gazebo self_drive_gazebo.launch.py robot_model:=makerspet_loki
@@ -112,6 +117,12 @@ ros2 launch kaiaai_bringup navigation.launch.py use_sim_time:=true robot_model:=
 # Launch the robot in a simulation - navigate and create a map simultaneously; save the map
 ros2 launch kaiaai_gazebo world.launch.py robot_model:=makerspet_loki
 ros2 launch kaiaai_bringup navigation.launch.py use_sim_time:=true robot_model:=makerspet_loki slam:=True
+ros2 run nav2_map_server map_saver_cli -f ~/map --ros-args -p save_map_timeout:=60.0
+
+# Launch the robot in a simulation - create, save a map; robot self-drives to map out unknown locations
+ros2 launch kaiaai_gazebo world.launch.py robot_model:=makerspet_loki
+ros2 launch kaiaai_bringup navigation.launch.py use_sim_time:=true robot_model:=makerspet_loki slam:=True
+ros2 launch explore_lite explore.launch.py
 ros2 run nav2_map_server map_saver_cli -f ~/map --ros-args -p save_map_timeout:=60.0
 ```
 
