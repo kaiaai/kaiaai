@@ -57,16 +57,18 @@ docker exec -it makerspet bash
 ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki
 ros2 run kaiaai_teleop teleop_keyboard robot_model:=makerspet_loki
 
-# Launch the physical robot and monitor its sensors
-ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki
+# Monitor robot sensors
 ros2 launch kaiaai_bringup monitor_robot.launch.py robot_model:=makerspet_loki
 
-# Launch the physical robot, monitor its sensors and drive it manually to create and save a map
-ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki
-ros2 launch kaiaai_bringup monitor_robot.launch.py robot_model:=makerspet_loki
+# Drive robot manually to create and save a map
 ros2 run kaiaai_teleop teleop_keyboard robot_model:=makerspet_loki
-ros2 launch kaiaai_bringup cartographer.launch.py use_sim_time:=true robot_model:=makerspet_loki
-ros2 run nav2_map_server map_saver_cli -f $HOME/my_map
+
+# Create and save a map
+ros2 launch kaiaai_bringup cartographer.launch.py robot_model:=makerspet_loki
+ros2 run nav2_map_server map_saver_cli -f ~/map --ros-args -p save_map_timeout:=60.0
+
+# Robot self-drives using an existing map
+ros2 launch kaiaai_bringup navigation.launch.py robot_model:=makerspet_loki map:=$HOME/my_map
 ```
 
 ### View, set physical robot's parameters
@@ -100,12 +102,17 @@ ros2 launch kaiaai_bringup monitor_robot.launch.py robot_model:=makerspet_loki
 ros2 launch kaiaai_gazebo world.launch.py robot_model:=makerspet_loki
 ros2 launch kaiaai_bringup cartographer.launch.py use_sim_time:=true robot_model:=makerspet_loki
 ros2 launch kaiaai_gazebo self_drive_gazebo.launch.py robot_model:=makerspet_loki
-ros2 run nav2_map_server map_saver_cli -f $HOME/living_room_map
+ros2 run nav2_map_server map_saver_cli -f ~/living_room_map --ros-args -p save_map_timeout:=60.0
 
 # Launch the robot in a simulation - let it navigate automatically using an existing map
 ros2 launch kaiaai_gazebo world.launch.py robot_model:=makerspet_loki
 ros2 launch kaiaai_bringup navigation.launch.py use_sim_time:=true robot_model:=makerspet_loki \
   map:=/ros_ws/src/kaiaai_simulations/kaiaai_gazebo/map/living_room.yaml
+
+# Launch the robot in a simulation - navigate and create a map simultaneously; save the map
+ros2 launch kaiaai_gazebo world.launch.py robot_model:=makerspet_loki
+ros2 launch kaiaai_bringup navigation.launch.py use_sim_time:=true robot_model:=makerspet_loki slam:=True
+ros2 run nav2_map_server map_saver_cli -f ~/map --ros-args -p save_map_timeout:=60.0
 ```
 
 ### Add your own modifications to an existing robot
