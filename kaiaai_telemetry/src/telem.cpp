@@ -1,4 +1,4 @@
-// Copyright 2023 REMAKE.AI
+// Copyright 2023 REMAKE.AI, KAIA.AI, MAKERSPET.COM
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,74 +27,31 @@
 #include "tf2_ros/transform_broadcaster.h"
 #include "tf2/LinearMath/Quaternion.h"
 
-#define DEG_TO_RAD 0.017453292519943295769236907684886
-#define NODE_NAME "kaiaai_telemetry_node"
-
-#define RESULT_OK      0
-#define RESULT_TIMEOUT -1
-#define RESULT_FAIL    -2
-#define RESULT_CRC_ERROR    -3
-#define RESULT_NOT_READY    -4
-
-#define LIDAR_RESP_MEASUREMENT_SYNCBIT        (0x1<<0)
-#define LIDAR_RESP_MEASUREMENT_QUALITY_SHIFT  2
-#define LIDAR_RESP_MEASUREMENT_CHECKBIT       (0x1<<0)
-#define LIDAR_RESP_MEASUREMENT_ANGLE_SHIFT    1
-#define LIDAR_RESP_MEASUREMENT_ANGLE_SAMPLE_SHIFT    8
-
-#define PackageSampleBytes 2
-#define PackageSampleMaxLngth 0x80
-#define Node_Default_Quality (10<<2)
-#define Node_Sync 1
-#define Node_NotSync 2
-#define PackagePaidBytes 10
-#define PH 0x55AA
-
-typedef enum {
-  CT_Normal = 0,
-  CT_RingStart  = 1,
-  CT_Tail,
-} CT;
-
-struct node_info {
-  uint8_t    sync_quality;
-  uint16_t   angle_q6_checkbit;
-  uint16_t   distance_q2;
-} __attribute__((packed));
-
-struct node_package {
-  uint16_t  package_Head;
-  uint8_t   package_CT;
-  uint8_t   nowPackageNum;
-  uint16_t  packageFirstSampleAngle;
-  uint16_t  packageLastSampleAngle;
-  uint16_t  checkSum;
-  uint16_t  packageSampleDistance[PackageSampleMaxLngth];
-} __attribute__((packed));
-
-struct scanPoint {
-  uint8_t quality;
-  float   angle;
-  float   distance;
-  bool    startBit;
-};
-
+#include "lds_ydlidar_x4.h"
+#include "lds_lds02rr.h"
 
 using std::placeholders::_1;
 
 class KaiaaiTelemetry : public rclcpp::Node
 {
 public:
+  inline static const std::string NODE_NAME = "kaiaai_telemetry_node";
+  static constexpr double DEG_TO_RAD = 0.017453292519943295769236907684886;
+
+public:
   KaiaaiTelemetry()
   : Node(NODE_NAME)
   {
-    this->declare_parameter("laser_scan.buf_len", 561);
-    this->declare_parameter("laser_scan.angle_min", 0.0);
-    this->declare_parameter("laser_scan.angle_max", 6.283185307179586476925286766559);
-    this->declare_parameter("laser_scan.range_min", 0.1);
-    this->declare_parameter("laser_scan.range_max", 12.0);
+    this->declare_parameter("laser_sensor.model", std::vector<std::string>({"LDS02RR", "LDS02RR"}));
+    this->declare_parameter("laser_sensor.angle_offset_deg", std::vector<double>({0.0, -180.0}));
+    this->declare_parameter("laser_sensor.pub_scan_size", std::vector<int>({561, 360}));
+    this->declare_parameter("laser_sensor.range_min_meters", std::vector<double>({0.15, 0.15}));
+    this->declare_parameter("laser_sensor.range_max_meters", std::vector<double>({12.0, 6.0}));
+
     this->declare_parameter("laser_scan.topic_name_pub", "scan");
-    this->declare_parameter("laser_scan.frame_id", "ldf");
+    this->declare_parameter("laser_scan.frame_id", "base_scan");
+    this->declare_parameter("laser_scan.lds_model", "YDLIDAR-X4");
+    this->declare_parameter("laser_scan.mask_radius_meters", 0.0);
 
     this->declare_parameter("telemetry.topic_name_sub", "telemetry");
 
@@ -119,35 +76,26 @@ public:
     laser_scan_pub_ = this->create_publisher<sensor_msgs::msg::LaserScan>(
       this->get_parameter("laser_scan.topic_name_pub").as_string(), 10);
     tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
-    // 561 default, 561pts*9 FPS=5,049; 505pts*10FPS=5,050
-    ranges_.resize(this->get_parameter("laser_scan.buf_len").as_int());
+
+    plds = NULL;
+    angle_offset_deg_ = 0.0;
+    pub_scan_size_ = 360;
+    range_min_meters_ = 0.15;
+    range_max_meters_ = 12.0;
+    mask_radius_meters_ = 0.0;
 
     clear_ranges_buffer();
     seq_last_ = 0;
-
     lds_data_idx_ = 0;
-    lds_data_length_ = 0;
+    pmsg = NULL;
+  }
 
-    recvPos = 0;
-    package_Sample_Num = 0;
-    package_recvPos = 0;
-    package_sample_sum = 0;
-    currentByte = 0;
-
-    packageBuffer = (uint8_t*) &package.package_Head;
-
-    package_Sample_Index = 0;
-    IntervalSampleAngle = 0;
-    IntervalSampleAngle_LastPackage = 0;
-    FirstSampleAngle = 0;
-    LastSampleAngle = 0;
-    CheckSum = 0;
-    CheckSumCal = 0;
-    SampleNumlAndCTCal = 0;
-    LastSampleAngleCal = 0;
-    CheckSumResult = true;
-    Valu8Tou16 = 0;
-    state = 0;
+  ~KaiaaiTelemetry()
+  {
+    if (plds != NULL) {
+      delete plds;
+      plds = NULL;
+    }
   }
 
 private:
@@ -168,12 +116,6 @@ private:
     odom_msg.pose.pose.position.y = telem_msg.odom_pos_y;
     odom_msg.pose.pose.position.z = 0;
 
-    //rosserial tf.h tf::createQuaternionFromYaw(double yaw)
-    //odom_msg.pose.pose.orientation.x = 0;
-    //odom_msg.pose.pose.orientation.y = 0;
-    //odom_msg.pose.pose.orientation.z = sin(telem_msg.odom_pos_yaw * 0.5);
-    //odom_msg.pose.pose.orientation.w = cos(telem_msg.odom_pos_yaw * 0.5);
-
     tf2::Quaternion q;
     q.setRPY(0, 0, telem_msg.odom_pos_yaw); // roll, pitch, yaw
     odom_msg.pose.pose.orientation.x = q.x();
@@ -193,7 +135,7 @@ private:
     name[0] = this->get_parameter("joints.wheel.left").as_string();
     name[1] = this->get_parameter("joints.wheel.right").as_string();
 
-    joint_state_msg.name = name;  // Makes a deep copy of name
+    joint_state_msg.name = name;  // deep copy
 
     std::vector<double> position;
     position.resize(2);
@@ -229,52 +171,141 @@ private:
 
     tf_broadcaster_->sendTransform(tf_stamped_msg);
 
-    if (telem_msg.lds.size() > 0)
+    if (telem_msg.lds.size() > 0) {
+      if (plds == NULL)
+        lds_setup();
       process_lds_data(telem_msg);
+    }
+  }
+
+  void lds_setup()
+  {
+    //RCLCPP_INFO(this->get_logger(), "string[] %s, double[] %s",
+    //            this->get_parameter("laser_sensor.model").value_to_string().c_str(),
+    //            this->get_parameter("laser_sensor.angle_offset_deg").value_to_string().c_str());
+    if (plds != NULL)
+      return;
+
+    const std::vector<std::string> model = this->get_parameter("laser_sensor.model").as_string_array();
+    const std::vector<long int> pub_scan_size = this->get_parameter("laser_sensor.pub_scan_size").as_integer_array();
+    const std::vector<double> angle_offset_deg = this->get_parameter("laser_sensor.angle_offset_deg").as_double_array();
+    const std::vector<double> range_min_meters = this->get_parameter("laser_sensor.range_min_meters").as_double_array();
+    const std::vector<double> range_max_meters = this->get_parameter("laser_sensor.range_max_meters").as_double_array();
+
+    long unsigned int model_count = model.size();
+    if (pub_scan_size.size() != model_count || angle_offset_deg.size() != model_count
+        || range_min_meters.size() != model_count || range_max_meters.size() != model_count) {
+      RCLCPP_FATAL(this->get_logger(), "laser_sensor parameter array sizes must be equal");
+      rclcpp::shutdown();
+    }
+
+    const std::string lds_model = this->get_parameter("laser_scan.lds_model").as_string();
+
+    int model_idx = 0;
+    for (auto &s: model) {
+
+      if (lds_model.compare(s) == 0) {
+        if (s.compare(LDS_LDSRR02::get_model_name()) == 0) {
+          plds = new LDS_LDSRR02();
+          // RCLCPP_INFO(this->get_logger(), "new LDS_LDSRR02()");
+          break;
+        } else {
+          if (s.compare(LDS_YDLidarX4::get_model_name()) == 0) {
+            plds = new LDS_YDLidarX4();
+            // RCLCPP_INFO(this->get_logger(), "new LDS_YDLidarX4()");
+            break;
+          }
+        }
+      }
+      model_idx++;
+    }
+
+    if (plds == NULL) {
+      RCLCPP_FATAL(this->get_logger(), "Laser sensor model %s not found", lds_model.c_str());
+      rclcpp::shutdown();
+      return;
+    }
+
+    plds->setReadByteCallback(read_byte_callback);
+    plds->setScanPointCallback(scan_point_callback);
+
+    angle_offset_deg_ = angle_offset_deg[model_idx];
+    pub_scan_size_ = pub_scan_size[model_idx];
+    range_min_meters_ = range_min_meters[model_idx];
+    range_max_meters_ = range_max_meters[model_idx];
+    ranges_.resize(pub_scan_size_);
+
+    // RCLCPP_INFO(this->get_logger(), "Laser sensor model %s, pub_scan_size_ %d, angle_offset_deg_ %f",
+    //   lds_model.c_str(), pub_scan_size_, angle_offset_deg_);
+    RCLCPP_INFO(this->get_logger(), "Laser sensor model %s", lds_model.c_str());
   }
 
   void process_lds_data(const kaiaai_msgs::msg::KaiaaiTelemetry & telem_msg)
   {
+    if (plds == NULL)
+      return;
+
     lds_data_idx_ = 0;
     lds_msg_count_++;
 
+    pmsg = const_cast<kaiaai_msgs::msg::KaiaaiTelemetry *>(& telem_msg);
     while (lds_data_idx_ < telem_msg.lds.size()) {
-      int err = decode_lds_data(telem_msg);
+
+      int err = plds->decode_data(this);
+
       switch(err) {
-        case RESULT_OK:
+        case LDS::RESULT_OK:
           break;
-        case RESULT_CRC_ERROR:
+        case LDS::RESULT_CRC_ERROR:
 //          RCLCPP_INFO(this->get_logger(), "RESULT_CRC_ERROR");
           lds_crc_error_count_++;
           break;
-        case RESULT_NOT_READY:
+        case LDS::RESULT_NOT_READY:
           break;
-        case RESULT_FAIL:
-//          RCLCPP_INFO(this->get_logger(), "RESULT_FAIL");
-          lds_result_fail_count_++;
+        case LDS::RESULT_INVALID_PACKET:
+//          RCLCPP_INFO(this->get_logger(), "RESULT_INVALID_PACKET");
+          lds_invalid_packet_count_++;
           break;
         default:
-          RCLCPP_WARN(this->get_logger(), "Unexpected decode_lds_data() result code %d", err);
+          RCLCPP_WARN(this->get_logger(), "Unexpected lds.decode_data() result code %d", err);
       }
     }
+    pmsg = NULL;
   }
 
-  int get_lds_byte(const kaiaai_msgs::msg::KaiaaiTelemetry & telem_msg)
+  int read_lds_byte()
   {
-    if (lds_data_idx_ >= telem_msg.lds.size())
+    if ((pmsg == NULL) || (lds_data_idx_ >= pmsg->lds.size()))
       return -1;
 
     lds_data_length_++;
-    return telem_msg.lds[lds_data_idx_++];
+    return pmsg->lds[lds_data_idx_++];
   }
 
-  void process_scan_point(const kaiaai_msgs::msg::KaiaaiTelemetry & telem_msg,
-    uint8_t quality, float angle_deg, float distance_mm, bool startBit)
+  static int read_byte_callback(const void * context)
+  {
+    void * ctx = const_cast<void *>(context);
+    return reinterpret_cast<KaiaaiTelemetry*>(ctx)->read_lds_byte();
+  }
+
+  static void scan_point_callback(const void * context,
+    float angle_deg, float distance_mm, float quality, bool scan_completed)
+  {
+    void * ctx = const_cast<void *>(context);
+    return reinterpret_cast<KaiaaiTelemetry*>(ctx)->process_scan_point(
+      angle_deg, distance_mm, quality, scan_completed);
+  }
+
+  void process_scan_point(float angle_deg, float distance_mm, float quality, bool scan_completed)
   {
     (void)quality; // Suppress unused parameter warning
-    if (startBit)
+
+//    RCLCPP_INFO(this->get_logger(), "process_scan_point() %f angle_deg %f distance_mm %f quality %d scan_completed",
+//      angle_deg, distance_mm, quality, scan_completed);
+
+    if (scan_completed)
     {
-      publish_scan(telem_msg);
+      publish_scan();
       clear_ranges_buffer();
       return;
     }
@@ -283,21 +314,20 @@ private:
     if (distance_mm == 0.0)  // Invalid measurement
       return;
 
-    //https://github.com/YDLIDAR/ydlidar_ros2/blob/master/src/ydlidar_node.cpp
-    angle_deg = angle_deg >= 360 ? angle_deg - 360 : angle_deg;
+
+    double distance_meters = distance_mm*0.001;
+    if (mask_radius_meters_ >= distance_meters) // Ignore
+      return;
+
+    angle_deg = fmod(angle_deg, 360.0);
     angle_deg = angle_deg < 0 ? angle_deg + 360 : angle_deg;
-    float angle_rad = DEG_TO_RAD * angle_deg;
 
-    double laser_scan_angle_min = this->get_parameter("laser_scan.angle_min").as_double();
-    double laser_scan_angle_max = this->get_parameter("laser_scan.angle_max").as_double();
-    int laser_scan_buf_len = this->get_parameter("laser_scan.buf_len").as_int();
-    double laser_scan_angle_increment = ((laser_scan_angle_max - laser_scan_angle_min) / (laser_scan_buf_len - 1));
-
-    int idx = floor((angle_rad - laser_scan_angle_min) / laser_scan_angle_increment);
+    double laser_scan_angle_increment = 360.0 / pub_scan_size_;
+    int idx = round(angle_deg / laser_scan_angle_increment);
 
     if (idx >= 0 && idx < ((long int)ranges_.size()))
     {
-      ranges_[idx] = distance_mm*0.001;
+      ranges_[idx] = distance_meters;
       scan_point_count_valid_++;
     }
   }
@@ -307,263 +337,35 @@ private:
     std::fill(ranges_.begin(), ranges_.end(), 0);
     scan_point_count_valid_ = 0;
     scan_point_count_total_ = 0;
-    lds_result_fail_count_ = 0;
+    lds_invalid_packet_count_ = 0;
     lds_crc_error_count_ = 0;
     lds_msg_count_ = 0;
     lds_data_length_ = 0;
+    mask_radius_meters_ = this->get_parameter("laser_scan.mask_radius_meters").as_double();
   }
 
-  void publish_scan(const kaiaai_msgs::msg::KaiaaiTelemetry & telem_msg)
-//  void process_scan_data(const std::vector<uint8_t> & lds)
+  void publish_scan()
   {
-//    RCLCPP_INFO(this->get_logger(), "publish_scan() total %u valid %u fail %u crc %u msg %u len %u",
-//      scan_point_count_total_, scan_point_count_valid_, lds_result_fail_count_, lds_crc_error_count_,
-//      lds_msg_count_, lds_data_length_);
+    //RCLCPP_INFO(this->get_logger(), "publish_scan() total %u valid %u fail %u crc %u msg %u len %u",
+    //  scan_point_count_total_, scan_point_count_valid_, lds_invalid_packet_count_, lds_crc_error_count_,
+    //  lds_msg_count_, lds_data_length_);
 
     auto laser_scan_msg = sensor_msgs::msg::LaserScan();
-
-    double laser_scan_angle_min = this->get_parameter("laser_scan.angle_min").as_double();
-    double laser_scan_angle_max = this->get_parameter("laser_scan.angle_max").as_double();
-    int laser_scan_buf_len = this->get_parameter("laser_scan.buf_len").as_int();
-    double laser_scan_angle_increment = ((laser_scan_angle_max - laser_scan_angle_min) / (laser_scan_buf_len - 1));
+    double laser_scan_angle_increment = 360.0 / pub_scan_size_;
 
     laser_scan_msg.ranges = ranges_;
-
-    laser_scan_msg.header.stamp = telem_msg.stamp;
+    laser_scan_msg.header.stamp = pmsg->stamp;
     laser_scan_msg.header.frame_id = this->get_parameter("laser_scan.frame_id").as_string();
-    laser_scan_msg.angle_min = laser_scan_angle_min;
-    laser_scan_msg.angle_max = laser_scan_angle_max;
-    laser_scan_msg.angle_increment = laser_scan_angle_increment;
-    laser_scan_msg.range_min = this->get_parameter("laser_scan.range_min").as_double();
-    laser_scan_msg.range_max = this->get_parameter("laser_scan.range_max").as_double();
-    laser_scan_msg.time_increment = 0;
-    //float32 scan_time
-    //float32[] intensities
+    laser_scan_msg.angle_min = angle_offset_deg_ * DEG_TO_RAD;
+    laser_scan_msg.angle_max = (angle_offset_deg_ + 360.0 * (pub_scan_size_ - 1) / pub_scan_size_) * DEG_TO_RAD;
+    laser_scan_msg.angle_increment = laser_scan_angle_increment * DEG_TO_RAD;
+    laser_scan_msg.range_min = range_min_meters_;
+    laser_scan_msg.range_max = range_max_meters_;
+    laser_scan_msg.time_increment = 0; // TODO
+    //float32 scan_time;
+    //float32[] intensities;
 
     laser_scan_pub_->publish(laser_scan_msg);
-  }
-
-  int decode_lds_data(const kaiaai_msgs::msg::KaiaaiTelemetry & telem_msg)
-  {
-    switch(state) {
-      case 1:
-        goto state1;
-      case 2:
-        goto state2;
-    }
-
-    // Read in a packet; a packet contains up to 40 samples
-    // Each packet has a Start and End (absolute) angles
-    if (package_Sample_Index == 0) {
-
-      // Read in, parse the packet header: first PackagePaidBytes=10 bytes
-      package_Sample_Num = 0;
-      package_recvPos = 0;
-      recvPos = 0;
-
-      while (true) {
-state1:  // hack
-        currentByte = get_lds_byte(telem_msg);
-
-        if (currentByte <0 ) {
-          state = 1;
-          return RESULT_NOT_READY;
-        }
-
-        switch (recvPos) {
-        case 0:
-          if(currentByte!=(PH&0xFF)){
-            continue;
-          }
-          break;
-        case 1:
-          CheckSumCal = PH;
-          if(currentByte!=(PH>>8)){
-            recvPos = 0;
-            continue;
-          }
-          break;
-        case 2:
-          SampleNumlAndCTCal = currentByte;
-          if ((currentByte != CT_Normal) && (currentByte != CT_RingStart)){
-            recvPos = 0;
-            continue;
-          }
-          break;
-        case 3:
-          SampleNumlAndCTCal += (currentByte<<LIDAR_RESP_MEASUREMENT_ANGLE_SAMPLE_SHIFT);
-          package_Sample_Num = currentByte;
-          break;
-        case 4:
-          if (currentByte & LIDAR_RESP_MEASUREMENT_CHECKBIT) {
-            FirstSampleAngle = currentByte;
-          } else {
-            recvPos = 0;
-            continue;
-          }
-          break;
-        case 5:
-          FirstSampleAngle += (currentByte<<LIDAR_RESP_MEASUREMENT_ANGLE_SAMPLE_SHIFT);
-          CheckSumCal ^= FirstSampleAngle;
-          FirstSampleAngle = FirstSampleAngle>>1;
-          break;
-        case 6:
-          if (currentByte & LIDAR_RESP_MEASUREMENT_CHECKBIT) {
-            LastSampleAngle = currentByte;
-          } else {
-            recvPos = 0;
-            continue;
-          }
-          break;
-        case 7:
-          LastSampleAngle += (currentByte<<LIDAR_RESP_MEASUREMENT_ANGLE_SAMPLE_SHIFT);
-          LastSampleAngleCal = LastSampleAngle;
-          LastSampleAngle = LastSampleAngle>>1;
-          if(package_Sample_Num == 1){
-            IntervalSampleAngle = 0;
-          }else{
-            if(LastSampleAngle < FirstSampleAngle){
-              if((FirstSampleAngle > 17280) && (LastSampleAngle < 5760)){
-                IntervalSampleAngle = ((float)(23040 + LastSampleAngle - FirstSampleAngle))/(package_Sample_Num-1);
-                IntervalSampleAngle_LastPackage = IntervalSampleAngle;
-              } else{
-                IntervalSampleAngle = IntervalSampleAngle_LastPackage;
-              }
-            } else{
-              IntervalSampleAngle = ((float)(LastSampleAngle -FirstSampleAngle))/(package_Sample_Num-1);
-              IntervalSampleAngle_LastPackage = IntervalSampleAngle;
-            }
-          }
-          break;
-        case 8:
-          CheckSum = currentByte;
-          break;
-        case 9:
-          CheckSum += (currentByte<<LIDAR_RESP_MEASUREMENT_ANGLE_SAMPLE_SHIFT);
-          break;
-        }
-        packageBuffer[recvPos++] = currentByte;
-
-        if (recvPos  == PackagePaidBytes ){
-          package_recvPos = recvPos;
-          break;
-
-        }
-      }
-
-      // Read in the rest of the packet, i.e. samples
-      if(PackagePaidBytes == recvPos){
-        recvPos = 0;
-        package_sample_sum = package_Sample_Num<<1;
-
-        while (true) {
-state2:
-          currentByte = get_lds_byte(telem_msg);
-          if (currentByte<0){
-            state = 2;
-            return RESULT_NOT_READY;
-          }
-          if((recvPos &1) == 1){
-            Valu8Tou16 += (currentByte<<LIDAR_RESP_MEASUREMENT_ANGLE_SAMPLE_SHIFT);
-            CheckSumCal ^= Valu8Tou16;
-          }else{
-            Valu8Tou16 = currentByte;
-          }
-
-          packageBuffer[package_recvPos+recvPos] =currentByte;
-          recvPos++;
-          if(package_sample_sum == recvPos){
-            package_recvPos += recvPos;
-            break;
-          }
-        }
-
-        if(package_sample_sum != recvPos){
-          state = 0;
-          return RESULT_FAIL;
-        }
-      } else {
-        state = 0;
-        return RESULT_FAIL;
-      }
-      CheckSumCal ^= SampleNumlAndCTCal;
-      CheckSumCal ^= LastSampleAngleCal;
-
-      if(CheckSumCal != CheckSum){
-        CheckSumResult = false;
-      }else{
-        CheckSumResult = true;
-      }
-    }
-
-    while(true) {
-
-      uint8_t package_CT;
-      node_info node;
-
-      package_CT = package.package_CT;
-      if(package_CT == CT_Normal){
-        node.sync_quality = Node_Default_Quality + Node_NotSync;
-      } else{
-        node.sync_quality = Node_Default_Quality + Node_Sync;
-      }
-
-      if(CheckSumResult == true){
-        int32_t AngleCorrectForDistance;
-        node.distance_q2 = package.packageSampleDistance[package_Sample_Index];
-
-        if(node.distance_q2/4 != 0){
-          AngleCorrectForDistance = (int32_t)((atan(((21.8*(155.3 -
-            (node.distance_q2*0.25f)) )/155.3)/(node.distance_q2*0.25f)))*3666.93);
-        }else{
-          AngleCorrectForDistance = 0;
-        }
-        float sampleAngle = IntervalSampleAngle*package_Sample_Index;
-        if((FirstSampleAngle + sampleAngle + AngleCorrectForDistance) < 0){
-          node.angle_q6_checkbit = (((uint16_t)(FirstSampleAngle + sampleAngle +
-            AngleCorrectForDistance + 23040))<<LIDAR_RESP_MEASUREMENT_ANGLE_SHIFT) + LIDAR_RESP_MEASUREMENT_CHECKBIT;
-        }else{
-          if((FirstSampleAngle + sampleAngle + AngleCorrectForDistance) > 23040){
-            node.angle_q6_checkbit = ((uint16_t)((FirstSampleAngle + sampleAngle +
-              AngleCorrectForDistance - 23040))<<LIDAR_RESP_MEASUREMENT_ANGLE_SHIFT) + LIDAR_RESP_MEASUREMENT_CHECKBIT;
-          }else{
-            node.angle_q6_checkbit = ((uint16_t)((FirstSampleAngle + sampleAngle +
-              AngleCorrectForDistance))<<LIDAR_RESP_MEASUREMENT_ANGLE_SHIFT) + LIDAR_RESP_MEASUREMENT_CHECKBIT;
-          }
-        }
-      }else{
-        node.sync_quality = Node_Default_Quality + Node_NotSync;
-        node.angle_q6_checkbit = LIDAR_RESP_MEASUREMENT_CHECKBIT;
-        node.distance_q2 = 0;
-        package_Sample_Index = 0;
-        state = 0;
-        return RESULT_CRC_ERROR;
-      }
-
-      // Dump out processed data
-      scanPoint point;
-      point.distance = node.distance_q2*0.25f;
-      point.angle = (node.angle_q6_checkbit >> LIDAR_RESP_MEASUREMENT_ANGLE_SHIFT)/64.0f;
-      point.quality = (node.sync_quality>>LIDAR_RESP_MEASUREMENT_QUALITY_SHIFT);
-      point.startBit = (node.sync_quality & LIDAR_RESP_MEASUREMENT_SYNCBIT);
-      //point.sampleIndex = package_Sample_Index;
-      //point.firstSampleAngle = FirstSampleAngle/64.0f;
-      //point.intervalSampleAngle = IntervalSampleAngle/64.0f;
-      //point.angleCorrectionForDistance = AngleCorrectForDistance/64.0f;
-
-      process_scan_point(telem_msg, point.quality, point.angle, point.distance, point.startBit);
-
-      // Dump finished?
-      package_Sample_Index++;
-      uint8_t nowPackageNum = package.nowPackageNum;
-      if(package_Sample_Index >= nowPackageNum){
-        package_Sample_Index = 0;
-        break;
-      }
-    }
-    state = 0;
-
-    return RESULT_OK;
   }
 
   rclcpp::Subscription<kaiaai_msgs::msg::KaiaaiTelemetry>::SharedPtr telem_sub_;
@@ -575,33 +377,20 @@ state2:
   unsigned int seq_last_;
   unsigned int scan_point_count_valid_;
   unsigned int scan_point_count_total_;
-  unsigned int lds_result_fail_count_;
+  unsigned int lds_invalid_packet_count_;
   unsigned int lds_crc_error_count_;
   unsigned int lds_msg_count_;
   unsigned int lds_data_idx_;
   unsigned int lds_data_length_;
 
-  int recvPos;
-  uint8_t package_Sample_Num;
-  int package_recvPos;
-  int package_sample_sum;
-  int currentByte;
+  LDS * plds;
+  double angle_offset_deg_;
+  int pub_scan_size_;
+  double range_min_meters_;
+  double range_max_meters_;
+  double mask_radius_meters_;
 
-  node_package package;
-  uint8_t *packageBuffer;
-
-  uint16_t package_Sample_Index;
-  float IntervalSampleAngle;
-  float IntervalSampleAngle_LastPackage;
-  uint16_t FirstSampleAngle;
-  uint16_t LastSampleAngle;
-  uint16_t CheckSum;
-  uint16_t CheckSumCal;
-  uint16_t SampleNumlAndCTCal;
-  uint16_t LastSampleAngleCal;
-  bool CheckSumResult;
-  uint16_t Valu8Tou16;
-  uint8_t state;
+  kaiaai_msgs::msg::KaiaaiTelemetry * pmsg;
 };
 
 int main(int argc, char * argv[])
