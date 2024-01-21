@@ -24,20 +24,17 @@ from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
 
 
-def make_nodes(context: LaunchContext, robot_model, use_sim_time):
+def make_nodes(context: LaunchContext, robot_model, lds_model, use_sim_time):
     robot_model_str = context.perform_substitution(robot_model)
+    lds_model_str = context.perform_substitution(lds_model)
     use_sim_time_str = context.perform_substitution(use_sim_time)
     description_package_path = get_package_share_path(robot_model_str)
 
-    # model_name = re.sub(r'_description$', '', description_str)
     urdf_path_name = os.path.join(
       description_package_path,
       'urdf',
-#      robot_model_str + '.urdf.xacro')
       'robot.urdf.xacro')
 
-    # with open(urdf_path, 'r') as infp:
-    #     robot_desc = infp.read()
     robot_description = ParameterValue(Command(['xacro ', urdf_path_name]), value_type=str)
 
     param_path_name = os.path.join(
@@ -47,13 +44,15 @@ def make_nodes(context: LaunchContext, robot_model, use_sim_time):
         )
     print('URDF file   : {}'.format(urdf_path_name))
     print('Telem params: {}'.format(param_path_name))
+    print('LDS model   : {}'.format(lds_model_str))
 
     return [
         Node(
             package="kaiaai_telemetry",
             executable="telem",
             output="screen",
-            parameters = [param_path_name]
+#            parameters = [param_path_name]
+            parameters = [param_path_name, {'laser_scan.lds_model': lds_model_str}]
         ),
         Node(
             package='robot_state_publisher',
@@ -77,6 +76,12 @@ def generate_launch_description():
             description='Robot description package name'
         ),
         DeclareLaunchArgument(
+            name='lds_model',
+            default_value='YDLIDAR-X4',
+            choices=['YDLIDAR-X4', 'LDS02RR'],
+            description='Laser distance scan sensor model'
+        ),
+        DeclareLaunchArgument(
             name='use_sim_time',
             default_value='false',
             choices=['true', 'false'],
@@ -89,15 +94,9 @@ def generate_launch_description():
             output="screen",
             arguments=["udp4", "-p", "8888"]  # , "-v6"
         ),
-        # Node(
-        #     package = "tf2_ros",
-        #     executable = "static_transform_publisher",
-        #     output="screen",
-        #     arguments = ["--frame-id", "map", "--child-frame-id", "lds"]
-        #     # arguments = ["0", "0", "0", "0", "0", "0", "map", "lds"]
-        # ),
         OpaqueFunction(function=make_nodes, args=[
             LaunchConfiguration('robot_model'),
+            LaunchConfiguration('lds_model'),
             LaunchConfiguration('use_sim_time')
         ]),
     ])
