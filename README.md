@@ -10,31 +10,22 @@ Kaia.ai robotics software platform consists of these parts:
 - Cloud software infrastructure
 
 ## Kaia.ai compatible robots
-Here is a [list of robots](https://github.com/topics/kaiaai-robot) compatible with Kaia.ai software platform.
-
-In particular, these two models are supported:
 - Maker's Pet [Loki](https://github.com/makerspet/makerspet_loki) 200mm 3D-printable pet robot
 - Maker's Pet [Fido](https://github.com/makerspet/makerspet_fido) 250mm 3D-printable pet robot
 - Maker's Pet [Snoopy](https://github.com/makerspet/makerspet_snoopy) 300mm 3D-printable pet robot
+- Add your own version to the [list](https://github.com/topics/kaiaai-robot)
 
 ## Setup
-- Set up your development PC following these
-[instructions](https://github.com/kaiaai/kaiaai_simulations#your-pc-setup).
-- [Launch](https://github.com/kaiaai/kaiaai_simulations/blob/main/README.md#launch-the-development-docker-image)
-the Kaia.ai development Docker image.
-- [Power up](https://github.com/makerspet/makerspet_snoopy/tree/main/firmware) your robot.
-- [Connect](https://github.com/makerspet/makerspet_snoopy/tree/main/firmware) your robot to your WiFi.
+- View build, setup and bringup [videos](https://www.youtube.com/playlist?list=PLOSXKDW70aR8SA16wTB0ou9ClKhv7micy)
 
+## Supported LDS/LiDAR sensors
+- YDLIDAR X4 (default)
+- Xiaomi 1st gen LDS02RR ($15 off AliExpress including shipping)
 
 ## Command cheat sheets
 
 Example: operate [makerspet_loki](https://github.com/makerspet/makerspet_loki) robot using commands below.
-
-Operate other compatible robot models by making these changes:
-- operate Maker's Pet [Fido](https://github.com/makerspet/makerspet_fido) robot by replacing `makerspet_loki`
-with `makerspet_fido`
-- operate Maker's Pet [Snoopy](https://github.com/makerspet/makerspet_fido) robot by replacing `makerspet_loki`
-with `makerspet_snoopy` or simply omitting `robot_model:=...`
+Operate Fido or Snoopy by replacing `loki` with `fido` or `snoopy` in commands below.
 
 ### Launch Docker image to operate your robot
 
@@ -46,7 +37,7 @@ docker pull kaiaai/kaiaai-ros-dev:humble
 docker run --name makerspet -it --rm -p 8888:8888/udp -e DISPLAY=host.docker.internal:0.0 -e LIBGL_ALWAYS_INDIRECT=0 kaiaai/kaiaai-ros-dev:humble
 ```
 
-To get an aditional bash prompt, open another Windows command shell or Windows PowerShell window and type:
+Get an aditional bash prompt by opening another Windows command shell or Windows PowerShell window and typing:
 ```
 docker exec -it makerspet bash
 ```
@@ -85,6 +76,12 @@ ros2 launch explore_lite explore.launch.py
 
 # Save the newly-created map
 ros2 run nav2_map_server map_saver_cli -f ~/map --ros-args -p save_map_timeout:=60.0
+```
+
+### Specify LDS/LiDAR model to use
+```
+ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_model:=LDS02RR
+ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_model:=YDLIDAR-X4
 ```
 
 ### View, set physical robot's parameters
@@ -144,7 +141,6 @@ ros2 run nav2_map_server map_saver_cli -f ~/map --ros-args -p save_map_timeout:=
 ```
 
 ### Add your own modifications to an existing robot
-
 ```
 # Inspect, edit robot's URDF model
 ros2 launch kaiaai_bringup inspect_urdf.launch.py robot_model:=makerspet_loki
