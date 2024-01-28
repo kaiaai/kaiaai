@@ -158,6 +158,10 @@ Initial versions of packages in this repo are based on ROBOTIS
 [Turtlebot3 code](https://github.com/ROBOTIS-GIT/turtlebot3)
 
 ## Release notes
+1/28/2024
+- added YDLIDAR X2 support to kaiaai_telemetry 
+  - `ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_model:=YDLIDAR-X2`
+
 1/21/2024
 - kaiaai_telemetry now supports multiple LiDAR/LDS laser distance scan sensors
   - added Xiaomi Mi LDS02RR; default is YDLIDAR X4
