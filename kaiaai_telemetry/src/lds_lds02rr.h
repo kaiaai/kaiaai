@@ -82,7 +82,7 @@ public:
 
   static const std::string get_model_name() { return "LDS02RR"; }
 
-  LDS::result_t decode_data(const void * context)
+  LDS::result_t decode_data(const void * context) override
   {
     return processByte(context, readByte(context));
   }

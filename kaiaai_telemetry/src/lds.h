@@ -48,7 +48,9 @@ public:
 
   virtual ~LDS() {}
 
-public:
+  virtual LDS::result_t decode_data(const void * context) = 0;
+  static const std::string get_model_name();
+
   void setScanPointCallback(ScanPointCallback scan_point_callback) {
     this->scan_point_callback = scan_point_callback;
   }
@@ -68,8 +70,4 @@ protected:
   int readByte(const void * context) {
     return (read_byte_callback) ? read_byte_callback(context) : RESULT_NOT_CONFIGURED;
   }
-
-public:
-  virtual LDS::result_t decode_data(const void * context) = 0;
-  static const std::string get_model_name();
 };
