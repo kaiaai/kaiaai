@@ -20,6 +20,7 @@ Kaia.ai robotics software platform consists of these parts:
 
 ## Supported LDS/LiDAR sensors
 - YDLIDAR X4 (default)
+- YDLIDAR X2
 - Xiaomi 1st gen LDS02RR ($15 off AliExpress including shipping)
 
 ## Command cheat sheets
@@ -82,6 +83,7 @@ ros2 run nav2_map_server map_saver_cli -f ~/map --ros-args -p save_map_timeout:=
 ```
 ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_model:=LDS02RR
 ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_model:=YDLIDAR-X4
+ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_model:=YDLIDAR-X2
 ```
 
 ### View, set physical robot's parameters
