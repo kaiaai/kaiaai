@@ -28,6 +28,7 @@
 #include "tf2/LinearMath/Quaternion.h"
 
 #include "lds_ydlidar_x4.h"
+#include "lds_ydlidar_x2.h"
 #include "lds_lds02rr.h"
 
 using std::placeholders::_1;
@@ -202,28 +203,30 @@ private:
     const std::string lds_model = this->get_parameter("laser_scan.lds_model").as_string();
 
     int model_idx = 0;
+    bool model_found = true;
     for (auto &s: model) {
 
       if (lds_model.compare(s) == 0) {
         if (s.compare(LDS_LDSRR02::get_model_name()) == 0) {
           plds = new LDS_LDSRR02();
-          // RCLCPP_INFO(this->get_logger(), "new LDS_LDSRR02()");
           break;
         } else {
-          if (s.compare(LDS_YDLidarX4::get_model_name()) == 0) {
+          if (s.compare(LDS_YDLidarX2::get_model_name()) == 0) {
+            plds = new LDS_YDLidarX2();
+            break;
+          } else {
+            if (s.compare(LDS_YDLidarX4::get_model_name()) != 0) {
+              RCLCPP_WARN(this->get_logger(),
+                "Laser distance scan sensor model %s not found, defaulting to YDLIDAR X4",
+                lds_model.c_str());
+              model_found = false;
+            }
             plds = new LDS_YDLidarX4();
-            // RCLCPP_INFO(this->get_logger(), "new LDS_YDLidarX4()");
             break;
           }
         }
       }
       model_idx++;
-    }
-
-    if (plds == NULL) {
-      RCLCPP_FATAL(this->get_logger(), "Laser sensor model %s not found", lds_model.c_str());
-      rclcpp::shutdown();
-      return;
     }
 
     plds->setReadByteCallback(read_byte_callback);
@@ -237,7 +240,8 @@ private:
 
     // RCLCPP_INFO(this->get_logger(), "Laser sensor model %s, pub_scan_size_ %d, angle_offset_deg_ %f",
     //   lds_model.c_str(), pub_scan_size_, angle_offset_deg_);
-    RCLCPP_INFO(this->get_logger(), "Laser sensor model %s", lds_model.c_str());
+    if (model_found)
+      RCLCPP_INFO(this->get_logger(), "Laser sensor model %s", lds_model.c_str());
   }
 
   void process_lds_data(const kaiaai_msgs::msg::KaiaaiTelemetry & telem_msg)
