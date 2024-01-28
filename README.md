@@ -1,4 +1,4 @@
-# Kaia.ai ROS2 home robots
+# Kaia.ai Arduino/ROS2 home robots
 
 [Kaia.ai](https://kaia.ai) is a platform for DIY home robots. Please sign up for an early launch invite [here](https://remake.ai).
 
