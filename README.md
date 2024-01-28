@@ -20,6 +20,7 @@ Kaia.ai robotics software platform consists of these parts:
 
 ## Supported LDS/LiDAR sensors
 - YDLIDAR X4 (default)
+- YDLIDAR X2
 - Xiaomi 1st gen LDS02RR ($15 off AliExpress including shipping)
 
 ## Command cheat sheets
@@ -82,6 +83,7 @@ ros2 run nav2_map_server map_saver_cli -f ~/map --ros-args -p save_map_timeout:=
 ```
 ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_model:=LDS02RR
 ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_model:=YDLIDAR-X4
+ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_model:=YDLIDAR-X2
 ```
 
 ### View, set physical robot's parameters
@@ -154,3 +156,21 @@ cd /ros_ws && colcon build --symlink-install --packages-select makerspet_loki
 ## Acknowledgements
 Initial versions of packages in this repo are based on ROBOTIS
 [Turtlebot3 code](https://github.com/ROBOTIS-GIT/turtlebot3)
+
+## Release notes
+1/21/2024
+- kaiaai_telemetry now supports multiple LiDAR/LDS laser distance scan sensors
+  - added Xiaomi Mi LDS02RR; default is YDLIDAR X4
+  - `ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_model:=LDS02RR`
+  - `ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_model:=YDLIDAR-X4`
+
+12/11/2024
+- added fully automatic self-driving to map exploration (frontier exploration m-explore)
+  - `ros2 launch explore_lite explore.launch.py`
+  - I think this code needs debug
+
+12/7/2024
+- added Nav2 SLAM (as an alternative to Google Cartographer)
+  - Nav2 SLAM enables driving autonomously to a set goal *while* mapping (and while the map is still incomplete)
+- increase the map saver default timeout
+  - fixed the map saving command timing out on my "slow" laptop
