@@ -106,10 +106,9 @@ public:
     state = 0;
   }
 
-public:
   static const std::string get_model_name() { return "YDLIDAR-X4"; }
 
-  LDS::result_t decode_data(const void * context)
+  LDS::result_t decode_data(const void * context) override
   {
     switch(state) {
       case 1:
