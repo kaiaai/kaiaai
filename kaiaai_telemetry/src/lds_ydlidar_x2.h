@@ -24,7 +24,5 @@ class LDS_YDLidarX2 : public LDS_YDLidarX4
 
 public:
   LDS_YDLidarX2() : LDS_YDLidarX4() {}
-
-public:
   static const std::string get_model_name() { return "YDLIDAR-X2"; }
 };
