@@ -29,7 +29,7 @@ protected:
   static const int LIDAR_RESP_MEASUREMENT_ANGLE_SAMPLE_SHIFT = 8;
 
   static const int PackageSampleBytes = 2;
-  static const int PACKAGE_SAMPLE_MAX_LENGTH = 0x80; // X4 40; X3PRO 90
+  static const int PACKAGE_SAMPLE_MAX_LENGTH = 40;
   static const int Node_Default_Quality = (10<<2);
   static const int Node_Sync = 1;
   static const int Node_NotSync = 2;
