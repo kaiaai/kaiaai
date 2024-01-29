@@ -22,14 +22,14 @@
 class LDS_YDLidarX3PRO : public LDS_YDLidarX4
 {
 protected:
-  uint16_t FirstSampleAnglePrev;
+  uint16_t LastSampleAnglePrev;
   bool scan_completed = false;
 
 public:
   static const std::string get_model_name() { return "YDLIDAR-X3-PRO"; }
   LDS_YDLidarX3PRO() : LDS_YDLidarX4()
   {
-    FirstSampleAnglePrev = 0;
+    LastSampleAnglePrev = 0;
     scan_completed = false;
   }
 
@@ -191,8 +191,8 @@ state2:
     }
 
     if (CheckSumResult) {
-      scan_completed = FirstSampleAngle <= FirstSampleAnglePrev;
-      FirstSampleAnglePrev = FirstSampleAngle;
+      scan_completed = FirstSampleAngle <= LastSampleAnglePrev;
+      LastSampleAnglePrev = FirstSampleAngle;
     }
 
     while(true) {
