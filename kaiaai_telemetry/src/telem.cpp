@@ -28,6 +28,7 @@
 #include "tf2/LinearMath/Quaternion.h"
 
 #include "lds_ydlidar_x4.h"
+#include "lds_ydlidar_x3_pro.h"
 #include "lds_ydlidar_x2.h"
 #include "lds_lds02rr.h"
 
@@ -214,9 +215,14 @@ private:
             plds = new LDS_YDLidarX2();
             break;
           } else {
-            if (s.compare(LDS_YDLidarX4::get_model_name()) == 0) {
-              plds = new LDS_YDLidarX4();
+            if (s.compare(LDS_YDLidarX3PRO::get_model_name()) == 0) {
+              plds = new LDS_YDLidarX3PRO();
               break;
+            } else {
+              if (s.compare(LDS_YDLidarX4::get_model_name()) == 0) {
+                plds = new LDS_YDLidarX4();
+                break;
+              }
             }
           }
         }
@@ -249,6 +255,7 @@ private:
     if (plds == NULL)
       return;
 
+    //RCLCPP_INFO(this->get_logger(), "process_lds_data() %lu", telem_msg.lds.size());
     lds_data_idx_ = 0;
     lds_msg_count_++;
 
@@ -261,13 +268,13 @@ private:
         case LDS::RESULT_OK:
           break;
         case LDS::RESULT_CRC_ERROR:
-//          RCLCPP_INFO(this->get_logger(), "RESULT_CRC_ERROR");
+          RCLCPP_INFO(this->get_logger(), "RESULT_CRC_ERROR");
           lds_crc_error_count_++;
           break;
         case LDS::RESULT_NOT_READY:
           break;
         case LDS::RESULT_INVALID_PACKET:
-//          RCLCPP_INFO(this->get_logger(), "RESULT_INVALID_PACKET");
+          RCLCPP_INFO(this->get_logger(), "RESULT_INVALID_PACKET");
           lds_invalid_packet_count_++;
           break;
         default:

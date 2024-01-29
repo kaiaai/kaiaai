@@ -17,98 +17,23 @@
 //   https://github.com/EAIBOT/ydlidar_arduino
 
 #pragma once
-#include "lds.h"
+#include "lds_ydlidar_x4.h"
 
-class LDS_YDLidarX4 : public LDS
+class LDS_YDLidarX3PRO : public LDS_YDLidarX4
 {
 protected:
-  static const int LIDAR_RESP_MEASUREMENT_SYNCBIT = (0x1<<0);
-  static const int LIDAR_RESP_MEASUREMENT_QUALITY_SHIFT = 2;
-  static const int LIDAR_RESP_MEASUREMENT_CHECKBIT = (0x1<<0);
-  static const int LIDAR_RESP_MEASUREMENT_ANGLE_SHIFT = 1;
-  static const int LIDAR_RESP_MEASUREMENT_ANGLE_SAMPLE_SHIFT = 8;
-
-  static const int PackageSampleBytes = 2;
-  static const int PACKAGE_SAMPLE_MAX_LENGTH = 0x80; // X4 40; X3PRO 90
-  static const int Node_Default_Quality = (10<<2);
-  static const int Node_Sync = 1;
-  static const int Node_NotSync = 2;
-  static const int PackagePaidBytes = 10;
-  static const int PH = 0x55AA;
-
-  enum {
-    CT_Normal = 0,
-    CT_RingStart  = 1,
-    CT_Tail,
-  } CT;
-
-  struct node_info {
-    uint8_t    sync_quality;
-    uint16_t   angle_q6_checkbit;
-    uint16_t   distance_q2;
-  } __attribute__((packed));
-
-  struct node_package {
-    uint16_t  package_Head;
-    uint8_t   package_CT;
-    uint8_t   nowPackageNum;
-    uint16_t  packageFirstSampleAngle;
-    uint16_t  packageLastSampleAngle;
-    uint16_t  checkSum;
-    uint16_t  packageSampleDistance[PACKAGE_SAMPLE_MAX_LENGTH];
-  } __attribute__((packed));
-
-protected:
-  int recvPos;
-  uint8_t package_Sample_Num;
-  int package_recvPos;
-  int package_sample_sum;
-  int currentByte;
-
-  node_package package;
-  uint8_t *packageBuffer;
-
-  uint16_t package_Sample_Index;
-  float IntervalSampleAngle;
-  float IntervalSampleAngle_LastPackage;
-  uint16_t FirstSampleAngle;
-  uint16_t LastSampleAngle;
-  uint16_t CheckSum;
-  uint16_t CheckSumCal;
-  uint16_t SampleNumlAndCTCal;
-  uint16_t LastSampleAngleCal;
-  bool CheckSumResult;
-  uint16_t Valu8Tou16;
-  uint8_t state;
+  uint16_t FirstSampleAnglePrev;
+  bool scan_completed = false;
 
 public:
-  LDS_YDLidarX4() : LDS()
+  static const std::string get_model_name() { return "YDLIDAR-X3-PRO"; }
+  LDS_YDLidarX3PRO() : LDS_YDLidarX4()
   {
-    recvPos = 0;
-    package_Sample_Num = 0;
-    package_recvPos = 0;
-    package_sample_sum = 0;
-    currentByte = 0;
-
-    packageBuffer = (uint8_t*) &package.package_Head;
-
-    package_Sample_Index = 0;
-    IntervalSampleAngle = 0;
-    IntervalSampleAngle_LastPackage = 0;
-    FirstSampleAngle = 0;
-    LastSampleAngle = 0;
-    CheckSum = 0;
-    CheckSumCal = 0;
-    SampleNumlAndCTCal = 0;
-    LastSampleAngleCal = 0;
-    CheckSumResult = true;
-    Valu8Tou16 = 0;
-    state = 0;
+    FirstSampleAnglePrev = 0;
+    scan_completed = false;
   }
 
-  static const std::string get_model_name() { return "YDLIDAR-X4"; }
-
-  virtual LDS::result_t decode_data(const void * context) override
+  LDS::result_t decode_data(const void * context) override
   {
     switch(state) {
       case 1:
@@ -265,6 +190,11 @@ state2:
       }
     }
 
+    if (CheckSumResult) {
+      scan_completed = FirstSampleAngle <= FirstSampleAnglePrev;
+      FirstSampleAnglePrev = FirstSampleAngle;
+    }
+
     while(true) {
 
       uint8_t package_CT;
@@ -313,13 +243,14 @@ state2:
       float point_distance_mm = node.distance_q2*0.25f;
       float point_angle_deg = (node.angle_q6_checkbit >> LIDAR_RESP_MEASUREMENT_ANGLE_SHIFT)/64.0f;
       uint8_t point_quality = (node.sync_quality>>LIDAR_RESP_MEASUREMENT_QUALITY_SHIFT);
-      bool point_startBit = (node.sync_quality & LIDAR_RESP_MEASUREMENT_SYNCBIT);
+      //bool point_startBit = (node.sync_quality & LIDAR_RESP_MEASUREMENT_SYNCBIT);
       //point.sampleIndex = package_Sample_Index;
       //point.firstSampleAngle = FirstSampleAngle/64.0f;
       //point.intervalSampleAngle = IntervalSampleAngle/64.0f;
       //point.angleCorrectionForDistance = AngleCorrectForDistance/64.0f;
 
-      postScanPoint(context, point_angle_deg, point_distance_mm, point_quality, point_startBit);
+      postScanPoint(context, point_angle_deg, point_distance_mm, point_quality, scan_completed);
+      scan_completed = false;
 
       // Dump finished?
       package_Sample_Index++;
@@ -333,5 +264,4 @@ state2:
 
     return RESULT_OK;
   }
-
 };
