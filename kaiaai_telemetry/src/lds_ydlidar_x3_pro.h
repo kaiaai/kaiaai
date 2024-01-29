@@ -192,7 +192,7 @@ state2:
 
     if (CheckSumResult) {
       scan_completed = FirstSampleAngle <= LastSampleAnglePrev;
-      LastSampleAnglePrev = FirstSampleAngle;
+      LastSampleAnglePrev = LastSampleAngle;
     }
 
     while(true) {
