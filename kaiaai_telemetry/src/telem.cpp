@@ -316,6 +316,7 @@ private:
 
     if (scan_completed)
     {
+      //RCLCPP_INFO(this->get_logger(), "scan_completed");
       publish_scan();
       clear_ranges_buffer();
       return;
