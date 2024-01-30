@@ -22,14 +22,12 @@
 class LDS_YDLidarX3PRO : public LDS_YDLidarX4
 {
 protected:
-  uint16_t LastSampleAnglePrev;
-  bool scan_completed = false;
+  bool scan_completed;
 
 public:
   static const std::string get_model_name() { return "YDLIDAR-X3-PRO"; }
   LDS_YDLidarX3PRO() : LDS_YDLidarX4()
   {
-    LastSampleAnglePrev = 0;
     scan_completed = false;
   }
 
@@ -75,10 +73,10 @@ state1:  // hack
           break;
         case 2:
           SampleNumlAndCTCal = currentByte;
-          if ((currentByte != CT_Normal) && (currentByte != CT_RingStart)) {
-            recvPos = 0;
-            continue;
-          }
+          //if ((currentByte != CT_Normal) && (currentByte != CT_RingStart)) {
+          //  recvPos = 0;
+          //  continue;
+          //}
           break;
         case 3:
           SampleNumlAndCTCal += (currentByte<<LIDAR_RESP_MEASUREMENT_ANGLE_SAMPLE_SHIFT);
@@ -190,17 +188,15 @@ state2:
       }
     }
 
-    if (CheckSumResult) {
-      scan_completed = FirstSampleAngle <= LastSampleAnglePrev;
-      LastSampleAnglePrev = LastSampleAngle;
-    }
+    scan_completed = (package.package_CT & 0x01) != 0;
 
     while(true) {
 
       uint8_t package_CT;
       node_info node;
 
-      package_CT = package.package_CT;
+      package_CT = package.package_CT & 0x01;
+
       if (package_CT == CT_Normal) {
         node.sync_quality = Node_Default_Quality + Node_NotSync;
       } else{
