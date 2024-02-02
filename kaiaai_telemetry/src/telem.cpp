@@ -31,6 +31,7 @@
 #include "lds_ydlidar_x3_pro.h"
 #include "lds_ydlidar_x2.h"
 #include "lds_lds02rr.h"
+#include "lds_neato_xv11.h"
 
 using std::placeholders::_1;
 
@@ -44,9 +45,10 @@ public:
   KaiaaiTelemetry()
   : Node(NODE_NAME)
   {
-    this->declare_parameter("laser_sensor.model", std::vector<std::string>({"LDS02RR", "LDS02RR"}));
+    this->declare_parameter("laser_sensor.model", std::vector<std::string>({"YDLIDAR-X4", "LDS02RR"}));
     this->declare_parameter("laser_sensor.angle_offset_deg", std::vector<double>({0.0, -180.0}));
-    this->declare_parameter("laser_sensor.pub_scan_size", std::vector<int>({561, 360}));
+    this->declare_parameter("laser_sensor.clockwise", std::vector<bool>({true, true}));
+    this->declare_parameter("laser_sensor.pub_scan_size", std::vector<int>({720, 360}));
     this->declare_parameter("laser_sensor.range_min_meters", std::vector<double>({0.15, 0.15}));
     this->declare_parameter("laser_sensor.range_max_meters", std::vector<double>({12.0, 6.0}));
 
@@ -81,6 +83,7 @@ public:
 
     plds = NULL;
     angle_offset_deg_ = 0.0;
+    clockwise_ = true;
     pub_scan_size_ = 360;
     range_min_meters_ = 0.15;
     range_max_meters_ = 12.0;
@@ -189,14 +192,16 @@ private:
       return;
 
     const std::vector<std::string> model = this->get_parameter("laser_sensor.model").as_string_array();
-    const std::vector<long int> pub_scan_size = this->get_parameter("laser_sensor.pub_scan_size").as_integer_array();
     const std::vector<double> angle_offset_deg = this->get_parameter("laser_sensor.angle_offset_deg").as_double_array();
+    const std::vector<bool> clockwise = this->get_parameter("laser_sensor.clockwise").as_bool_array();
+    const std::vector<long int> pub_scan_size = this->get_parameter("laser_sensor.pub_scan_size").as_integer_array();
     const std::vector<double> range_min_meters = this->get_parameter("laser_sensor.range_min_meters").as_double_array();
     const std::vector<double> range_max_meters = this->get_parameter("laser_sensor.range_max_meters").as_double_array();
 
     long unsigned int model_count = model.size();
     if (pub_scan_size.size() != model_count || angle_offset_deg.size() != model_count
-        || range_min_meters.size() != model_count || range_max_meters.size() != model_count) {
+        || range_min_meters.size() != model_count || range_max_meters.size() != model_count
+        || clockwise.size() != model_count) {
       RCLCPP_FATAL(this->get_logger(), "laser_sensor parameter array sizes must be equal");
       rclcpp::shutdown();
     }
@@ -207,21 +212,26 @@ private:
     for (auto &s: model) {
 
       if (lds_model.compare(s) == 0) {
-        if (s.compare(LDS_LDSRR02::get_model_name()) == 0) {
-          plds = new LDS_LDSRR02();
+        if (s.compare(LDS_LDS02RR::get_model_name()) == 0) {
+          plds = new LDS_LDS02RR();
           break;
         } else {
-          if (s.compare(LDS_YDLidarX2::get_model_name()) == 0) {
-            plds = new LDS_YDLidarX2();
+          if (s.compare(LDS_NeatoXV11::get_model_name()) == 0) {
+            plds = new LDS_NeatoXV11();
             break;
           } else {
-            if (s.compare(LDS_YDLidarX3PRO::get_model_name()) == 0) {
-              plds = new LDS_YDLidarX3PRO();
+            if (s.compare(LDS_YDLidarX2::get_model_name()) == 0) {
+              plds = new LDS_YDLidarX2();
               break;
             } else {
-              if (s.compare(LDS_YDLidarX4::get_model_name()) == 0) {
-                plds = new LDS_YDLidarX4();
+              if (s.compare(LDS_YDLidarX3PRO::get_model_name()) == 0) {
+                plds = new LDS_YDLidarX3PRO();
                 break;
+              } else {
+                if (s.compare(LDS_YDLidarX4::get_model_name()) == 0) {
+                  plds = new LDS_YDLidarX4();
+                  break;
+                }
               }
             }
           }
@@ -240,6 +250,7 @@ private:
     plds->setScanPointCallback(scan_point_callback);
 
     angle_offset_deg_ = angle_offset_deg[model_idx];
+    clockwise_ = clockwise[model_idx];
     pub_scan_size_ = pub_scan_size[model_idx];
     range_min_meters_ = range_min_meters[model_idx];
     range_max_meters_ = range_max_meters[model_idx];
@@ -331,6 +342,7 @@ private:
     if (mask_radius_meters_ >= distance_meters) // Ignore
       return;
 
+    angle_deg = clockwise_ ? angle_deg : 360.0 - angle_deg;
     angle_deg = fmod(angle_deg, 360.0);
     angle_deg = angle_deg < 0 ? angle_deg + 360 : angle_deg;
 
@@ -374,7 +386,9 @@ private:
     laser_scan_msg.range_min = range_min_meters_;
     laser_scan_msg.range_max = range_max_meters_;
     laser_scan_msg.time_increment = 0; // TODO
-    //float32 scan_time;
+    float scan_time = plds->get_scan_time();
+    if (scan_time > 0)
+      laser_scan_msg.scan_time = scan_time;
     //float32[] intensities;
 
     laser_scan_pub_->publish(laser_scan_msg);
@@ -397,6 +411,7 @@ private:
 
   LDS * plds;
   double angle_offset_deg_;
+  bool clockwise_;
   int pub_scan_size_;
   double range_min_meters_;
   double range_max_meters_;

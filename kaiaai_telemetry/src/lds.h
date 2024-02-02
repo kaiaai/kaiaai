@@ -47,8 +47,9 @@ public:
   }
 
   virtual ~LDS() {}
-
   virtual LDS::result_t decode_data(const void * context) = 0;
+  virtual float get_scan_time() = 0;
+
   static const std::string get_model_name();
 
   void setScanPointCallback(ScanPointCallback scan_point_callback) {
