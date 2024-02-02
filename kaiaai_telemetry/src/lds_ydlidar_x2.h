@@ -21,8 +21,10 @@
 
 class LDS_YDLidarX2 : public LDS_YDLidarX4
 {
-
 public:
   LDS_YDLidarX2() : LDS_YDLidarX4() {}
+  virtual float get_scan_time() override {
+    return (scan_freq > 0) ? 10.0f/float(scan_freq) : -1;
+  }
   static const std::string get_model_name() { return "YDLIDAR-X2"; }
 };

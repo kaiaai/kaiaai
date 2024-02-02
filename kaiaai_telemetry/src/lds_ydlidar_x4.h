@@ -23,23 +23,23 @@ class LDS_YDLidarX4 : public LDS
 {
 protected:
   static const int LIDAR_RESP_MEASUREMENT_SYNCBIT = (0x1<<0);
-  static const int LIDAR_RESP_MEASUREMENT_QUALITY_SHIFT = 2;
+//  static const int LIDAR_RESP_MEASUREMENT_QUALITY_SHIFT = 2;
   static const int LIDAR_RESP_MEASUREMENT_CHECKBIT = (0x1<<0);
   static const int LIDAR_RESP_MEASUREMENT_ANGLE_SHIFT = 1;
   static const int LIDAR_RESP_MEASUREMENT_ANGLE_SAMPLE_SHIFT = 8;
 
-  static const int PackageSampleBytes = 2;
+  static const int PACKAGE_SAMPLE_BYTES = 2;
   static const int PACKAGE_SAMPLE_MAX_LENGTH = 40;
-  static const int Node_Default_Quality = (10<<2);
-  static const int Node_Sync = 1;
-  static const int Node_NotSync = 2;
-  static const int PackagePaidBytes = 10;
+  static const int NODE_DEFAULT_QUALITY = 10; // (10<<2)
+  static const int NODE_SYNC = 1;
+  static const int NODE_NOTSYNC = 2;
+  static const int PACKAGE_PAID_BYTES = 10;
   static const int PH = 0x55AA;
 
   enum {
-    CT_Normal = 0,
-    CT_RingStart  = 1,
-    CT_Tail,
+    CT_NORMAL = 0,
+    CT_RING_START = 1,
+    CT_TAIL,
   } CT;
 
   struct node_info {
@@ -81,6 +81,9 @@ protected:
   uint16_t Valu8Tou16;
   uint8_t state;
 
+  uint8_t scan_freq;
+  bool scan_completed;
+
 public:
   LDS_YDLidarX4() : LDS()
   {
@@ -104,9 +107,14 @@ public:
     CheckSumResult = true;
     Valu8Tou16 = 0;
     state = 0;
+
+    scan_freq = 0;
+    scan_completed = false;
   }
 
   static const std::string get_model_name() { return "YDLIDAR-X4"; }
+
+  virtual float get_scan_time() override { return -1; }
 
   virtual LDS::result_t decode_data(const void * context) override
   {
@@ -121,7 +129,7 @@ public:
     // Each packet has a Start and End (absolute) angles
     if (package_Sample_Index == 0) {
 
-      // Read in, parse the packet header: first PackagePaidBytes=10 bytes
+      // Read in, parse the packet header: first PACKAGE_PAID_BYTES=10 bytes
       package_Sample_Num = 0;
       package_recvPos = 0;
       recvPos = 0;
@@ -150,10 +158,10 @@ state1:  // hack
           break;
         case 2:
           SampleNumlAndCTCal = currentByte;
-          if ((currentByte != CT_Normal) && (currentByte != CT_RingStart)) {
-            recvPos = 0;
-            continue;
-          }
+//          if ((currentByte != CT_NORMAL) && (currentByte != CT_RING_START)) {
+//            recvPos = 0;
+//            continue;
+//          }
           break;
         case 3:
           SampleNumlAndCTCal += (currentByte<<LIDAR_RESP_MEASUREMENT_ANGLE_SAMPLE_SHIFT);
@@ -209,7 +217,7 @@ state1:  // hack
         }
         packageBuffer[recvPos++] = currentByte;
 
-        if (recvPos  == PackagePaidBytes ){
+        if (recvPos  == PACKAGE_PAID_BYTES ){
           package_recvPos = recvPos;
           break;
 
@@ -221,7 +229,7 @@ state1:  // hack
         return RESULT_INVALID_PACKET;
 
       // Read in the rest of the packet, i.e. samples
-      if (PackagePaidBytes == recvPos) {
+      if (PACKAGE_PAID_BYTES == recvPos) {
         recvPos = 0;
         package_sample_sum = package_Sample_Num<<1;
 
@@ -258,24 +266,33 @@ state2:
       CheckSumCal ^= SampleNumlAndCTCal;
       CheckSumCal ^= LastSampleAngleCal;
 
-      if (CheckSumCal != CheckSum) {
-        CheckSumResult = false;
-      } else {
-        CheckSumResult = true;
-      }
+      CheckSumResult = CheckSumCal == CheckSum;
+//      if (CheckSumCal != CheckSum) {
+//        CheckSumResult = false;
+//      } else {
+//        CheckSumResult = true;
+//      }
+    }
+
+    scan_completed = false;
+    if (CheckSumResult) {
+      scan_completed = (package.package_CT & 0x01) == CT_RING_START;
+      if (scan_completed)
+        scan_freq = package.package_CT >> 1;
     }
 
     while(true) {
 
-      uint8_t package_CT;
+//      uint8_t package_CT;
       node_info node;
 
-      package_CT = package.package_CT;
-      if (package_CT == CT_Normal) {
-        node.sync_quality = Node_Default_Quality + Node_NotSync;
-      } else{
-        node.sync_quality = Node_Default_Quality + Node_Sync;
-      }
+      //package_CT = package.package_CT;
+      //if ((package_CT & 0x01) == CT_NORMAL) {
+      //  node.sync_quality = NODE_DEFAULT_QUALITY + NODE_NOTSYNC;
+      //} else {
+      //  node.sync_quality = NODE_DEFAULT_QUALITY + NODE_SYNC;
+      //}
+      node.sync_quality = NODE_DEFAULT_QUALITY;
 
       if (CheckSumResult == true) {
         int32_t AngleCorrectForDistance;
@@ -301,7 +318,7 @@ state2:
           }
         }
       } else {
-        node.sync_quality = Node_Default_Quality + Node_NotSync;
+//        node.sync_quality = NODE_DEFAULT_QUALITY + NODE_NOTSYNC;
         node.angle_q6_checkbit = LIDAR_RESP_MEASUREMENT_CHECKBIT;
         node.distance_q2 = 0;
         package_Sample_Index = 0;
@@ -312,14 +329,17 @@ state2:
       // Dump out processed data
       float point_distance_mm = node.distance_q2*0.25f;
       float point_angle_deg = (node.angle_q6_checkbit >> LIDAR_RESP_MEASUREMENT_ANGLE_SHIFT)/64.0f;
-      uint8_t point_quality = (node.sync_quality>>LIDAR_RESP_MEASUREMENT_QUALITY_SHIFT);
-      bool point_startBit = (node.sync_quality & LIDAR_RESP_MEASUREMENT_SYNCBIT);
+//      uint8_t point_quality = (node.sync_quality>>LIDAR_RESP_MEASUREMENT_QUALITY_SHIFT);
+      uint8_t point_quality = NODE_DEFAULT_QUALITY;
+//      bool point_startBit = (node.sync_quality & LIDAR_RESP_MEASUREMENT_SYNCBIT);
       //point.sampleIndex = package_Sample_Index;
       //point.firstSampleAngle = FirstSampleAngle/64.0f;
       //point.intervalSampleAngle = IntervalSampleAngle/64.0f;
       //point.angleCorrectionForDistance = AngleCorrectForDistance/64.0f;
 
-      postScanPoint(context, point_angle_deg, point_distance_mm, point_quality, point_startBit);
+//      postScanPoint(context, point_angle_deg, point_distance_mm, point_quality, point_startBit);
+      postScanPoint(context, point_angle_deg, point_distance_mm, point_quality, scan_completed);
+      scan_completed = false;
 
       // Dump finished?
       package_Sample_Index++;
