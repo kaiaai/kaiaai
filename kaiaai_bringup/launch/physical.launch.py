@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright 2023 REMAKE.AI
+# Copyright 2023 REMAKE.AI, KAIA.AI, MAKERSPET.COm
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -78,7 +78,8 @@ def generate_launch_description():
         DeclareLaunchArgument(
             name='lds_model',
             default_value='YDLIDAR-X4',
-            choices=['YDLIDAR-X4', 'LDS02RR', 'YDLIDAR-X2', 'YDLIDAR-X3-PRO'],
+            choices=['YDLIDAR-X4', 'LDS02RR', 'YDLIDAR-X2-X2L',
+              'YDLIDAR-X3-PRO', 'YDLIDAR-X3', 'NEATO-XV11', 'RPLIDAR-A1'],
             description='Laser distance scan sensor model'
         ),
         DeclareLaunchArgument(
