@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright 2023 REMAKE.AI, KAIA.AI, MAKERSPET.COM
+# Copyright 2023 REMAKE.AI, KAIA.AI, MAKERSPET.COm
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -29,28 +29,21 @@ def make_nodes(context: LaunchContext, robot_model, lds_model, use_sim_time):
     lds_model_str = context.perform_substitution(lds_model)
     use_sim_time_str = context.perform_substitution(use_sim_time)
     description_package_path = get_package_share_path(robot_model_str)
-    telem_package_path = get_package_share_path('kaiaai_telemetry')
 
     urdf_path_name = os.path.join(
       description_package_path,
       'urdf',
       'robot.urdf.xacro')
 
-    config_telem_path_name = os.path.join(
-      telem_package_path,
-      'config',
-      'telem.yaml')
-
     robot_description = ParameterValue(Command(['xacro ', urdf_path_name]), value_type=str)
 
-    config_override_path_name = os.path.join(
+    param_path_name = os.path.join(
         description_package_path,
         'config',
         'telem.yaml'
         )
     print('URDF file   : {}'.format(urdf_path_name))
-    print('Telem params: {}'.format(config_telem_path_name))
-    print('Model params: {}'.format(config_override_path_name))
+    print('Telem params: {}'.format(param_path_name))
     print('LDS model   : {}'.format(lds_model_str))
 
     return [
@@ -58,8 +51,8 @@ def make_nodes(context: LaunchContext, robot_model, lds_model, use_sim_time):
             package="kaiaai_telemetry",
             executable="telem",
             output="screen",
-            parameters = [config_telem_path_name, config_override_path_name,
-              {'laser_scan.lds_model': lds_model_str}]
+#            parameters = [param_path_name]
+            parameters = [param_path_name, {'laser_scan.lds_model': lds_model_str}]
         ),
         Node(
             package='robot_state_publisher',
