@@ -13,11 +13,11 @@
 // limitations under the License.
 
 #pragma once
-#include "lds_ydlidar_x2.h"
+#include "lds_ydlidar_x2_x2l.h"
 
-class LDS_YDLidarX3 : public LDS_YDLidarX2
+class LDS_YDLidarX3 : public LDS_YDLidarX2X2L
 {
 public:
-  LDS_YDLidarX3() : LDS_YDLidarX2() {}
+  LDS_YDLidarX3() : LDS_YDLidarX2X2L() {}
   static const std::string get_model_name() { return "YDLIDAR-X3"; }
 };

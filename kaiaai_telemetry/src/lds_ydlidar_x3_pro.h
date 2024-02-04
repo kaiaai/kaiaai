@@ -11,17 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//
-// Based on
-//   Copyright 2015 - 2018 EAI TEAM http://www.eaibot.com
-//   https://github.com/EAIBOT/ydlidar_arduino
 
 #pragma once
-#include "lds_ydlidar_x2.h"
+#include "lds_ydlidar_x2_x2l.h"
 
-class LDS_YDLidarX3PRO : public LDS_YDLidarX2
+class LDS_YDLidarX3PRO : public LDS_YDLidarX2X2L
 {
 public:
-  LDS_YDLidarX3PRO() : LDS_YDLidarX2() {}
+  LDS_YDLidarX3PRO() : LDS_YDLidarX2X2L() {}
   static const std::string get_model_name() { return "YDLIDAR-X3-PRO"; }
 };

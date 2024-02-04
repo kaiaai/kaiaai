@@ -12,9 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// Based on
-//   Copyright 2015 - 2018 EAI TEAM http://www.eaibot.com
-//   https://github.com/EAIBOT/ydlidar_arduino
+// Based on https://github.com/EAIBOT/ydlidar_arduino
 
 #pragma once
 #include "lds.h"

@@ -30,10 +30,9 @@
 #include "lds_ydlidar_x4.h"
 #include "lds_ydlidar_x3_pro.h"
 #include "lds_ydlidar_x3.h"
-#include "lds_ydlidar_x2.h"
-#include "lds_ydlidar_x2l.h"
-#include "lds_lds02rr.h"
+#include "lds_ydlidar_x2_x2l.h"
 #include "lds_neato_xv11.h"
+#include "lds_lds02rr.h"
 #include "lds_rplidar_a1.h"
 
 using std::placeholders::_1;
@@ -221,8 +220,8 @@ private:
           plds = new LDS_YDLidarX3();
           break;
         } else {
-          if (s.compare(LDS_YDLidarX2L::get_model_name()) == 0) {
-            plds = new LDS_YDLidarX2L();
+          if (s.compare(LDS_YDLidarX2X2L::get_model_name()) == 0) {
+            plds = new LDS_YDLidarX2X2L();
             break;
           } else {
             if (s.compare(LDS_LDS02RR::get_model_name()) == 0) {
@@ -233,8 +232,8 @@ private:
                 plds = new LDS_NeatoXV11();
                 break;
               } else {
-                if (s.compare(LDS_YDLidarX2::get_model_name()) == 0) {
-                  plds = new LDS_YDLidarX2();
+                if (s.compare(LDS_RPLidarA1::get_model_name()) == 0) {
+                  plds = new LDS_RPLidarA1();
                   break;
                 } else {
                   if (s.compare(LDS_YDLidarX3PRO::get_model_name()) == 0) {
