@@ -34,6 +34,7 @@
 #include "lds_ydlidar_x2l.h"
 #include "lds_lds02rr.h"
 #include "lds_neato_xv11.h"
+#include "lds_rplidar_a1.h"
 
 using std::placeholders::_1;
 
