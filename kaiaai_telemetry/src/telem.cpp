@@ -29,7 +29,9 @@
 
 #include "lds_ydlidar_x4.h"
 #include "lds_ydlidar_x3_pro.h"
+#include "lds_ydlidar_x3.h"
 #include "lds_ydlidar_x2.h"
+#include "lds_ydlidar_x2l.h"
 #include "lds_lds02rr.h"
 #include "lds_neato_xv11.h"
 
@@ -214,25 +216,35 @@ private:
     for (auto &s: model) {
 
       if (lds_model.compare(s) == 0) {
-        if (s.compare(LDS_LDS02RR::get_model_name()) == 0) {
-          plds = new LDS_LDS02RR();
+        if (s.compare(LDS_YDLidarX3::get_model_name()) == 0) {
+          plds = new LDS_YDLidarX3();
           break;
         } else {
-          if (s.compare(LDS_NeatoXV11::get_model_name()) == 0) {
-            plds = new LDS_NeatoXV11();
+          if (s.compare(LDS_YDLidarX2L::get_model_name()) == 0) {
+            plds = new LDS_YDLidarX2L();
             break;
           } else {
-            if (s.compare(LDS_YDLidarX2::get_model_name()) == 0) {
-              plds = new LDS_YDLidarX2();
+            if (s.compare(LDS_LDS02RR::get_model_name()) == 0) {
+              plds = new LDS_LDS02RR();
               break;
             } else {
-              if (s.compare(LDS_YDLidarX3PRO::get_model_name()) == 0) {
-                plds = new LDS_YDLidarX3PRO();
+              if (s.compare(LDS_NeatoXV11::get_model_name()) == 0) {
+                plds = new LDS_NeatoXV11();
                 break;
               } else {
-                if (s.compare(LDS_YDLidarX4::get_model_name()) == 0) {
-                  plds = new LDS_YDLidarX4();
+                if (s.compare(LDS_YDLidarX2::get_model_name()) == 0) {
+                  plds = new LDS_YDLidarX2();
                   break;
+                } else {
+                  if (s.compare(LDS_YDLidarX3PRO::get_model_name()) == 0) {
+                    plds = new LDS_YDLidarX3PRO();
+                    break;
+                  } else {
+                    if (s.compare(LDS_YDLidarX4::get_model_name()) == 0) {
+                      plds = new LDS_YDLidarX4();
+                      break;
+                    }
+                  }
                 }
               }
             }
