@@ -93,6 +93,8 @@ public:
     seq_last_ = 0;
     lds_data_idx_ = 0;
     pmsg = NULL;
+    prev_stamp_.sec = 0;
+    prev_stamp_.nanosec = 0;
   }
 
   ~KaiaaiTelemetry()
@@ -256,6 +258,12 @@ private:
     range_max_meters_ = range_max_meters[model_idx];
     ranges_.resize(pub_scan_size_);
 
+    if (pub_scan_size_ <= 0) {
+      RCLCPP_FATAL(this->get_logger(), "Invalid pub_scan_size %d", pub_scan_size_);
+      rclcpp::shutdown();
+      return;
+    }
+
     // RCLCPP_INFO(this->get_logger(), "Laser sensor model %s, pub_scan_size_ %d, angle_offset_deg_ %f",
     //   lds_model.c_str(), pub_scan_size_, angle_offset_deg_);
     RCLCPP_INFO(this->get_logger(), "LDS model %s", lds_model.c_str());
@@ -385,11 +393,18 @@ private:
     laser_scan_msg.angle_increment = laser_scan_angle_increment * DEG_TO_RAD;
     laser_scan_msg.range_min = range_min_meters_;
     laser_scan_msg.range_max = range_max_meters_;
-    laser_scan_msg.time_increment = 0; // TODO
+
     float scan_time = plds->get_scan_time();
-    if (scan_time > 0)
-      laser_scan_msg.scan_time = scan_time;
+    if (scan_time <= 0) {
+      // Hack up a scan time estimate
+      scan_time = pmsg->stamp.sec - prev_stamp_.sec + (pmsg->stamp.nanosec - prev_stamp_.nanosec)*1e-6;
+      scan_time = scan_time > 0.25 ? 0 : scan_time; // Require 4Hz scan minimum
+    }
+    scan_time = scan_time < 0 ? 0 : scan_time;
+    laser_scan_msg.scan_time = scan_time > 0 ? scan_time : 0;
+    laser_scan_msg.time_increment = scan_time/pub_scan_size_;
     //float32[] intensities;
+    prev_stamp_ = pmsg->stamp;
 
     laser_scan_pub_->publish(laser_scan_msg);
   }
@@ -418,6 +433,7 @@ private:
   double mask_radius_meters_;
 
   kaiaai_msgs::msg::KaiaaiTelemetry * pmsg;
+  builtin_interfaces::msg::Time prev_stamp_;
 };
 
 int main(int argc, char * argv[])

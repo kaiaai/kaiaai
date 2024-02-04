@@ -12,9 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// Based on
-//   Copyright 2014-2021 James LeRoy getSurreal.com
-//   https://github.com/getSurreal/XV_Lidar_Controller
+// Based on https://github.com/getSurreal/XV_Lidar_Controller
 
 #pragma once
 #include "lds.h"
@@ -67,8 +65,12 @@ protected:
 
     static const uint8_t BAD_DATA_MASK = (INVALID_DATA_FLAG | STRENGTH_WARNING_FLAG);
 
-    static const uint8_t eState_Find_COMMAND = 0;                        // 1st state: find 0xFA (COMMAND) in input stream
-    static const uint8_t eState_Build_Packet = eState_Find_COMMAND + 1;  // 2nd state: build the packet
+    enum e_state{
+      eState_Find_COMMAND = 0, // 1st state: find 0xFA (COMMAND) in input stream
+      eState_Build_Packet = 1, // 2nd state: build the packet
+    };
+    // static const uint8_t eState_Find_COMMAND = 0; // 1st state: find 0xFA (COMMAND) in input stream
+    // static const uint8_t eState_Build_Packet = eState_Find_COMMAND + 1;  // 2nd state: build the packet
     uint16_t aryDist[N_DATA_QUADS];    // there are (4) distances, one for each data quad
                                        // so the maximum distance is 16383 mm (0x3FFF)
     uint16_t aryQuality[N_DATA_QUADS]; // same with 'quality'

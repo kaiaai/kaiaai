@@ -18,10 +18,11 @@ Kaia.ai robotics software platform consists of these parts:
 ## Setup
 - View build, setup and bringup [videos](https://www.youtube.com/playlist?list=PLOSXKDW70aR8SA16wTB0ou9ClKhv7micy)
 
-## Supported LDS/LiDAR sensors
-- YDLIDAR X4 (default)
-- YDLIDAR X2
-- Xiaomi 1st gen LDS02RR ($15 off AliExpress including shipping)
+## Supported LiDAR/LDS sensors
+- YDLIDAR X4 (default), YDLIDAR X2/X2L, YDLIDAR X3/X3PRO
+- Neato XV11
+- Xiaomi 1st gen LDS02RR (~$16 off AliExpress including shipping)
+- RPLIDAR A1
 
 ## Command cheat sheets
 
@@ -83,7 +84,10 @@ ros2 run nav2_map_server map_saver_cli -f ~/map --ros-args -p save_map_timeout:=
 ```
 ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_model:=LDS02RR
 ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_model:=YDLIDAR-X4
+ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_model:=YDLIDAR-X3-PRO
 ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_model:=YDLIDAR-X2
+ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_model:=NEATO-XV11
+ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_model:=RPLIDAR-A1
 ```
 
 ### View, set physical robot's parameters
