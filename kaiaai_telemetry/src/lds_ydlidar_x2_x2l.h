@@ -13,11 +13,14 @@
 // limitations under the License.
 
 #pragma once
-#include "lds_ydlidar_x2l.h"
+#include "lds_ydlidar_x4.h"
 
-class LDS_YDLidarX2L : public LDS_YDLidarX2
+class LDS_YDLidarX2X2L : public LDS_YDLidarX4
 {
 public:
-  LDS_YDLidarX2L() : LDS_YDLidarX2() {}
-  static const std::string get_model_name() { return "YDLIDAR-X2L"; }
+  LDS_YDLidarX2X2L() : LDS_YDLidarX4() {}
+  virtual float get_scan_time() override {
+    return (scan_freq > 0) ? 10.0f/float(scan_freq) : -1;
+  }
+  static const std::string get_model_name() { return "YDLIDAR-X2-X2L"; }
 };
