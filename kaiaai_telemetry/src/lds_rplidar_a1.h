@@ -51,25 +51,21 @@ public:
         recvPos = 0;
 
       int current_byte = readByte(context);
-      //int current_byte = readSerial();
       if (current_byte < 0)
         return RESULT_NOT_READY;
 
-      uint8_t test;
       switch (recvPos) {
-        case 0:
-          test = current_byte >> 1;
-          test = (test ^ current_byte) & 0x01;
-          if (!test)
-            continue;
+      case 0:
+        if (((current_byte >> 1) ^ current_byte) & 0x01)
           break;
-        case 1:
-          test = current_byte & RESP_MEAS_CHECKBIT;
-          if (!test) {
-            recvPos = 0;
-            continue;
-          }
+        continue;
+      case 1:
+        if (current_byte & RESP_MEAS_CHECKBIT)
           break;
+        recvPos = 0;
+        if (((current_byte >> 1) ^ current_byte) & 0x01)
+          break;
+        continue;
       }
 
       uint8_t *nodebuf = (uint8_t*)&node;
@@ -81,8 +77,6 @@ public:
         uint8_t quality = (node.sync_quality >> RESP_MEAS_QUALITY_SHIFT);
         bool scan_completed = (node.sync_quality & RESP_MEAS_SYNCBIT);
 
-        //postPacket(nodebuf, sizeof(node_info_t), scan_completed);
-        //postScanPoint(angle_deg, distance_mm, quality, scan_completed);
         postScanPoint(context, angle_deg, distance_mm, quality, scan_completed);
 
         recvPos = 0;
