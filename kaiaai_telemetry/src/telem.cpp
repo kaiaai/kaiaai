@@ -279,7 +279,7 @@ private:
     // RCLCPP_INFO(this->get_logger(), "Laser sensor model %s, pub_scan_size_ %d, angle_offset_deg_ %f",
     //   lds_model.c_str(), pub_scan_size_, angle_offset_deg_);
     RCLCPP_INFO(this->get_logger(), "LDS model %s", lds_model.c_str());
-    RCLCPP_INFO(this->get_logger(), "mask_radius_meters_ %lf", mask_radius_meters_);
+    //RCLCPP_INFO(this->get_logger(), "mask_radius_meters_ %lf", mask_radius_meters_);
   }
 
   void process_lds_data(const kaiaai_msgs::msg::KaiaaiTelemetry & telem_msg)
