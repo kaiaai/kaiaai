@@ -1,4 +1,4 @@
-// Copyright 2023 REMAKE.AI, KAIA.AI, MAKERSPET.COM
+// Copyright 2024 REMAKE.AI, KAIA.AI, MAKERSPET.COM
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,5 +19,5 @@ class LDS_LDS02RR : public LDS_NeatoXV11
 {
 public:
   LDS_LDS02RR() : LDS_NeatoXV11() {}
-  static const std::string get_model_name() { return "LDS02RR"; }
+  static const std::string get_model_name() { return "XIAOMI-LDS02RR"; }
 };

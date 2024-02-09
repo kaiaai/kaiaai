@@ -1,4 +1,4 @@
-// Copyright 2023 REMAKE.AI, KAIA.AI, MAKERSPET.COM
+// Copyright 2024 REMAKE.AI, KAIA.AI, MAKERSPET.COM
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,11 +20,11 @@
 class LDS_YDLidarX4 : public LDS
 {
 protected:
-  static const int LIDAR_RESP_MEASUREMENT_SYNCBIT = (0x1<<0);
-//  static const int LIDAR_RESP_MEASUREMENT_QUALITY_SHIFT = 2;
-  static const int LIDAR_RESP_MEASUREMENT_CHECKBIT = (0x1<<0);
-  static const int LIDAR_RESP_MEASUREMENT_ANGLE_SHIFT = 1;
-  static const int LIDAR_RESP_MEASUREMENT_ANGLE_SAMPLE_SHIFT = 8;
+  static const int RESP_MEASUREMENT_SYNCBIT = (0x1<<0);
+//  static const int RESP_MEASUREMENT_QUALITY_SHIFT = 2;
+  static const int RESP_MEASUREMENT_CHECKBIT = (0x1<<0);
+  static const int RESP_MEASUREMENT_ANGLE_SHIFT = 1;
+  static const int RESP_MEASUREMENT_ANGLE_SAMPLE_SHIFT = 8;
 
   static const int PACKAGE_SAMPLE_BYTES = 2;
   static const int PACKAGE_SAMPLE_MAX_LENGTH = 40;
@@ -162,11 +162,11 @@ state1:  // hack
 //          }
           break;
         case 3:
-          SampleNumlAndCTCal += (currentByte<<LIDAR_RESP_MEASUREMENT_ANGLE_SAMPLE_SHIFT);
+          SampleNumlAndCTCal += (currentByte<<RESP_MEASUREMENT_ANGLE_SAMPLE_SHIFT);
           package_Sample_Num = currentByte;
           break;
         case 4:
-          if (currentByte & LIDAR_RESP_MEASUREMENT_CHECKBIT) {
+          if (currentByte & RESP_MEASUREMENT_CHECKBIT) {
             FirstSampleAngle = currentByte;
           } else {
             recvPos = 0;
@@ -174,12 +174,12 @@ state1:  // hack
           }
           break;
         case 5:
-          FirstSampleAngle += (currentByte<<LIDAR_RESP_MEASUREMENT_ANGLE_SAMPLE_SHIFT);
+          FirstSampleAngle += (currentByte<<RESP_MEASUREMENT_ANGLE_SAMPLE_SHIFT);
           CheckSumCal ^= FirstSampleAngle;
           FirstSampleAngle = FirstSampleAngle>>1;
           break;
         case 6:
-          if (currentByte & LIDAR_RESP_MEASUREMENT_CHECKBIT) {
+          if (currentByte & RESP_MEASUREMENT_CHECKBIT) {
             LastSampleAngle = currentByte;
           } else {
             recvPos = 0;
@@ -187,7 +187,7 @@ state1:  // hack
           }
           break;
         case 7:
-          LastSampleAngle += (currentByte<<LIDAR_RESP_MEASUREMENT_ANGLE_SAMPLE_SHIFT);
+          LastSampleAngle += (currentByte<<RESP_MEASUREMENT_ANGLE_SAMPLE_SHIFT);
           LastSampleAngleCal = LastSampleAngle;
           LastSampleAngle = LastSampleAngle>>1;
           if(package_Sample_Num == 1){
@@ -210,7 +210,7 @@ state1:  // hack
           CheckSum = currentByte;
           break;
         case 9:
-          CheckSum += (currentByte<<LIDAR_RESP_MEASUREMENT_ANGLE_SAMPLE_SHIFT);
+          CheckSum += (currentByte<<RESP_MEASUREMENT_ANGLE_SAMPLE_SHIFT);
           break;
         }
         packageBuffer[recvPos++] = currentByte;
@@ -239,7 +239,7 @@ state2:
             return RESULT_NOT_READY;
           }
           if ((recvPos & 1) == 1) {
-            Valu8Tou16 += (currentByte<<LIDAR_RESP_MEASUREMENT_ANGLE_SAMPLE_SHIFT);
+            Valu8Tou16 += (currentByte<<RESP_MEASUREMENT_ANGLE_SAMPLE_SHIFT);
             CheckSumCal ^= Valu8Tou16;
           } else {
             Valu8Tou16 = currentByte;
@@ -305,31 +305,31 @@ state2:
         float sampleAngle = IntervalSampleAngle*package_Sample_Index;
         if ((FirstSampleAngle + sampleAngle + AngleCorrectForDistance) < 0) {
           node.angle_q6_checkbit = (((uint16_t)(FirstSampleAngle + sampleAngle +
-            AngleCorrectForDistance + 23040))<<LIDAR_RESP_MEASUREMENT_ANGLE_SHIFT) + LIDAR_RESP_MEASUREMENT_CHECKBIT;
+            AngleCorrectForDistance + 23040))<<RESP_MEASUREMENT_ANGLE_SHIFT) + RESP_MEASUREMENT_CHECKBIT;
         } else {
           if ((FirstSampleAngle + sampleAngle + AngleCorrectForDistance) > 23040) {
             node.angle_q6_checkbit = ((uint16_t)((FirstSampleAngle + sampleAngle +
-              AngleCorrectForDistance - 23040))<<LIDAR_RESP_MEASUREMENT_ANGLE_SHIFT) + LIDAR_RESP_MEASUREMENT_CHECKBIT;
+              AngleCorrectForDistance - 23040))<<RESP_MEASUREMENT_ANGLE_SHIFT) + RESP_MEASUREMENT_CHECKBIT;
           } else {
             node.angle_q6_checkbit = ((uint16_t)((FirstSampleAngle + sampleAngle +
-              AngleCorrectForDistance))<<LIDAR_RESP_MEASUREMENT_ANGLE_SHIFT) + LIDAR_RESP_MEASUREMENT_CHECKBIT;
+              AngleCorrectForDistance))<<RESP_MEASUREMENT_ANGLE_SHIFT) + RESP_MEASUREMENT_CHECKBIT;
           }
         }
       } else {
 //        node.sync_quality = NODE_DEFAULT_QUALITY + NODE_NOTSYNC;
-        node.angle_q6_checkbit = LIDAR_RESP_MEASUREMENT_CHECKBIT;
+        node.angle_q6_checkbit = RESP_MEASUREMENT_CHECKBIT;
         node.distance_q2 = 0;
         package_Sample_Index = 0;
         state = 0;
-        return RESULT_CRC_ERROR;
+        return RESULT_CHECKSUM_ERROR;
       }
 
       // Dump out processed data
       float point_distance_mm = node.distance_q2*0.25f;
-      float point_angle_deg = (node.angle_q6_checkbit >> LIDAR_RESP_MEASUREMENT_ANGLE_SHIFT)/64.0f;
-//      uint8_t point_quality = (node.sync_quality>>LIDAR_RESP_MEASUREMENT_QUALITY_SHIFT);
+      float point_angle_deg = (node.angle_q6_checkbit >> RESP_MEASUREMENT_ANGLE_SHIFT)/64.0f;
+//      uint8_t point_quality = (node.sync_quality>>RESP_MEASUREMENT_QUALITY_SHIFT);
       uint8_t point_quality = NODE_DEFAULT_QUALITY;
-//      bool point_startBit = (node.sync_quality & LIDAR_RESP_MEASUREMENT_SYNCBIT);
+//      bool point_startBit = (node.sync_quality & RESP_MEASUREMENT_SYNCBIT);
       //point.sampleIndex = package_Sample_Index;
       //point.firstSampleAngle = FirstSampleAngle/64.0f;
       //point.intervalSampleAngle = IntervalSampleAngle/64.0f;

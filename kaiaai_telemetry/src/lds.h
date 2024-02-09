@@ -1,4 +1,4 @@
-// Copyright 2023 REMAKE.AI, KAIA.AI, MAKERSPET.COM
+// Copyright 2024 REMAKE.AI, KAIA.AI, MAKERSPET.COM
 //
 // Based on
 //   Copyright 2015 - 2018 EAI TEAM http://www.eaibot.com
@@ -30,7 +30,7 @@ public:
     RESULT_OK = 0,
     RESULT_TIMEOUT = -1,
     RESULT_INVALID_PACKET = -2,
-    RESULT_CRC_ERROR = -3,
+    RESULT_CHECKSUM_ERROR = -3,
     RESULT_NOT_READY = -4,
     RESULT_NOT_CONFIGURED = -5,
   };

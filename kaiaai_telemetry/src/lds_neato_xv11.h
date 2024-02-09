@@ -1,4 +1,4 @@
-// Copyright 2023 REMAKE.AI, KAIA.AI, MAKERSPET.COM
+// Copyright 2024 REMAKE.AI, KAIA.AI, MAKERSPET.COM
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -231,7 +231,7 @@ public:
           }
         } else {
           // Bad packet
-          result = RESULT_CRC_ERROR;
+          result = RESULT_CHECKSUM_ERROR;
         }
 
         clearVars();

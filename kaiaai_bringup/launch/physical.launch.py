@@ -85,7 +85,7 @@ def generate_launch_description():
         DeclareLaunchArgument(
             name='lds_model',
             default_value='YDLIDAR-X4',
-            choices=['YDLIDAR-X4', 'LDS02RR', 'YDLIDAR-X2-X2L',
+            choices=['YDLIDAR-X4', 'XIAOMI-LDS02RR', 'YDLIDAR-X2-X2L', 'DELTA-2G',
               'YDLIDAR-X3-PRO', 'YDLIDAR-X3', 'NEATO-XV11', 'RPLIDAR-A1'],
             description='Laser distance scan sensor model'
         ),
