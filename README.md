@@ -82,7 +82,7 @@ ros2 run nav2_map_server map_saver_cli -f ~/map --ros-args -p save_map_timeout:=
 
 ### Specify LDS/LiDAR model to use
 ```
-ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_model:=LDS02RR
+ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_model:=XIAOMI-LDS02RR
 ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_model:=YDLIDAR-X4
 ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_model:=YDLIDAR-X3
 ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_model:=YDLIDAR-X3-PRO
@@ -166,8 +166,10 @@ Initial versions of packages in this repo are based on ROBOTIS
 2/5/2024
 - added LiDAR/LDS laser distance scan sensors support
   - YDLIDAR X3, X3-PRO
-  - Neato XV11
-  - RPLIDAR A1
+  - `ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_model:=YDLIDAR-X3`
+  - `ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_model:=YDLIDAR-X3-PRO`
+  - Neato XV11 `ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_model:=NEATO-XV11`
+  - RPLIDAR A1 `ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_model:=RPLIDAR-A1`
 - split kaiaai_telemetry config into default and custom
   - `kaiaai/kaiaai_telemetry/config/telem.yaml` is the default config
   - `makerspet_loki/config/telem.yaml` is the custom config for the Loki robot model
@@ -181,7 +183,7 @@ Initial versions of packages in this repo are based on ROBOTIS
 1/21/2024
 - kaiaai_telemetry now supports multiple LiDAR/LDS laser distance scan sensors
   - added Xiaomi Mi LDS02RR; default is YDLIDAR X4
-  - `ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_model:=LDS02RR`
+  - `ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_model:=XIAOMI-LDS02RR`
   - `ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_model:=YDLIDAR-X4`
 
 12/11/2024

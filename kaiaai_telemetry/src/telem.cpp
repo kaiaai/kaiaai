@@ -1,4 +1,4 @@
-// Copyright 2023 REMAKE.AI, KAIA.AI, MAKERSPET.COM
+// Copyright 2023-2024 REMAKE.AI, KAIA.AI, MAKERSPET.COM
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,6 +34,7 @@
 #include "lds_neato_xv11.h"
 #include "lds_lds02rr.h"
 #include "lds_rplidar_a1.h"
+#include "lds_delta_2g.h"
 
 using std::placeholders::_1;
 
@@ -240,9 +241,14 @@ private:
                     plds = new LDS_YDLidarX3PRO();
                     break;
                   } else {
-                    if (s.compare(LDS_YDLidarX4::get_model_name()) == 0) {
-                      plds = new LDS_YDLidarX4();
+                    if (s.compare(LDS_Delta2G::get_model_name()) == 0) {
+                      plds = new LDS_Delta2G();
                       break;
+                    } else {
+                      if (s.compare(LDS_YDLidarX4::get_model_name()) == 0) {
+                        plds = new LDS_YDLidarX4();
+                        break;
+                      }
                     }
                   }
                 }
@@ -299,7 +305,7 @@ private:
       switch(err) {
         case LDS::RESULT_OK:
           break;
-        case LDS::RESULT_CRC_ERROR:
+        case LDS::RESULT_CHECKSUM_ERROR:
           RCLCPP_INFO(this->get_logger(), "RESULT_CRC_ERROR");
           lds_crc_error_count_++;
           break;
