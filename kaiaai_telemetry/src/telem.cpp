@@ -34,6 +34,7 @@
 #include "lds_neato_xv11.h"
 #include "lds_lds02rr.h"
 #include "lds_rplidar_a1.h"
+#include "lds_delta_2a.h"
 #include "lds_delta_2g.h"
 
 using std::placeholders::_1;
@@ -245,9 +246,14 @@ private:
                       plds = new LDS_Delta2G();
                       break;
                     } else {
-                      if (s.compare(LDS_YDLidarX4::get_model_name()) == 0) {
-                        plds = new LDS_YDLidarX4();
+                      if (s.compare(LDS_Delta2A::get_model_name()) == 0) {
+                        plds = new LDS_Delta2A();
                         break;
+                      } else {
+                        if (s.compare(LDS_YDLidarX4::get_model_name()) == 0) {
+                          plds = new LDS_YDLidarX4();
+                          break;
+                        }
                       }
                     }
                   }
