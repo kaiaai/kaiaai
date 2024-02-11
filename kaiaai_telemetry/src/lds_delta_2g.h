@@ -95,7 +95,7 @@ public:
 
     if (parser_idx >= sizeof(scan_packet_t)) {
       parser_idx = 0;
-      return RESULT_INVALID_PACKET;
+      return RESULT_OK; //RESULT_INVALID_PACKET;
     }
 
     rx_buffer[parser_idx++] = c;
@@ -103,9 +103,10 @@ public:
 
     switch (parser_idx) {
     case 1:
-      if (c != START_BYTE)
-        result = RESULT_INVALID_PACKET;
-      else
+      if (c != START_BYTE) {
+        parser_idx = 0;
+        result = RESULT_OK; //RESULT_INVALID_PACKET;
+      } else
         checksum = c;
       break;
 
