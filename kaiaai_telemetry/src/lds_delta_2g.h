@@ -21,12 +21,11 @@ protected:
   static const uint8_t START_BYTE = 0xAA;
   static const uint8_t PROTOCOL_VERSION = 0x01;
   static const uint8_t PACKET_TYPE = 0x61;
-  static const uint8_t DATA_TYPE_RPM_AND_MEAS = 0xAE;
-  static const uint8_t DATA_TYPE_RPM_ONLY = 0xAD;
-  static const uint8_t PACKETS_PER_SCAN = 15;
-  static constexpr float DEG_PER_PACKET = 1.0f / (float)PACKETS_PER_SCAN;
-  static const uint8_t MAX_DATA_SAMPLES = 360/PACKETS_PER_SCAN;
-  static const uint8_t PACKET_HEADER_BYTE_LEN = 10;
+  static const uint8_t DATA_TYPE_RPM_AND_MEAS = 0xAD;
+  static const uint8_t DATA_TYPE_RPM_ONLY = 0xAE;
+  static const uint8_t PACKETS_PER_SCAN = 16;
+  static constexpr float DEG_PER_PACKET = 360.0f / (float)PACKETS_PER_SCAN;
+  static const uint8_t MAX_DATA_SAMPLES = 28;
 
   struct meas_sample_t {
     uint8_t quality;
@@ -50,9 +49,6 @@ protected:
 
     uint16_t   checksum;
   } __attribute__((packed));
-  // 15 scan steps per revolution
-  // float angle = start_angle + 22.5 * sample_idx / n_samples;
-  // float angle = start_angle + 24 * sample_idx / n_samples;
 
   uint8_t parser_state;
   float scan_freq_hz;
@@ -74,8 +70,19 @@ public:
     return (scan_freq_hz <= 0) ? 0 : 1.0f / scan_freq_hz;
   }
 
+  uint16_t decodeUInt16(const uint16_t value) const {
+    union {
+      uint16_t i;
+      char c[2];
+    } bint = {0x0102};
+
+    return bint.c[0] == 0x01 ? value : (value << 8) + (value >> 8);
+  }
+
   virtual LDS::result_t decode_data(const void * context) override
   {
+    uint16_t packet_length = 0;
+    uint16_t data_length = 0;
     LDS::result_t result = RESULT_OK;
 
     int current_byte = readByte(context);
@@ -84,6 +91,7 @@ public:
     uint8_t c = (uint8_t) current_byte;
 
     uint8_t * rx_buffer = (uint8_t *)&scan_packet;
+
 
     if (parser_idx >= sizeof(scan_packet_t)) {
       parser_idx = 0;
@@ -94,83 +102,91 @@ public:
     checksum += c;
 
     switch (parser_idx) {
-    case 0:
+    case 1:
       if (c != START_BYTE)
         result = RESULT_INVALID_PACKET;
       else
-        checksum = 0;
+        checksum = c;
       break;
 
-    case 1: // packet length MSB
-      break;
-
-    case 2: // packet length LSB
-      if (scan_packet.packet_length > sizeof(scan_packet_t) - sizeof(scan_packet.checksum))
-        result = RESULT_INVALID_PACKET;
+    case 2:
       break;
 
     case 3:
-      if (c != PROTOCOL_VERSION)
+      packet_length = decodeUInt16(scan_packet.packet_length);
+      if (packet_length > sizeof(scan_packet_t) - sizeof(scan_packet.checksum))
         result = RESULT_INVALID_PACKET;
       break;
 
     case 4:
-      if (c != PACKET_TYPE)
+      if (c != PROTOCOL_VERSION)
         result = RESULT_INVALID_PACKET;
       break;
 
     case 5:
+      if (c != PACKET_TYPE)
+        result = RESULT_INVALID_PACKET;
+      break;
+
+    case 6:
       if (c != DATA_TYPE_RPM_AND_MEAS && c != DATA_TYPE_RPM_ONLY)
         result = RESULT_INVALID_PACKET;
       break;
 
-    case 6: // data length MSB
+    case 7: // data length MSB
       break;
 
-    case 7: // data length LSB
-      if (scan_packet.data_length == 0 || scan_packet.data_length > MAX_DATA_BYTE_LEN)
+    case 8: // data length LSB
+      data_length = decodeUInt16(scan_packet.data_length);
+      if (data_length == 0 || data_length > MAX_DATA_BYTE_LEN)
         result = RESULT_INVALID_PACKET;
       break;
 
     default:
       // Keep reading
-      if (parser_idx >= scan_packet.packet_length + sizeof(scan_packet.checksum)) {
+      packet_length = decodeUInt16(scan_packet.packet_length);
+      if (parser_idx != packet_length + 2)
+        break;
 
-        // Got checksum
-        scan_packet.checksum += c << 8;
-        uint16_t checksum_adjusted = checksum;
-        checksum_adjusted += checksum & 0xFF;
-        checksum_adjusted += (checksum >> 8) & 0xFF;
+      uint16_t pkt_checksum = (rx_buffer[parser_idx-2] << 8) + rx_buffer[parser_idx-1];
 
-        if (scan_packet.checksum != checksum_adjusted) {
-          result = RESULT_CHECKSUM_ERROR;
+      pkt_checksum += rx_buffer[parser_idx-2];
+      pkt_checksum += rx_buffer[parser_idx-1];
+      if (checksum != pkt_checksum) {
+        result = RESULT_CHECKSUM_ERROR;
+        break;
+      }
+
+      scan_freq_hz = scan_packet.scan_freq_x20 * 0.05;
+
+      if (scan_packet.data_type == DATA_TYPE_RPM_AND_MEAS) {
+        uint16_t start_angle_x100 = decodeUInt16(scan_packet.start_angle_x100);
+        bool scan_completed = start_angle_x100 == 0;
+
+        data_length = decodeUInt16(scan_packet.data_length);
+        if (data_length < 8) {
+          result = RESULT_INVALID_PACKET;
           break;
         }
 
-        scan_freq_hz = scan_packet.scan_freq_x20 * 0.05;
-        if (scan_packet.data_type == DATA_TYPE_RPM_AND_MEAS) {
-
-          unsigned int packet_index = (scan_packet.start_angle_x100 * PACKETS_PER_SCAN) % 36000;
-          bool scan_completed = packet_index == 0;
-
-          uint16_t sample_count = (scan_packet.data_length - 5) / 3;
-          if (sample_count > MAX_DATA_SAMPLES) {
-            result = RESULT_INVALID_PACKET;
-            break;
-          }
-
-          float start_angle = scan_packet.start_angle_x100 * 0.01;
-          float coeff = DEG_PER_PACKET / (float)sample_count;
-          for (uint16_t idx = 0; idx < sample_count; idx++) {
-            float angle_deg = start_angle + idx * coeff;
-            float distance_mm = scan_packet.sample[idx].distance_mm_x4 * 0.25;
-            float quality = scan_packet.sample[idx].quality;
-            postScanPoint(context, angle_deg, distance_mm, quality, scan_completed);
-          }
+        uint16_t sample_count = (data_length - 5) / 3;
+        if (sample_count > MAX_DATA_SAMPLES) {
+          result = RESULT_INVALID_PACKET;
+          break;
         }
-        parser_idx = 0;
-        break;
+        float start_angle = start_angle_x100 * 0.01;
+        float coeff = DEG_PER_PACKET / (float)sample_count;
+        for (uint16_t idx = 0; idx < sample_count; idx++) {
+          float angle_deg = start_angle + idx * coeff;
+
+          uint16_t distance_mm_x4 = decodeUInt16(scan_packet.sample[idx].distance_mm_x4);
+          float distance_mm = distance_mm_x4 * 0.25;
+          float quality = scan_packet.sample[idx].quality;
+          postScanPoint(context, angle_deg, distance_mm, quality, scan_completed);
+          scan_completed = false;
+        }
       }
+      parser_idx = 0;
       break;
     }
 
