@@ -21,8 +21,8 @@ Kaia.ai robotics software platform consists of these parts:
 ## Supported LiDAR/LDS sensors
 - YDLIDAR X4 (default), X2/X2L, X3, X3PRO
 - Neato XV11
-- Xiaomi 1st gen LDS02RR (~$16 off AliExpress including shipping)
-- RPLIDAR A1
+- Xiaomi Roborock 1st gen LDS02RR (~$16 off AliExpress including shipping)
+- SLAMTEC RPLIDAR A1
 
 ## Command cheat sheets
 
@@ -163,7 +163,7 @@ Initial versions of packages in this repo are based on ROBOTIS
 [Turtlebot3 code](https://github.com/ROBOTIS-GIT/turtlebot3)
 
 ## Release notes
-2/5/2024
+v0.5.0 2/5/2024
 - added LiDAR/LDS laser distance scan sensors support
   - YDLIDAR X3, X3-PRO
   - `ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_model:=YDLIDAR-X3`
