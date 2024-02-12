@@ -23,6 +23,7 @@ Kaia.ai robotics software platform consists of these parts:
 - Neato XV11
 - Xiaomi Roborock 1st gen LDS02RR (~$16 off AliExpress including shipping)
 - SLAMTEC RPLIDAR A1
+- 3irobotix Delta-2A, Delta-2G
 
 ## Command cheat sheets
 
@@ -88,7 +89,8 @@ ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_mo
 ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_model:=YDLIDAR-X3-PRO
 ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_model:=YDLIDAR-X2-X2L
 ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_model:=NEATO-XV11
-ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_model:=RPLIDAR-A1
+ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_model:=DELTA-2A
+ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_model:=DELTA-2G
 ```
 
 ### View, set physical robot's parameters
@@ -163,7 +165,12 @@ Initial versions of packages in this repo are based on ROBOTIS
 [Turtlebot3 code](https://github.com/ROBOTIS-GIT/turtlebot3)
 
 ## Release notes
-v0.5.0 2/5/2024
+v0.6.0 2/11/2024 (in debug)
+- added 3irobotix Delta-2A, Delta-2G
+  - `ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_model:=DELTA-2A`
+  - `ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_model:=DELTA-2G`
+
+2/5/2024
 - added LiDAR/LDS laser distance scan sensors support
   - YDLIDAR X3, X3-PRO
   - `ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_model:=YDLIDAR-X3`
