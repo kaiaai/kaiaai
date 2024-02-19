@@ -91,6 +91,7 @@ ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_mo
 ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_model:=NEATO-XV11
 ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_model:=DELTA-2A
 ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_model:=DELTA-2G
+ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_model:=LDLIDAR-LD14P
 ```
 
 ### View, set physical robot's parameters
