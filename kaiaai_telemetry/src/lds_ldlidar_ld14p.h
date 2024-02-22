@@ -29,7 +29,7 @@ protected:
     uint8_t intensity;
   } __attribute__((packed));
 
-  static const uint16_t MAX_DATA_BYTE_LEN = sizeof(meas_sample_t) * POINT_PER_PACK;
+  static const uint16_t DATA_BYTE_LEN = sizeof(meas_sample_t) * POINT_PER_PACK;
 
   struct scan_packet_t {
     uint8_t start_byte;
@@ -46,6 +46,7 @@ protected:
   scan_packet_t scan_packet;
   uint16_t parser_idx;
   uint8_t crc;
+  uint16_t end_angle_deg_x100_prev;
 
 public:
   LDS_LDLidarLD14P() : LDS()
@@ -53,6 +54,7 @@ public:
     parser_idx = 0;
     crc = 0;
     speed_deg_per_sec = 0;
+    end_angle_deg_x100_prev = 0;
   }
 
   static const std::string get_model_name() { return "LDLIDAR-LD14P"; }
@@ -116,7 +118,8 @@ public:
 
     crc = parser_idx == 0 ? 0 : crc;
     rx_buffer[parser_idx++] = c;
-    checkSum(c);
+    if (parser_idx < 47)
+      checkSum(c);
 
     switch (parser_idx) {
     case 1:
@@ -141,6 +144,13 @@ public:
     case 6: // start angle MSB
       break;
 
+    default:
+      if (parser_idx >= 7 && parser_idx < (6 + DATA_BYTE_LEN)) {
+      } else {
+        result = RESULT_INVALID_PACKET;
+      }
+      break;
+
     case 42: // end angle LSB
     case 43: // end angle MSB
       break;
@@ -149,37 +159,66 @@ public:
     case 45: // end angle MSB
       break;
 
-    case 46: // CRC
+    case 47: // CRC
       if (crc != scan_packet.crc8) {
         result = RESULT_CHECKSUM_ERROR;
       } else {
-        static constexpr float ONE_OVER_PPP_M1 = 1.0f / (POINT_PER_PACK - 1);
 
         speed_deg_per_sec = decodeUInt16(scan_packet.speed_deg_per_sec);
-        float start_angle = decodeUInt16(scan_packet.start_angle_deg_x100)*0.01f;
-        float end_angle = decodeUInt16(scan_packet.end_angle_deg_x100)*0.01f;
-        float step_angle = (end_angle - start_angle)*ONE_OVER_PPP_M1;
+        uint16_t start_angle_deg_x100 = decodeUInt16(scan_packet.start_angle_deg_x100);
+        uint16_t end_angle_deg_x100 = decodeUInt16(scan_packet.end_angle_deg_x100);
 
-        bool scan_completed = false;
-        //bool scan_completed = start_angle_x100 == 0;
+        bool scan_completed_mid_packet = end_angle_deg_x100 < start_angle_deg_x100;
+        bool scan_completed_between_packets = start_angle_deg_x100 < end_angle_deg_x100_prev;
+        bool scan_completed = scan_completed_mid_packet || scan_completed_between_packets;
+        end_angle_deg_x100_prev = end_angle_deg_x100;
 
+        float start_angle = start_angle_deg_x100*0.01f;
+        float end_angle = end_angle_deg_x100*0.01f;
+
+        if (end_angle < start_angle)
+          end_angle = end_angle + 360;
+
+        static constexpr float _1_OVER_PPP_M1 = 1.0f / (POINT_PER_PACK - 1);
+        float step_angle = (end_angle - start_angle)*_1_OVER_PPP_M1;
+
+        float angle_deg_prev = start_angle;
+        float last_shift_delta = 0;
         for (uint8_t i = 0; i < POINT_PER_PACK; i++) {
           float angle_deg = start_angle + step_angle*i;
           float distance_mm = decodeUInt16(scan_packet.sample[i].distance_mm);
           float quality = scan_packet.sample[i].intensity;
-          // TODO apply correction
-          postScanPoint(context, angle_deg, distance_mm, quality, scan_completed);
-          scan_completed = false;
-        }
-        parser_idx = 0;
-      }
-      break;
 
-    default:
-      if (parser_idx >= 7 && parser_idx < (7 + MAX_DATA_BYTE_LEN)) {
-      } else {
-        result = RESULT_INVALID_PACKET;
+          float offset_x_ = 5.9f;
+          float offset_y_ = -18.975571f;
+          float angle_corrected;
+          if (distance_mm > 0) {
+            float x = distance_mm + offset_x_;
+            float y = distance_mm * 0.11923f + offset_y_;
+            float shift = atan(y / x) * 57.295779513082320876798154814105f;
+            angle_corrected = angle_deg - shift;
+            last_shift_delta = shift;
+          } else {
+            angle_corrected = angle_deg - last_shift_delta;
+          }
+
+          scan_completed = false;
+          if (scan_completed_mid_packet) {
+            scan_completed = (angle_deg >= 360 && angle_deg_prev < 360);
+          } else if (scan_completed_between_packets) {
+            scan_completed = (i == 0);
+          }
+
+          if (angle_corrected > 360)
+            angle_corrected -= 360;
+          if (angle_corrected < 0)
+            angle_corrected += 360;
+
+          postScanPoint(context, angle_corrected, distance_mm, quality, scan_completed);
+          angle_deg_prev = angle_deg;
+        }
       }
+      parser_idx = 0;
       break;
     }
 
