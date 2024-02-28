@@ -17,7 +17,7 @@
 #include <string>
 
 #include "rclcpp/rclcpp.hpp"
-#include "kaiaai_msgs/msg/kaiaai_telemetry.hpp"
+#include "kaiaai_msgs/msg/kaiaai_telemetry2.hpp"
 #include <builtin_interfaces/msg/time.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>
@@ -75,7 +75,7 @@ public:
     this->declare_parameter("odometry.child_frame_id", "base_footprint");
     this->declare_parameter("odometry.topic_name_pub", "odom");
 
-    telem_sub_ = this->create_subscription<kaiaai_msgs::msg::KaiaaiTelemetry>(
+    telem_sub_ = this->create_subscription<kaiaai_msgs::msg::KaiaaiTelemetry2>(
       this->get_parameter("telemetry.topic_name_sub").as_string(),
       rclcpp::SensorDataQoS(), std::bind(&KaiaaiTelemetry::topic_callback, this, _1));
     odom_pub_ = this->create_publisher<nav_msgs::msg::Odometry>(
@@ -111,7 +111,7 @@ public:
   }
 
 private:
-  void topic_callback(const kaiaai_msgs::msg::KaiaaiTelemetry & telem_msg) // const
+  void topic_callback(const kaiaai_msgs::msg::KaiaaiTelemetry2 & telem_msg) // const
   {
     long int seq_diff = (long int)telem_msg.seq - (long int)seq_last_;
     seq_last_ = telem_msg.seq;
@@ -300,7 +300,7 @@ private:
     //RCLCPP_INFO(this->get_logger(), "mask_radius_meters_ %lf", mask_radius_meters_);
   }
 
-  void process_lds_data(const kaiaai_msgs::msg::KaiaaiTelemetry & telem_msg)
+  void process_lds_data(const kaiaai_msgs::msg::KaiaaiTelemetry2 & telem_msg)
   {
     if (plds == NULL)
       return;
@@ -309,7 +309,7 @@ private:
     lds_data_idx_ = 0;
     lds_msg_count_++;
 
-    pmsg = const_cast<kaiaai_msgs::msg::KaiaaiTelemetry *>(& telem_msg);
+    pmsg = const_cast<kaiaai_msgs::msg::KaiaaiTelemetry2 *>(& telem_msg);
     while (lds_data_idx_ < telem_msg.lds.size()) {
 
       int err = plds->decode_data(this);
@@ -440,7 +440,7 @@ private:
     laser_scan_pub_->publish(laser_scan_msg);
   }
 
-  rclcpp::Subscription<kaiaai_msgs::msg::KaiaaiTelemetry>::SharedPtr telem_sub_;
+  rclcpp::Subscription<kaiaai_msgs::msg::KaiaaiTelemetry2>::SharedPtr telem_sub_;
   rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_pub_;
   rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr joint_state_pub_;
   rclcpp::Publisher<sensor_msgs::msg::LaserScan>::SharedPtr laser_scan_pub_;
@@ -463,7 +463,7 @@ private:
   double range_max_meters_;
   double mask_radius_meters_;
 
-  kaiaai_msgs::msg::KaiaaiTelemetry * pmsg;
+  kaiaai_msgs::msg::KaiaaiTelemetry2 * pmsg;
   builtin_interfaces::msg::Time prev_stamp_;
 };
 
