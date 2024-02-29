@@ -18,10 +18,12 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "kaiaai_msgs/msg/kaiaai_telemetry2.hpp"
+#include "kaiaai_msgs/msg/wifi_state.hpp"
 #include <builtin_interfaces/msg/time.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>
 #include <sensor_msgs/msg/laser_scan.hpp>
+#include <sensor_msgs/msg/battery_state.hpp>
 #include <geometry_msgs/msg/transform_stamped.hpp>
 #include <tf2_msgs/msg/tf_message.hpp>
 #include "tf2_ros/transform_broadcaster.h"
@@ -75,6 +77,12 @@ public:
     this->declare_parameter("odometry.child_frame_id", "base_footprint");
     this->declare_parameter("odometry.topic_name_pub", "odom");
 
+    this->declare_parameter("battery.topic_name_pub", "battery_state");
+    this->declare_parameter("battery.voltage_full", 4.2);
+    this->declare_parameter("battery.voltage_empty", 3.7);
+
+    this->declare_parameter("wifi.topic_name_pub", "wifi_state");
+
     telem_sub_ = this->create_subscription<kaiaai_msgs::msg::KaiaaiTelemetry2>(
       this->get_parameter("telemetry.topic_name_sub").as_string(),
       rclcpp::SensorDataQoS(), std::bind(&KaiaaiTelemetry::topic_callback, this, _1));
@@ -84,6 +92,10 @@ public:
       this->get_parameter("joints.topic_name_pub").as_string(), 10);
     laser_scan_pub_ = this->create_publisher<sensor_msgs::msg::LaserScan>(
       this->get_parameter("laser_scan.topic_name_pub").as_string(), 10);
+    battery_state_pub_ = this->create_publisher<sensor_msgs::msg::BatteryState>(
+      this->get_parameter("battery.topic_name_pub").as_string(), 10);
+    wifi_state_pub_ = this->create_publisher<kaiaai_msgs::msg::WifiState>(
+      this->get_parameter("wifi.topic_name_pub").as_string(), 10);
     tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
 
     plds = NULL;
@@ -188,6 +200,32 @@ private:
         lds_setup();
       process_lds_data(telem_msg);
     }
+
+    auto wifi_state_msg = kaiaai_msgs::msg::WifiState();
+    wifi_state_msg.stamp = telem_msg.stamp;
+    wifi_state_msg.rssi_dbm = telem_msg.wifi_rssi_dbm;
+    wifi_state_pub_->publish(wifi_state_msg);
+
+    auto battery_state_msg = sensor_msgs::msg::BatteryState();
+    battery_state_msg.header.stamp = telem_msg.stamp;
+
+    double voltage = telem_msg.battery_mv * 0.001;
+    double voltage_full = this->get_parameter("battery.voltage_full").as_double();
+    double voltage_empty = this->get_parameter("battery.voltage_empty").as_double();
+
+    if (voltage_full <= voltage_empty) {
+      RCLCPP_FATAL(this->get_logger(), "battery.voltage_full parameter value must be greater than battery.voltage_empty");
+      rclcpp::shutdown();
+    }
+
+    double percentage = (voltage - voltage_empty)/(voltage_full - voltage_empty) * 100;
+    percentage = percentage > 100 ? 100 : percentage;
+    percentage = percentage < 0 ? 0 : percentage;
+
+    battery_state_msg.present = true;
+    battery_state_msg.voltage = (float) voltage;
+    battery_state_msg.percentage = (float) percentage;
+    battery_state_pub_->publish(battery_state_msg);
   }
 
   void lds_setup()
@@ -444,6 +482,8 @@ private:
   rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_pub_;
   rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr joint_state_pub_;
   rclcpp::Publisher<sensor_msgs::msg::LaserScan>::SharedPtr laser_scan_pub_;
+  rclcpp::Publisher<sensor_msgs::msg::BatteryState>::SharedPtr battery_state_pub_;
+  rclcpp::Publisher<kaiaai_msgs::msg::WifiState>::SharedPtr wifi_state_pub_;
   std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
   std::vector<float> ranges_;
   unsigned int seq_last_;
