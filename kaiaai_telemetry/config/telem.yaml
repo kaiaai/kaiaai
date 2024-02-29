@@ -38,3 +38,11 @@ kaiaai_telemetry_node:
       frame_id: "odom"
       child_frame_id: "base_footprint"
       topic_name_pub: "odom"
+
+    battery:
+      topic_name_pub: "battery_state"
+      voltage_full: 4.2
+      voltage_empty: 3.7
+
+    wifi:
+      topic_name_pub: "wifi_state"
