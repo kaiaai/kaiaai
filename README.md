@@ -166,6 +166,13 @@ Initial versions of packages in this repo are based on ROBOTIS
 [Turtlebot3 code](https://github.com/ROBOTIS-GIT/turtlebot3)
 
 ## Release notes
+v0.7.0 - in debug
+- kaiaai_telemetry
+  - switched to KaiaTelemetry2 message from KaiaTelemetry
+  - publish /battery_state
+  - publish /wifi_state RSSI
+- added LDROBOT LD14P
+
 v0.6.0 2/11/2024
 - added 3irobotix Delta-2A, Delta-2G
   - `ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_model:=DELTA-2A`
