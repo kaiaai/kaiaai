@@ -78,8 +78,8 @@ public:
     this->declare_parameter("odometry.topic_name_pub", "odom");
 
     this->declare_parameter("battery.topic_name_pub", "battery_state");
-    this->declare_parameter("battery.voltage_full", 4.2);
-    this->declare_parameter("battery.voltage_empty", 3.7);
+    this->declare_parameter("battery.voltage_full", 4.2*6);
+    this->declare_parameter("battery.voltage_empty", 3.7*6);
 
     this->declare_parameter("wifi.topic_name_pub", "wifi_state");
 
@@ -214,7 +214,8 @@ private:
     double voltage_empty = this->get_parameter("battery.voltage_empty").as_double();
 
     if (voltage_full <= voltage_empty) {
-      RCLCPP_FATAL(this->get_logger(), "battery.voltage_full parameter value must be greater than battery.voltage_empty");
+      RCLCPP_FATAL(this->get_logger(),
+        "Invalid parameters, battery.voltage_full <= battery.voltage_empty");
       rclcpp::shutdown();
     }
 
@@ -222,7 +223,7 @@ private:
     percentage = percentage > 100 ? 100 : percentage;
     percentage = percentage < 0 ? 0 : percentage;
 
-    battery_state_msg.present = true;
+    battery_state_msg.present = telem_msg.battery_mv > 0;
     battery_state_msg.voltage = (float) voltage;
     battery_state_msg.percentage = (float) percentage;
     battery_state_pub_->publish(battery_state_msg);
