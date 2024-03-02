@@ -11,13 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//
-// Based on https://github.com/EAIBOT/ydlidar_arduino
 
 #pragma once
 #include "lds.h"
 
-class LDS_LDLidarLD14P : public LDS
+class LDS_LDRobotLD14P : public LDS
 {
 protected:
   static const uint8_t START_BYTE = 0x54;
@@ -49,7 +47,7 @@ protected:
   uint16_t end_angle_deg_x100_prev;
 
 public:
-  LDS_LDLidarLD14P() : LDS()
+  LDS_LDRobotLD14P() : LDS()
   {
     parser_idx = 0;
     crc = 0;
@@ -57,7 +55,7 @@ public:
     end_angle_deg_x100_prev = 0;
   }
 
-  static const std::string get_model_name() { return "LDLIDAR-LD14P"; }
+  static const std::string get_model_name() { return "LDROBOT-LD14P"; }
 
   virtual float get_scan_time() override {
     return speed_deg_per_sec == 0 ? 0 : 360.0f / speed_deg_per_sec;
