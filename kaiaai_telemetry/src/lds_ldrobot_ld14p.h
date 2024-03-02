@@ -19,7 +19,7 @@ class LDS_LDRobotLD14P : public LDS
 {
 protected:
   static const uint8_t START_BYTE = 0x54;
-  static const uint8_t POINT_PER_PACK = 12;
+  static const uint8_t POINTS_PER_PACK = 12;
   static const uint8_t VER_LEN = 0x2C;
 
   struct meas_sample_t {
@@ -27,14 +27,14 @@ protected:
     uint8_t intensity;
   } __attribute__((packed));
 
-  static const uint16_t DATA_BYTE_LEN = sizeof(meas_sample_t) * POINT_PER_PACK;
+  static const uint16_t DATA_BYTE_LEN = sizeof(meas_sample_t) * POINTS_PER_PACK;
 
   struct scan_packet_t {
     uint8_t start_byte;
     uint8_t ver_len;
     uint16_t speed_deg_per_sec;
     uint16_t start_angle_deg_x100;
-    meas_sample_t sample[POINT_PER_PACK];
+    meas_sample_t sample[POINTS_PER_PACK];
     uint16_t end_angle_deg_x100;
     uint16_t timestamp_ms;
     uint8_t crc8;
@@ -143,18 +143,18 @@ public:
       break;
 
     default:
-      if (parser_idx >= 7 && parser_idx < (6 + DATA_BYTE_LEN)) {
+      if (parser_idx >= 6 && parser_idx < (6 + DATA_BYTE_LEN)) {
       } else {
         result = RESULT_INVALID_PACKET;
       }
       break;
 
-    case 42: // end angle LSB
-    case 43: // end angle MSB
+    case 43: // end angle LSB
+    case 44: // end angle MSB
       break;
 
-    case 44: // timestamp LSB
-    case 45: // end angle MSB
+    case 45: // timestamp LSB
+    case 46: // end angle MSB
       break;
 
     case 47: // CRC
@@ -177,12 +177,13 @@ public:
         if (end_angle < start_angle)
           end_angle = end_angle + 360;
 
-        static constexpr float _1_OVER_PPP_M1 = 1.0f / (POINT_PER_PACK - 1);
+        static constexpr float _1_OVER_PPP_M1 = 1.0f / (POINTS_PER_PACK - 1);
         float step_angle = (end_angle - start_angle)*_1_OVER_PPP_M1;
 
         float angle_deg_prev = start_angle;
         float last_shift_delta = 0;
-        for (uint8_t i = 0; i < POINT_PER_PACK; i++) {
+        const float RAD_TO_DEG = 57.295779513082320876798154814105f;
+        for (uint8_t i = 0; i < POINTS_PER_PACK; i++) {
           float angle_deg = start_angle + step_angle*i;
           float distance_mm = decodeUInt16(scan_packet.sample[i].distance_mm);
           float quality = scan_packet.sample[i].intensity;
@@ -193,7 +194,7 @@ public:
           if (distance_mm > 0) {
             float x = distance_mm + offset_x_;
             float y = distance_mm * 0.11923f + offset_y_;
-            float shift = atan(y / x) * 57.295779513082320876798154814105f;
+            float shift = atan(y / x) * RAD_TO_DEG;
             angle_corrected = angle_deg - shift;
             last_shift_delta = shift;
           } else {
