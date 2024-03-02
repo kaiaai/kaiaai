@@ -38,7 +38,7 @@
 #include "lds_rplidar_a1.h"
 #include "lds_delta_2a.h"
 #include "lds_delta_2g.h"
-#include "lds_ldlidar_ld14p.h"
+#include "lds_ldrobot_ld14p.h"
 
 using std::placeholders::_1;
 
@@ -290,8 +290,8 @@ private:
                         plds = new LDS_Delta2A();
                         break;
                       } else {
-                        if (s.compare(LDS_LDLidarLD14P::get_model_name()) == 0) {
-                          plds = new LDS_LDLidarLD14P();
+                        if (s.compare(LDS_LDRobotLD14P::get_model_name()) == 0) {
+                          plds = new LDS_LDRobotLD14P();
                           break;
                         } else {
                           if (s.compare(LDS_YDLidarX4::get_model_name()) == 0) {
