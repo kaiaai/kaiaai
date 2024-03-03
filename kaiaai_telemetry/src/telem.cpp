@@ -163,14 +163,14 @@ private:
 
     std::vector<double> position;
     position.resize(2);
-    position[0] = telem_msg.joint_pos[0];
-    position[1] = telem_msg.joint_pos[1];
+    position[0] = telem_msg.joint[0].pos;
+    position[1] = telem_msg.joint[1].pos;
     joint_state_msg.position = position;
 
     std::vector<double> velocity;
     velocity.resize(2);
-    velocity[0] = telem_msg.joint_vel[0];
-    velocity[1] = telem_msg.joint_vel[1];
+    velocity[0] = telem_msg.joint[0].vel;
+    velocity[1] = telem_msg.joint[1].vel;
     joint_state_msg.velocity = velocity;
     //float64[] effort
     joint_state_msg.header.stamp = telem_msg.stamp;

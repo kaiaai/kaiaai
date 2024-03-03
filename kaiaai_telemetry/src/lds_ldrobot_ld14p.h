@@ -143,7 +143,7 @@ public:
       break;
 
     default:
-      if (parser_idx >= 6 && parser_idx < (6 + DATA_BYTE_LEN)) {
+      if (parser_idx > 6 && parser_idx <= (6 + DATA_BYTE_LEN)) {
       } else {
         result = RESULT_INVALID_PACKET;
       }
