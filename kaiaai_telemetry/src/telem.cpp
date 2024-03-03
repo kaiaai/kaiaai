@@ -17,7 +17,7 @@
 #include <string>
 
 #include "rclcpp/rclcpp.hpp"
-#include "kaiaai_msgs/msg/kaiaai_telemetry.hpp"
+#include "kaiaai_msgs/msg/kaiaai_telemetry2.hpp"
 #include "kaiaai_msgs/msg/wifi_state.hpp"
 #include <builtin_interfaces/msg/time.hpp>
 #include <nav_msgs/msg/odometry.hpp>
@@ -63,6 +63,7 @@ public:
     this->declare_parameter("laser_scan.frame_id", "base_scan");
     this->declare_parameter("laser_scan.lds_model", "YDLIDAR-X4");
     this->declare_parameter("laser_scan.mask_radius_meters", 0.0);
+    this->declare_parameter("laser_scan.discard_broken_scans", false);
 
     this->declare_parameter("telemetry.topic_name_sub", "telemetry");
 
@@ -83,7 +84,7 @@ public:
 
     this->declare_parameter("wifi.topic_name_pub", "wifi_state");
 
-    telem_sub_ = this->create_subscription<kaiaai_msgs::msg::KaiaaiTelemetry>(
+    telem_sub_ = this->create_subscription<kaiaai_msgs::msg::KaiaaiTelemetry2>(
       this->get_parameter("telemetry.topic_name_sub").as_string(),
       rclcpp::SensorDataQoS(), std::bind(&KaiaaiTelemetry::topic_callback, this, _1));
     odom_pub_ = this->create_publisher<nav_msgs::msg::Odometry>(
@@ -112,6 +113,7 @@ public:
     pmsg = NULL;
     prev_stamp_.sec = 0;
     prev_stamp_.nanosec = 0;
+    broken_scan_ = false;
   }
 
   ~KaiaaiTelemetry()
@@ -123,14 +125,15 @@ public:
   }
 
 private:
-  void topic_callback(const kaiaai_msgs::msg::KaiaaiTelemetry & telem_msg) // const
+  void topic_callback(const kaiaai_msgs::msg::KaiaaiTelemetry2 & telem_msg) // const
   {
     long int seq_diff = (long int)telem_msg.seq - (long int)seq_last_;
     seq_last_ = telem_msg.seq;
-    //RCLCPP_INFO(this->get_logger(), "Seq %u (%ld) len %lu", telem_msg.seq, seq_diff, telem_msg.lds.size());
 
-    if (seq_diff > 1)
+    if (seq_diff > 1) {
+      broken_scan_ = true;
       RCLCPP_INFO(this->get_logger(), "%ld message(s) lost", seq_diff-1);
+    }
 
     auto odom_msg = nav_msgs::msg::Odometry();
     odom_msg.header.frame_id = this->get_parameter("odometry.frame_id").as_string();
@@ -163,18 +166,14 @@ private:
 
     std::vector<double> position;
     position.resize(2);
-//    position[0] = telem_msg.joint[0].pos;
-//    position[1] = telem_msg.joint[1].pos;
-    position[0] = telem_msg.joint_pos[0];
-    position[1] = telem_msg.joint_pos[1];
+    position[0] = telem_msg.joint[0].pos;
+    position[1] = telem_msg.joint[1].pos;
     joint_state_msg.position = position;
 
     std::vector<double> velocity;
     velocity.resize(2);
-//    velocity[0] = telem_msg.joint[0].vel;
-//    velocity[1] = telem_msg.joint[1].vel;
-    velocity[0] = telem_msg.joint_vel[0];
-    velocity[1] = telem_msg.joint_vel[1];
+    velocity[0] = telem_msg.joint[0].vel;
+    velocity[1] = telem_msg.joint[1].vel;
     joint_state_msg.velocity = velocity;
     //float64[] effort
     joint_state_msg.header.stamp = telem_msg.stamp;
@@ -205,7 +204,6 @@ private:
       process_lds_data(telem_msg);
     }
 
-/*
     auto wifi_state_msg = kaiaai_msgs::msg::WifiState();
     wifi_state_msg.stamp = telem_msg.stamp;
     wifi_state_msg.rssi_dbm = telem_msg.wifi_rssi_dbm;
@@ -232,7 +230,6 @@ private:
     battery_state_msg.voltage = (float) voltage;
     battery_state_msg.percentage = (float) percentage;
     battery_state_pub_->publish(battery_state_msg);
-*/
   }
 
   void lds_setup()
@@ -345,7 +342,7 @@ private:
     //RCLCPP_INFO(this->get_logger(), "mask_radius_meters_ %lf", mask_radius_meters_);
   }
 
-  void process_lds_data(const kaiaai_msgs::msg::KaiaaiTelemetry & telem_msg)
+  void process_lds_data(const kaiaai_msgs::msg::KaiaaiTelemetry2 & telem_msg)
   {
     if (plds == NULL)
       return;
@@ -354,7 +351,7 @@ private:
     lds_data_idx_ = 0;
     lds_msg_count_++;
 
-    pmsg = const_cast<kaiaai_msgs::msg::KaiaaiTelemetry *>(& telem_msg);
+    pmsg = const_cast<kaiaai_msgs::msg::KaiaaiTelemetry2 *>(& telem_msg);
     while (lds_data_idx_ < telem_msg.lds.size()) {
 
       int err = plds->decode_data(this);
@@ -411,8 +408,11 @@ private:
 
     if (scan_completed)
     {
-      //RCLCPP_INFO(this->get_logger(), "scan_completed");
-      publish_scan();
+      const bool discard_broken_scans = this->get_parameter("laser_scan.discard_broken_scans").as_bool();
+      if (!discard_broken_scans || !broken_scan_)
+        publish_scan();
+      broken_scan_ = false;
+
       clear_ranges_buffer();
       return;
     }
@@ -485,7 +485,7 @@ private:
     laser_scan_pub_->publish(laser_scan_msg);
   }
 
-  rclcpp::Subscription<kaiaai_msgs::msg::KaiaaiTelemetry>::SharedPtr telem_sub_;
+  rclcpp::Subscription<kaiaai_msgs::msg::KaiaaiTelemetry2>::SharedPtr telem_sub_;
   rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_pub_;
   rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr joint_state_pub_;
   rclcpp::Publisher<sensor_msgs::msg::LaserScan>::SharedPtr laser_scan_pub_;
@@ -509,8 +509,9 @@ private:
   double range_min_meters_;
   double range_max_meters_;
   double mask_radius_meters_;
+  bool broken_scan_;
 
-  kaiaai_msgs::msg::KaiaaiTelemetry * pmsg;
+  kaiaai_msgs::msg::KaiaaiTelemetry2 * pmsg;
   builtin_interfaces::msg::Time prev_stamp_;
 };
 
