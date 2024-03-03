@@ -166,11 +166,12 @@ Initial versions of packages in this repo are based on ROBOTIS
 [Turtlebot3 code](https://github.com/ROBOTIS-GIT/turtlebot3)
 
 ## Release notes
-v0.7.0 - in debug
+v0.7.0
 - kaiaai_telemetry
-  - switched to KaiaTelemetry2 message from KaiaTelemetry
+  - switched to KaiaTelemetry2 message
   - publish /battery_state
   - publish /wifi_state RSSI
+  - discard_broken_scans, needs more debug
 - added LDROBOT LD14P
 
 v0.6.0 2/11/2024
