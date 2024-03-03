@@ -5,6 +5,7 @@ kaiaai_telemetry_node:
       mask_radius_meters: 0.1
       topic_name_pub: "scan"
       frame_id: "base_scan"
+      discard_broken_scans: true
 #      lds_model: "LDS02RR"
 
     laser_sensor:
