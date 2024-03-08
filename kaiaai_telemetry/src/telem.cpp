@@ -37,6 +37,7 @@
 #include "lds_lds02rr.h"
 #include "lds_rplidar_a1.h"
 #include "lds_delta_2a.h"
+#include "lds_delta_2b.h"
 #include "lds_delta_2g.h"
 #include "lds_ldrobot_ld14p.h"
 
@@ -293,13 +294,18 @@ private:
                         plds = new LDS_Delta2A();
                         break;
                       } else {
-                        if (s.compare(LDS_LDRobotLD14P::get_model_name()) == 0) {
-                          plds = new LDS_LDRobotLD14P();
+                        if (s.compare(LDS_Delta2B::get_model_name()) == 0) {
+                          plds = new LDS_Delta2B();
                           break;
                         } else {
-                          if (s.compare(LDS_YDLidarX4::get_model_name()) == 0) {
-                            plds = new LDS_YDLidarX4();
+                          if (s.compare(LDS_LDRobotLD14P::get_model_name()) == 0) {
+                            plds = new LDS_LDRobotLD14P();
                             break;
+                          } else {
+                            if (s.compare(LDS_YDLidarX4::get_model_name()) == 0) {
+                              plds = new LDS_YDLidarX4();
+                              break;
+                            }
                           }
                         }
                       }
@@ -406,15 +412,14 @@ private:
 //    RCLCPP_INFO(this->get_logger(), "process_scan_point() %f angle_deg %f distance_mm %f quality %d scan_completed",
 //      angle_deg, distance_mm, quality, scan_completed);
 
-    if (scan_completed)
-    {
+    if (scan_completed) {
       const bool discard_broken_scans = this->get_parameter("laser_scan.discard_broken_scans").as_bool();
       if (!discard_broken_scans || !broken_scan_)
         publish_scan();
       broken_scan_ = false;
 
       clear_ranges_buffer();
-      return;
+      //return;
     }
 
     scan_point_count_total_++;
