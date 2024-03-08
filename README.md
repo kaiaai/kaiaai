@@ -104,14 +104,14 @@ ros2 node info /MAKERSPET_LOKI
 ros2 param list /MAKERSPET_LOKI
 ros2 param dump /MAKERSPET_LOKI
 
-# Turn the robot's laser scanner motor off
-ros2 param set /MAKERSPET_LOKI lds.motor_speed 0.0
+# Set the desired laser scan frequency to 7 Hz
+ros2 param set /MAKERSPET_LOKI lds.scan_freq 7.0
 
-# Turn the robot's laser scanner motor on, default speed
-ros2 param set /MAKERSPET_LOKI lds.motor_speed -1.0
+# Get the current desired laser scan frequency
+ros2 param get /MAKERSPET_LOKI lds.scan_freq
 
-# Get laser scanner motor current speed
-ros2 param get /MAKERSPET_LOKI lds.motor_speed
+# Reset the desired laser scan frequency to default
+ros2 param set /MAKERSPET_LOKI lds.scan_freq 0.0
 ```
 
 ### Operate a simulated robot
