@@ -23,7 +23,8 @@ Kaia.ai robotics software platform consists of these parts:
 - Neato XV11
 - Xiaomi Roborock 1st gen LDS02RR (~$16 off AliExpress including shipping)
 - SLAMTEC RPLIDAR A1
-- 3irobotix Delta-2A, Delta-2G
+- 3irobotix Delta-2A, Delta-2B, Delta-2G
+- LDROBOT LD14P
 
 ## Command cheat sheets
 
@@ -90,6 +91,7 @@ ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_mo
 ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_model:=YDLIDAR-X2-X2L
 ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_model:=NEATO-XV11
 ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_model:=DELTA-2A
+ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_model:=DELTA-2B
 ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_model:=DELTA-2G
 ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_model:=LDLIDAR-LD14P
 ```
@@ -166,6 +168,11 @@ Initial versions of packages in this repo are based on ROBOTIS
 [Turtlebot3 code](https://github.com/ROBOTIS-GIT/turtlebot3)
 
 ## Release notes
+v0.7.1 - in debug
+- added 3irobotix Delta-2A 230400 baud (vs 115200)
+- added 3irobotix Delta-2B
+- bugfix missing first scan point
+
 v0.7.0
 - kaiaai_telemetry
   - switched to KaiaTelemetry2 message
