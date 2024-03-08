@@ -25,7 +25,7 @@ protected:
   static const uint8_t DATA_TYPE_RPM_ONLY = 0xAE;
   static const uint8_t PACKETS_PER_SCAN = 16;
   static constexpr float DEG_PER_PACKET = 360.0f / (float)PACKETS_PER_SCAN;
-  static const uint8_t MAX_DATA_SAMPLES = 28;
+  static const uint8_t MAX_DATA_SAMPLES = 61; // 28
 
   struct meas_sample_t {
     uint8_t quality;
