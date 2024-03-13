@@ -7,7 +7,9 @@ Kaia.ai robotics software platform consists of these parts:
 - End-user and development ROS2 Docker images [repo](https://github.com/kaiaai/docker)
 - Robot simulation ROS2 packages [repo](https://github.com/kaiaai/kaiaai_simulations)
 - Robot operation ROS2 packages [repo](https://github.com/kaiaai/kaiaai), including SLAM mapping, navigation, etc.
-- Cloud software infrastructure
+- [WebRTC-based](https://github.com/kaiaai/kaiaai-python) image/video/data streaming
+  - [Python-based](https://github.com/kaiaai/kaiaai-python) image/audio sensing, processing (ML), decision making (ML/AI), robot face animation (TODO)
+- Cloud software infrastructure (TODO)
 
 ## Kaia.ai compatible robots
 - Maker's Pet [Loki](https://github.com/makerspet/makerspet_loki) 200mm 3D-printable pet robot
@@ -17,6 +19,7 @@ Kaia.ai robotics software platform consists of these parts:
 
 ## Setup
 - View build, setup and bringup [videos](https://www.youtube.com/playlist?list=PLOSXKDW70aR8SA16wTB0ou9ClKhv7micy)
+  - This video is somewhat outdated; an up-to-date video will be published at a later time
 
 ## Supported LiDAR/LDS sensors
 - YDLIDAR X4 (default), X2/X2L, X3, X3PRO
@@ -25,6 +28,8 @@ Kaia.ai robotics software platform consists of these parts:
 - SLAMTEC RPLIDAR A1
 - 3irobotix Delta-2A, Delta-2B, Delta-2G
 - LDROBOT LD14P
+
+The entire up-to-date list of supported LiDAR/LDS is [here](https://github.com/kaiaai/LDS).
 
 ## Command cheat sheets
 
