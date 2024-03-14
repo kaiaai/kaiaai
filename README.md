@@ -7,8 +7,8 @@ Kaia.ai robotics software platform consists of these parts:
 - End-user and development ROS2 Docker images [repo](https://github.com/kaiaai/docker)
 - Robot simulation ROS2 packages [repo](https://github.com/kaiaai/kaiaai_simulations)
 - Robot operation ROS2 packages [repo](https://github.com/kaiaai/kaiaai), including SLAM mapping, navigation, etc.
-- [WebRTC-based](https://github.com/kaiaai/kaiaai-python) image/video/data streaming
-  - [Python-based](https://github.com/kaiaai/kaiaai-python) image/audio sensing, processing (ML), decision making (ML/AI), robot face animation (TODO)
+- [WebRTC-based](https://github.com/kaiaai/kaiaai_python) image/video/data streaming
+  - [Python-based](https://github.com/kaiaai/kaiaai_python) image/audio sensing, processing (ML), decision making (ML/AI), robot face animation (TODO)
 - Cloud software infrastructure (TODO)
 
 ## Kaia.ai compatible robots
@@ -43,7 +43,7 @@ The Docker image contains ROS2 and micro-ROS pre-configured with additional Kaia
 Open a Windows command shell or Windows PowerShell window and type the command below. This should give you a bash prompt.
 ```
 docker pull kaiaai/kaiaai-ros-dev:iron
-docker run --name makerspet -it --rm -p 8888:8888/udp -e DISPLAY=host.docker.internal:0.0 -e LIBGL_ALWAYS_INDIRECT=0 kaiaai/kaiaai-ros-dev:iron
+docker run --name makerspet -it --rm -p 8888:8888/udp -p 4430:4430/tcp -e DISPLAY=host.docker.internal:0.0 -e LIBGL_ALWAYS_INDIRECT=0 kaiaai/kaiaai-ros-dev:iron
 ```
 
 Get an aditional bash prompt by opening another Windows command shell or Windows PowerShell window and typing:
