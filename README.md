@@ -173,7 +173,7 @@ Initial versions of packages in this repo are based on ROBOTIS
 [Turtlebot3 code](https://github.com/ROBOTIS-GIT/turtlebot3)
 
 ## Release notes
-v0.8.0 - in debug
+v0.8.0
 - added kaiaai_python ROS2 package
 - added 3irobotix Delta-2A 230400 baud (vs 115200)
 - added 3irobotix Delta-2B
