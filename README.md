@@ -42,8 +42,8 @@ The Docker image contains ROS2 and micro-ROS pre-configured with additional Kaia
 
 Open a Windows command shell or Windows PowerShell window and type the command below. This should give you a bash prompt.
 ```
-docker pull kaiaai/kaiaai-ros-dev:iron
-docker run --name makerspet -it --rm -p 8888:8888/udp -p 4430:4430/tcp -e DISPLAY=host.docker.internal:0.0 -e LIBGL_ALWAYS_INDIRECT=0 kaiaai/kaiaai-ros-dev:iron
+docker pull kaiaai/kaiaai:iron
+docker run --name makerspet -it --rm -p 8888:8888/udp -p 4430:4430/tcp -e DISPLAY=host.docker.internal:0.0 -e LIBGL_ALWAYS_INDIRECT=0 kaiaai/kaiaai:iron
 ```
 
 Get an aditional bash prompt by opening another Windows command shell or Windows PowerShell window and typing:
