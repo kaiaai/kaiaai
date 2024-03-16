@@ -18,10 +18,11 @@ import os
 import re
 from ament_index_python.packages import get_package_share_path
 from launch import LaunchDescription, LaunchContext
-from launch.actions import DeclareLaunchArgument, OpaqueFunction
+from launch.actions import DeclareLaunchArgument, OpaqueFunction, LogInfo
 from launch.substitutions import Command, LaunchConfiguration
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
+# from launch.conditions import LaunchConfigurationEquals
 
 
 def make_nodes(context: LaunchContext, robot_model, lds_model, use_sim_time):
@@ -30,6 +31,7 @@ def make_nodes(context: LaunchContext, robot_model, lds_model, use_sim_time):
     use_sim_time_str = context.perform_substitution(use_sim_time)
     description_package_path = get_package_share_path(robot_model_str)
     telem_package_path = get_package_share_path('kaiaai_telemetry')
+    web_server_package_path = get_package_share_path('kaiaai_python')
 
     urdf_path_name = os.path.join(
       description_package_path,
@@ -41,17 +43,30 @@ def make_nodes(context: LaunchContext, robot_model, lds_model, use_sim_time):
       'config',
       'telem.yaml')
 
+    config_web_server_path_name = os.path.join(
+      web_server_package_path,
+      'config',
+      'web_server.yaml')
+
     robot_description = ParameterValue(Command(['xacro ', urdf_path_name]), value_type=str)
 
     config_override_path_name = os.path.join(
         description_package_path,
         'config',
         'telem.yaml'
-        )
-    print('URDF file   : {}'.format(urdf_path_name))
-    print('Telem params: {}'.format(config_telem_path_name))
-    print('Model params: {}'.format(config_override_path_name))
-    print('LDS model   : {}'.format(lds_model_str))
+    )
+
+    # print('URDF file   : {}'.format(urdf_path_name))
+    # print('Telem params: {}'.format(config_telem_path_name))
+    # print('Model params: {}'.format(config_override_path_name))
+    # print('LDS model   : {}'.format(lds_model_str))
+    # print('Web server  : {}'.format(config_web_server_path_name))
+
+    LogInfo(msg='URDF file   : {}'.format(urdf_path_name))
+    LogInfo(msg='Telem params: {}'.format(config_telem_path_name))
+    LogInfo(msg='Model params: {}'.format(config_override_path_name))
+    LogInfo(msg='LDS model   : {}'.format(lds_model_str))
+    LogInfo(msg='Web server  : {}'.format(config_web_server_path_name))
 
     return [
         Node(
@@ -70,7 +85,15 @@ def make_nodes(context: LaunchContext, robot_model, lds_model, use_sim_time):
                 'use_sim_time': use_sim_time_str.lower() == 'true',
                 'robot_description': robot_description
             }]
-        )
+        ),
+        Node(
+#           condition=UnlessCondition(no_web_server),
+           package='kaiaai_python',
+            executable='web_server',
+            name='web_server',
+            parameters = [config_web_server_path_name],
+            output='screen',
+        ),
     ]
 
 
@@ -96,6 +119,11 @@ def generate_launch_description():
             choices=['true', 'false'],
             description='Use simulation (Gazebo) clock if true'
         ),
+#        DeclareLaunchArgument(
+#            name='no_web_server',
+#            default_value='false',
+#            description='Do NOT launch WebRTC web server'
+#        ),
         Node(
             package='micro_ros_agent',
             executable='micro_ros_agent',
@@ -106,6 +134,6 @@ def generate_launch_description():
         OpaqueFunction(function=make_nodes, args=[
             LaunchConfiguration('robot_model'),
             LaunchConfiguration('lds_model'),
-            LaunchConfiguration('use_sim_time')
+            LaunchConfiguration('use_sim_time'),
         ]),
     ])
