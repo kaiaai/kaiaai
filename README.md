@@ -28,6 +28,7 @@ Kaia.ai robotics software platform consists of these parts:
 - SLAMTEC RPLIDAR A1
 - 3irobotix Delta-2A, Delta-2B, Delta-2G
 - LDROBOT LD14P
+- Camsense X1
 
 The entire up-to-date list of supported LiDAR/LDS is [here](https://github.com/kaiaai/LDS).
 
@@ -99,6 +100,7 @@ ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_mo
 ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_model:=DELTA-2B
 ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_model:=DELTA-2G
 ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_model:=LDLIDAR-LD14P
+ros2 launch kaiaai_bringup physical.launch.py robot_model:=makerspet_loki lds_model:=CAMSENSE-X1
 ```
 
 ### View, set physical robot's parameters
