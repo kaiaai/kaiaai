@@ -172,12 +172,12 @@ public:
         } else if (scan_completed_between_packets) {
           scan_completed = (i == 0);
         }
+        angle_deg_prev = angle_deg;
 
         angle_deg = angle_deg > 360 ? angle_deg - 360 : angle_deg;
         distance_mm = distance_mm < 0 ? 0 : distance_mm;
 
         postScanPoint(context, angle_deg, distance_mm, quality, scan_completed);
-        angle_deg_prev = angle_deg;
       }
       parser_idx = 0;
       break;
