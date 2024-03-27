@@ -175,8 +175,12 @@ Initial versions of packages in this repo are based on ROBOTIS
 [Turtlebot3 code](https://github.com/ROBOTIS-GIT/turtlebot3)
 
 ## Release notes
-v0.9.0 in debug
-- added WebRTC web server launch
+v0.10.0 in debug
+- TODO
+
+v0.9.0
+- added WebRTC, web server, OpenCV launch
+- added Camsense X1 LiDAR
 
 v0.8.0
 - added kaiaai_python ROS2 package
