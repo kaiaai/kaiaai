@@ -40,6 +40,7 @@
 #include "lds_delta_2b.h"
 #include "lds_delta_2g.h"
 #include "lds_ldrobot_ld14p.h"
+#include "lds_camsense_x1.h"
 
 using std::placeholders::_1;
 
@@ -305,6 +306,11 @@ private:
                             if (s.compare(LDS_YDLidarX4::get_model_name()) == 0) {
                               plds = new LDS_YDLidarX4();
                               break;
+                            } else {
+                              if (s.compare(LDS_CamsenseX1::get_model_name()) == 0) {
+                                plds = new LDS_CamsenseX1();
+                                break;
+                              }
                             }
                           }
                         }
