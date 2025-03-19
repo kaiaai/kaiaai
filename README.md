@@ -53,13 +53,21 @@ pre-configured with additional Kaia.ai ROS2 packages.
 Open a Windows command shell or Windows PowerShell window and type the command below. This should give you a bash prompt.
 Note that your `c:\maps` will be mapped to `/root/maps` to store navigation maps. Feel free to change `c:\maps` path to a more suitable location, e.g. `c:\Users\MyUserName\maps`.
 ```
+# Windows WSL2
 docker pull kaiaai/kaiaai:iron
 docker run --name makerspet -it --rm -v c:\maps:/root/maps -p 8888:8888/udp -p 4430:4430/tcp -e DISPLAY=host.docker.internal:0.0 -e LIBGL_ALWAYS_INDIRECT=0 kaiaai/kaiaai:iron
+
+# Ubuntu
+sudo docker run --name makerspet -it --rm -v ~/maps:/root/maps -p 8888:8888/udp -p 4430:4430/tcp -e DISPLAY -e QT_X11_NO_MITSHM=1 --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" --volume="${XAUTHORITY}:/root/.Xauthority" kaiaai/kaiaai:iron
 ```
 
 Get an aditional bash prompt by opening another Windows command shell or Windows PowerShell window and typing:
 ```
+# Windows WSL2
 docker exec -it makerspet bash
+
+# Ubuntu
+sudo docker exec -it makerspet bash
 ```
 
 If you installed ROS2/Kaia.ai without Docker directly on a Ubuntu PC/VM, just boot your Ubuntu PC to a bash prompt.
