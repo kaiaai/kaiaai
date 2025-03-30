@@ -1,14 +1,24 @@
 # Kaia.ai Arduino/ROS2 home robots
 
-[Kaia.ai](https://kaia.ai) is a software platform for intelligent robots. Please read our blog for [more](https://kaia.ai/blog/what-is-kaia-ai/).
+[Kaia.ai](https://kaia.ai) is an open-source software platform to run apps on (consumer/home) robots. For now, it uses ROS2 for mapping/navigation/SLAM and [Arduino-compabile firwmare](https://github.com/kaiaai/firmware).
 
-A step-by-step usage example with videos is [here](https://makerspet.com/blog/BLD-120MM-PACK/).
+Here is a current 3/2025 brief demo (I have not released the apps setup yet).
 
-Please sign up for a Kickstarter pre-launch invite [here](https://remake.ai). We plan to launch on Kickstarter in 1nd half of 2025 via our [Maker's Pet](https://makerspet.com) hardware partner's campaign.
+[![My DIY Arduino robot loves self-driving](https://img.youtube.com/vi/RCPUQmvS37Q/0.jpg)](https://www.youtube.com/watch?v=RCPUQmvS37Q&list=PLOSXKDW70aR8uA1IFahSKVuk5ODDfjTZV)
 
-Please visit the [Support Forum](https://github.com/makerspet/support/discussions/)!
+Here are current 3/2025 build, setup, bring-up and operation instructions.
+
+[![My DIY Arduino robot loves self-driving](https://img.youtube.com/vi/6GtjAB19GP8/0.jpg)](https://www.youtube.com/watch?v=6GtjAB19GP8&list=PLOSXKDW70aR8uA1IFahSKVuk5ODDfjTZV)
+
+Here are [troubleshooting instructions](https://makerspet.com/blog/BLD-120MM-PACK/).
+
+Here is the technical [support forum](https://github.com/makerspet/support/discussions/).
+
+## Components
 
 Kaia.ai robotics software platform is actively evolving and currently consists of these parts:
+- Cloud software infrastructure (TODO)
+- robot skills store (TODO)
 - Micro-ROS Arduino library for Kaia.ai-compatible robots [repo](https://github.com/kaiaai/micro_ros_arduino_kaia)
   - Micro-ROS LiDAR telemetry receiver [package](https://github.com/kaiaai/kaiaai_telemetry)
 - End-user and development ROS2 Docker images [repo](https://github.com/kaiaai/install)
@@ -18,8 +28,6 @@ Kaia.ai robotics software platform is actively evolving and currently consists o
 - Robot keyboard teleoperation [package](https://github.com/kaiaai/kaiaai_teleop)
 - [WebRTC-based](https://github.com/kaiaai/kaiaai_python) image/video/data streaming
   - [Python-based](https://github.com/kaiaai/kaiaai_python) image/audio sensing, processing (ML), decision making (ML/AI), robot face animation (TODO)
-- Cloud software infrastructure (TODO)
-- robot skills store (TODO)
 
 ## Kaia.ai compatible robots
 - Maker's Pet [Loki](https://github.com/makerspet/makerspet_loki) 200mm 3D-printed pet robot
@@ -39,7 +47,7 @@ Kaia.ai robotics software platform is actively evolving and currently consists o
 
 The entire up-to-date list of supported LiDAR is [here](https://github.com/kaiaai/LDS).
 
-## Installation Instructions
+## Installation and Command Reference
 There are two ways to install ROS2 and Kaia.ai on your PC - using Docker (Windows, Linux) or Ubuntu 24.04 (physical PC of virtual machine).
 Follow the installation [instructions here](https://github.com/kaiaai/install).
 
