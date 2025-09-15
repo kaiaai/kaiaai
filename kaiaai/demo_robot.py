@@ -17,7 +17,7 @@ class DemoRobot:
         self.websocket = None
         self.running = False
         
-    async def connect_to_cloud(self, uri="ws://localhost:8000/robot"):
+    async def connect_to_cloud(self, uri="ws://host.docker.internal:8000/robot"):
         """Connect to the cloud controller"""
         try:
             self.websocket = await websockets.connect(uri)
