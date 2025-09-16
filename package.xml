@@ -13,7 +13,8 @@
 
   <depend>rclpy</depend>
 
-  <exec_depend>python3-websockets</exec_depend>
+  <!-- exec_depend>python3-websockets</exec_depend -->
+  <!-- rosdep installs an old version of python3-websockets, causing WS connection to fail -->
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>
