@@ -7,15 +7,30 @@ import base64
 import io
 from PIL import Image, ImageDraw, ImageFont
 import math
+import rclpy
+from rclpy.node import Node
+from std_msgs.msg import String
 
-class DemoRobot:
+class DemoRobot(Node):
     def __init__(self):
+        super().__init__('demo_robot')
         self.position = {"x": 0.0, "y": 0.0}
         self.angle = 0.0  # Robot's facing direction in degrees
         self.battery = 100.0
         self.temperature = 25.0
         self.websocket = None
         self.running = False
+
+        # Initialize ROS2 publishers and subscribers
+        self.command_publisher = self.create_publisher(String, '/command_received', 10)
+        self.sensor_subscription = self.create_subscription(
+            String,
+            '/sensor_data',
+            self.sensor_data_callback,
+            10
+        )
+
+        self.get_logger().info('Demo robot node initialized')
         
     async def connect_to_cloud(self, uri="ws://host.docker.internal:8000/robot"):
         """Connect to the cloud controller"""
@@ -39,6 +54,13 @@ class DemoRobot:
         try:
             async for message in self.websocket:
                 command = json.loads(message)
+
+                # Publish command to ROS2 topic
+                msg = String()
+                msg.data = message  # Send the original JSON string
+                self.command_publisher.publish(msg)
+                self.get_logger().info(f'Published command to /command_received: {message}')
+
                 await self.execute_command(command)
         except websockets.exceptions.ConnectionClosed:
             print("🔌 Connection to cloud lost")
@@ -49,13 +71,34 @@ class DemoRobot:
     async def execute_command(self, command):
         """Execute received commands"""
         command_type = command.get("type")
-        
+
         if command_type == "move":
             await self.move_to_position(command.get("x", 0), command.get("y", 0))
         elif command_type == "turn":
             await self.turn(command.get("angle", 0))
         else:
             print(f"❓ Unknown command type: {command_type}")
+
+    def sensor_data_callback(self, msg):
+        """Handle sensor data received from ROS2 topic"""
+        try:
+            sensor_data_json = msg.data
+            self.get_logger().info(f'Received sensor data from /sensor_data: {sensor_data_json}')
+
+            # Forward the sensor data to websocket
+            if self.websocket and self.running:
+                asyncio.create_task(self.forward_sensor_data(sensor_data_json))
+        except Exception as e:
+            self.get_logger().error(f'Error processing sensor data: {e}')
+
+    async def forward_sensor_data(self, sensor_data_json):
+        """Forward sensor data from ROS2 to websocket connection"""
+        try:
+            if self.websocket and self.running:
+                await self.websocket.send(sensor_data_json)
+                self.get_logger().info(f'Forwarded sensor data to websocket: {sensor_data_json}')
+        except Exception as e:
+            self.get_logger().error(f'Error forwarding sensor data to websocket: {e}')
     
     async def move_to_position(self, target_x, target_y):
         """Simulate moving to a target position"""
@@ -194,6 +237,12 @@ class DemoRobot:
                 print(f"❌ Error sending camera data: {e}")
                 break
 
+async def spin(robot):
+    """Run ROS2 spinning asynchronously"""
+    while rclpy.ok():
+        rclpy.spin_once(robot, timeout_sec=0.01)
+        await asyncio.sleep(0.001)
+
 async def main():
     """Main function to run the demo robot"""
     print("🤖 Starting Demo Robot Client...")
@@ -201,25 +250,43 @@ async def main():
     print("   • Receiving movement and turn commands")
     print("   • Sending sensor data (position, battery, temperature)")
     print("   • Sending simulated camera images")
+    print("   • Publishing commands to ROS2 topic /command_received")
+    print("   • Subscribing to ROS2 topic /sensor_data")
     print()
-    
-    robot = DemoRobot()
-    
-    # Try to connect with retry logic
-    max_retries = 5
-    retry_delay = 3
-    
-    for attempt in range(max_retries):
-        try:
-            await robot.connect_to_cloud()
-            break
-        except Exception as e:
-            print(f"⏳ Connection attempt {attempt + 1}/{max_retries} failed: {e}")
-            if attempt < max_retries - 1:
-                print(f"🔄 Retrying in {retry_delay} seconds...")
-                await asyncio.sleep(retry_delay)
-            else:
-                print("❌ Max retries reached. Make sure the backend server is running on localhost:8000")
+
+    # Initialize ROS2
+    rclpy.init()
+
+    try:
+        robot = DemoRobot()
+
+        # Create tasks for both ROS2 spinning and cloud connection
+        async def connect_with_retries():
+            max_retries = 5
+            retry_delay = 3
+
+            for attempt in range(max_retries):
+                try:
+                    await robot.connect_to_cloud()
+                    break
+                except Exception as e:
+                    print(f"⏳ Connection attempt {attempt + 1}/{max_retries} failed: {e}")
+                    if attempt < max_retries - 1:
+                        print(f"🔄 Retrying in {retry_delay} seconds...")
+                        await asyncio.sleep(retry_delay)
+                    else:
+                        print("❌ Max retries reached. Make sure the backend server is running on localhost:8000")
+
+        # Run both ROS2 spinning and cloud connection concurrently
+        await asyncio.gather(
+            spin(robot),
+            connect_with_retries()
+        )
+
+    finally:
+        # Cleanup ROS2
+        robot.destroy_node()
+        rclpy.shutdown()
 
 if __name__ == "__main__":
     try:
