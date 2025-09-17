@@ -10,6 +10,7 @@ import math
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
+from sensor_msgs.msg import LaserScan
 
 class DemoRobot(Node):
     def __init__(self):
@@ -29,10 +30,16 @@ class DemoRobot(Node):
             self.sensor_data_callback,
             10
         )
+        self.scan_subscription = self.create_subscription(
+            LaserScan,
+            '/scan',
+            self.scan_callback,
+            10
+        )
 
         self.get_logger().info('Demo robot node initialized')
         
-    async def connect_to_cloud(self, uri="ws://host.docker.internal:8000/robot"):
+    async def connect_to_cloud(self, uri="ws://localhost:8000/robot"):
         """Connect to the cloud controller"""
         try:
             self.websocket = await websockets.connect(uri)
@@ -99,6 +106,48 @@ class DemoRobot(Node):
                 self.get_logger().info(f'Forwarded sensor data to websocket: {sensor_data_json}')
         except Exception as e:
             self.get_logger().error(f'Error forwarding sensor data to websocket: {e}')
+
+    def scan_callback(self, msg):
+        """Handle LaserScan messages from /scan topic"""
+        try:
+            # Convert LaserScan message to JSON structure
+            scan_data = {
+                "type": "laser_scan",
+                "header": {
+                    "stamp": {
+                        "sec": msg.header.stamp.sec,
+                        "nanosec": msg.header.stamp.nanosec
+                    },
+                    "frame_id": msg.header.frame_id
+                },
+                "angle_min": msg.angle_min,
+                "angle_max": msg.angle_max,
+                "angle_increment": msg.angle_increment,
+                "time_increment": msg.time_increment,
+                "scan_time": msg.scan_time,
+                "range_min": msg.range_min,
+                "range_max": msg.range_max,
+                "ranges": list(msg.ranges),
+                "intensities": list(msg.intensities),
+                "timestamp": time.strftime("%H:%M:%S")
+            }
+
+            self.get_logger().info(f'Received LaserScan with {len(msg.ranges)} points')
+
+            # Forward the scan data to websocket
+            if self.websocket and self.running:
+                asyncio.create_task(self.forward_scan_data(scan_data))
+        except Exception as e:
+            self.get_logger().error(f'Error processing LaserScan data: {e}')
+
+    async def forward_scan_data(self, scan_data):
+        """Forward LaserScan data to websocket connection"""
+        try:
+            if self.websocket and self.running:
+                await self.websocket.send(json.dumps(scan_data))
+                self.get_logger().info(f'Forwarded LaserScan data to websocket')
+        except Exception as e:
+            self.get_logger().error(f'Error forwarding LaserScan data to websocket: {e}')
     
     async def move_to_position(self, target_x, target_y):
         """Simulate moving to a target position"""
@@ -239,9 +288,12 @@ class DemoRobot(Node):
 
 async def spin(robot):
     """Run ROS2 spinning asynchronously"""
-    while rclpy.ok():
-        rclpy.spin_once(robot, timeout_sec=0.01)
-        await asyncio.sleep(0.001)
+    try:
+        while rclpy.ok():
+            rclpy.spin_once(robot, timeout_sec=0.01)
+            await asyncio.sleep(0.001)
+    except asyncio.CancelledError:
+        pass
 
 async def main():
     """Main function to run the demo robot"""
@@ -267,7 +319,7 @@ async def main():
 
             for attempt in range(max_retries):
                 try:
-                    await robot.connect_to_cloud()
+                    await robot.connect_to_cloud("ws://host.docker.internal:8000/robot")
                     break
                 except Exception as e:
                     print(f"⏳ Connection attempt {attempt + 1}/{max_retries} failed: {e}")
@@ -283,13 +335,22 @@ async def main():
             connect_with_retries()
         )
 
+    except KeyboardInterrupt:
+        print("\n🛑 Robot client stopped by user")
     finally:
         # Cleanup ROS2
-        robot.destroy_node()
-        rclpy.shutdown()
+        try:
+            robot.destroy_node()
+        except:
+            pass
+        try:
+            if rclpy.ok():
+                rclpy.shutdown()
+        except:
+            pass
 
 if __name__ == "__main__":
     try:
         asyncio.run(main())
-    except KeyboardInterrupt:
-        print("\n🛑 Robot client stopped by user")
+    except:
+        pass
