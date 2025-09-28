@@ -406,7 +406,7 @@ class RobotClientROS2(RobotClient, Node):
                 "timestamp": time.strftime("%H:%M:%S")
             }
 
-            self.get_logger().debug(f'Received LaserScan with {len(msg.ranges)} points')
+            self.get_logger().info(f'Received LaserScan with {len(msg.ranges)} points')
 
             # Forward the scan data to cloud controller
             if self.is_connected():
