@@ -141,9 +141,13 @@ class RobotClientROS2(RobotClient, Node):
             self.get_logger().error(f'Error publishing remote control status: {e}')
             print(f"❌ Error publishing remote control status: {e}")
 
-    async def set_velocity(self, linear_x, angular_z):
+    async def set_velocity(self, command):
         """Set robot velocity by publishing Twist command to /cmd_vel topic"""
         try:
+            # Extract linear_x and angular_z from command
+            linear_x = command.get('linear_x', 0.0)
+            angular_z = command.get('angular_z', 0.0)
+
             twist_msg = Twist()
             twist_msg.linear.x = float(linear_x)
             twist_msg.linear.y = 0.0
