@@ -1,6 +1,7 @@
 import asyncio
 import websockets
 import json
+import logging
 import time
 import sys
 import os
@@ -14,6 +15,7 @@ class RobotClient(ABC, MessageCallbackMixin):
     """Abstract base class for robot clients"""
 
     def __init__(self, specification=None):
+        self.logger = logging.getLogger(__name__)
         # Initialize MessageCallbackMixin
         MessageCallbackMixin.__init__(self)
 
@@ -40,7 +42,7 @@ class RobotClient(ABC, MessageCallbackMixin):
         self.add_message_callback('robot_disconnect', self.handle_disconnect_command)
         self.add_message_callback('occupancy_grid', self.set_occupancy_grid)
 
-        print("Robot client initialized")
+        self.logger.info("Robot client initialized")
 
 
     # Abstract methods that must be implemented by subclasses
@@ -72,7 +74,7 @@ class RobotClient(ABC, MessageCallbackMixin):
     def cleanup_and_exit(self):
         """Cleanup method for graceful shutdown"""
         try:
-            print(f"\n🛑 Shutting down robot client...")
+            self.logger.info("🛑 Shutting down robot client...")
 
             # Close websocket connection if it exists
             self.running = False
@@ -81,15 +83,15 @@ class RobotClient(ABC, MessageCallbackMixin):
                 # The websocket will be closed in the finally block of listen_for_commands
                 pass
 
-            print(f"✅ Cleanup completed")
+            self.logger.info("✅ Cleanup completed")
 
         except Exception as e:
-            print(f"❌ Error during cleanup: {e}")
+            self.logger.error(f"❌ Error during cleanup: {e}")
 
     async def connect_to_cloud(self, uri="ws://localhost:8000/robot"):
         """Connect to the cloud controller"""
         self.websocket = await websockets.connect(uri)
-        print(f"✅ Connected to cloud controller at {uri}")
+        self.logger.info(f"✅ Connected to cloud controller at {uri}")
         self.running = True
 
         # Set remote control status as connected
@@ -107,10 +109,10 @@ class RobotClient(ABC, MessageCallbackMixin):
                 command = json.loads(message)
                 await self.execute_command(command)
         except websockets.exceptions.ConnectionClosed:
-            print("🔌 Connection to cloud lost")
+            self.logger.warning("🔌 Connection to cloud lost")
             self.running = False
         except Exception as e:
-            print(f"❌ Error listening for commands: {e}")
+            self.logger.error(f"❌ Error listening for commands: {e}")
             self.running = False
         finally:
             # Set remote control status as disconnected
@@ -137,18 +139,18 @@ class RobotClient(ABC, MessageCallbackMixin):
             robot_spec["timestamp"] = time.strftime("%H:%M:%S")
             robot_spec["type"] = "robot_specification"
 
-            print(f"📋 Sending robot specification")
+            self.logger.info("📋 Sending robot specification")
 
             # Send robot specification via forward_data
             await self.forward_data(robot_spec)
 
         except Exception as e:
-            print(f"❌ Error sending robot specification: {e}")
+            self.logger.error(f"❌ Error sending robot specification: {e}")
 
     async def handle_disconnect_command(self, command=None):
         """Handle robot_disconnect command from backend"""
         try:
-            print(f"🔌 Received disconnect command from backend")
+            self.logger.info("🔌 Received disconnect command from backend")
 
             # Set remote control status as disconnected
             self.set_remote_control_status(False)
@@ -158,10 +160,10 @@ class RobotClient(ABC, MessageCallbackMixin):
             if self.websocket:
                 await self.websocket.close()
                 self.websocket = None
-                print(f"✅ Websocket connection closed by disconnect command")
+                self.logger.info("✅ Websocket connection closed by disconnect command")
 
         except Exception as e:
-            print(f"❌ Error handling disconnect command: {e}")
+            self.logger.error(f"❌ Error handling disconnect command: {e}")
 
     def is_connected(self):
         """Check if the robot client is connected and ready to communicate"""
@@ -172,6 +174,6 @@ class RobotClient(ABC, MessageCallbackMixin):
         try:
             if self.is_connected():
                 await self.websocket.send(json.dumps(data))
-                print(f"📡 Forwarded {data.get('type', 'unknown')} data to websocket")
+                self.logger.debug(f"📡 Forwarded {data.get('type', 'unknown')} data to websocket")
         except Exception as e:
-            print(f"❌ Error forwarding data to websocket: {e}")
+            self.logger.error(f"❌ Error forwarding data to websocket: {e}")
