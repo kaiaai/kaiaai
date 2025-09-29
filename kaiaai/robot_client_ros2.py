@@ -92,7 +92,7 @@ class RobotClientROS2(RobotClient, Node):
             OccupancyGrid,
             '/map',
             self.map_callback,
-            10
+            latched_qos
         )
         self.camera_subscription = self.create_subscription(
             CompressedImage,
