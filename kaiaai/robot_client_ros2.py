@@ -5,12 +5,15 @@ import io
 from PIL import Image, ImageDraw, ImageFont
 import math
 import time
+import cv2
+import numpy as np
+from cv_bridge import CvBridge
 import rclpy
 from rclpy.node import Node
 from rclpy.action import ActionClient
 from rclpy.qos import QoSProfile, QoSDurabilityPolicy, QoSReliabilityPolicy
 from std_msgs.msg import String
-from sensor_msgs.msg import LaserScan, BatteryState, CompressedImage
+from sensor_msgs.msg import LaserScan, BatteryState, Image
 from geometry_msgs.msg import Twist, PoseStamped, PoseWithCovarianceStamped
 from nav_msgs.msg import OccupancyGrid
 from kaiaai_msgs.msg import WifiState
@@ -36,7 +39,7 @@ class RobotClientROS2(RobotClient, Node):
         self.wifi_data = None  # Will store latest WifiState message
         self.cmd_vel_data = None  # Will store latest Twist message from /cmd_vel
         self.map_data = None  # Will store latest OccupancyGrid message from /map
-        self.camera_data = None  # Will store latest CompressedImage message from /camera/image/compressed
+        self.camera_data = None  # Will store latest Image message from /color_camera/image_raw
         self.pose_data = None  # Will store latest PoseWithCovarianceStamped message from /amcl_pose
         self.temperature = 25.0
 
@@ -95,8 +98,8 @@ class RobotClientROS2(RobotClient, Node):
             latched_qos
         )
         self.camera_subscription = self.create_subscription(
-            CompressedImage,
-            '/camera/image/compressed',
+            Image,
+            '/color_camera/image_raw',
             self.camera_callback,
             10
         )
@@ -107,9 +110,12 @@ class RobotClientROS2(RobotClient, Node):
         # Create action client for navigation
         self.navigate_to_pose_client = ActionClient(self, NavigateToPose, 'navigate_to_pose')
 
+        # Initialize CV Bridge for image conversion
+        self.bridge = CvBridge()
+
         self.get_logger().info('ROS2 robot client node initialized')
 
-        self.get_logger().set_level(rclpy.logging.LoggingSeverity.WARN)
+        # self.get_logger().set_level(rclpy.logging.LoggingSeverity.WARN)
 
     def set_remote_control_status(self, connected: bool):
         """Set remote control status by publishing to /remote_control_status topic"""
@@ -130,7 +136,7 @@ class RobotClientROS2(RobotClient, Node):
 
             self.remote_control_status_publisher.publish(msg)
             self.get_logger().info(f'Published remote control status: {connected}')
-            print(f"📡 Remote control status: {'CONNECTED' if connected else 'DISCONNECTED'}")
+            self.get_logger().info(f"📡 Remote control status: {'CONNECTED' if connected else 'DISCONNECTED'}")
 
             # Set flag when setting disconnect status
             if not connected:
@@ -141,7 +147,7 @@ class RobotClientROS2(RobotClient, Node):
 
         except Exception as e:
             self.get_logger().error(f'Error publishing remote control status: {e}')
-            print(f"❌ Error publishing remote control status: {e}")
+            self.get_logger().error(f"❌ Error publishing remote control status: {e}")
 
     async def set_velocity(self, command):
         """Set robot velocity by publishing Twist command to /cmd_vel topic"""
@@ -160,17 +166,17 @@ class RobotClientROS2(RobotClient, Node):
 
             self.twist_publisher.publish(twist_msg)
             self.get_logger().info(f'Published Twist command: linear.x={linear_x:.2f}, angular.z={angular_z:.2f}')
-            print(f"🚀 Published Twist: linear.x={linear_x:.2f} m/s, angular.z={angular_z:.2f} rad/s")
+            self.get_logger().info(f"🚀 Published Twist: linear.x={linear_x:.2f} m/s, angular.z={angular_z:.2f} rad/s")
 
         except Exception as e:
             self.get_logger().error(f'Error publishing Twist command: {e}')
-            print(f"❌ Error publishing Twist command: {e}")
+            self.get_logger().error(f"❌ Error publishing Twist command: {e}")
 
     async def set_occupancy_grid(self, grid_data):
         """Set occupancy grid by publishing OccupancyGrid to /map topic with latched QoS"""
         try:
             if not grid_data:
-                print("❌ No grid data provided")
+                self.get_logger().error("❌ No grid data provided")
                 return
 
             # Create OccupancyGrid message
@@ -203,28 +209,36 @@ class RobotClientROS2(RobotClient, Node):
             if isinstance(occupancy_data, list):
                 grid_msg.data = [int(cell) for cell in occupancy_data]
             else:
-                print("❌ Invalid occupancy data format")
+                self.get_logger().error("❌ Invalid occupancy data format")
                 return
 
             # Publish the message
             self.map_publisher.publish(grid_msg)
             self.get_logger().info(f'Published OccupancyGrid: {grid_msg.info.width}x{grid_msg.info.height}, resolution={grid_msg.info.resolution:.3f}m/cell')
-            print(f"🗺️ Published OccupancyGrid to /map: {grid_msg.info.width}x{grid_msg.info.height} cells")
+            self.get_logger().info(f"🗺️ Published OccupancyGrid to /map: {grid_msg.info.width}x{grid_msg.info.height} cells")
 
         except Exception as e:
             self.get_logger().error(f'Error publishing OccupancyGrid: {e}')
-            print(f"❌ Error publishing OccupancyGrid: {e}")
+            self.get_logger().error(f"❌ Error publishing OccupancyGrid: {e}")
 
-    async def navigate_to_pose(self, pose_data, relative=False):
+    async def navigate_to_pose(self, command):
         """Send navigation goal to navigate_to_pose action server"""
         try:
+            if not command:
+                self.get_logger().error("❌ No command provided")
+                return
+
+            # Extract pose data and relative flag from command
+            pose_data = command.get("pose", {})
+            relative = command.get("relative", False)
+
             if not pose_data:
-                print("❌ No pose data provided")
+                self.get_logger().error("❌ No pose data in command")
                 return
 
             # Wait for action server
             if not self.navigate_to_pose_client.wait_for_server(timeout_sec=5.0):
-                print("❌ Navigation action server not available")
+                self.get_logger().error("❌ Navigation action server not available")
                 await self.send_navigation_status("failed", "Action server not available")
                 return
 
@@ -248,7 +262,7 @@ class RobotClientROS2(RobotClient, Node):
                 # Get current robot pose for relative navigation
                 current_pose = self.get_map_pos_2d()
                 if current_pose is None:
-                    print("❌ Cannot get current robot pose for relative navigation")
+                    self.get_logger().error("❌ Cannot get current robot pose for relative navigation")
                     await self.send_navigation_status("failed", "Cannot get current robot pose")
                     return
 
@@ -268,7 +282,7 @@ class RobotClientROS2(RobotClient, Node):
                 # Add to current position
                 target_x = current_x + rotated_x
                 target_y = current_y + rotated_y
-                target_z = target_z  # Z remains as offset
+                target_z = 0.0 + target_z  # Add relative Z to base level (0.0)
 
                 # For orientation, add relative yaw to current yaw
                 relative_yaw = math.atan2(2.0 * (target_qw * target_qz + target_qx * target_qy),
@@ -281,9 +295,13 @@ class RobotClientROS2(RobotClient, Node):
                 target_qz = math.sin(final_yaw / 2.0)
                 target_qw = math.cos(final_yaw / 2.0)
 
-                print(f"🎯 Relative navigation: offset ({pose_data.get('x', 0.0):.2f}, {pose_data.get('y', 0.0):.2f}) -> absolute ({target_x:.2f}, {target_y:.2f})")
+                self.get_logger().info(f"🎯 Relative navigation:")
+                self.get_logger().info(f"    Current pose: ({current_x:.3f}, {current_y:.3f}, {math.degrees(current_yaw):.1f}°)")
+                self.get_logger().info(f"    Relative offset: ({pose_data.get('x', 0.0):.3f}, {pose_data.get('y', 0.0):.3f}, {math.degrees(relative_yaw):.1f}°)")
+                self.get_logger().info(f"    Target pose: ({target_x:.3f}, {target_y:.3f}, {math.degrees(final_yaw):.1f}°)")
+                self.get_logger().info(f"    Target quaternion: qz={target_qz:.6f}, qw={target_qw:.6f}")
             else:
-                print(f"🎯 Absolute navigation to ({target_x:.2f}, {target_y:.2f})")
+                self.get_logger().info(f"🎯 Absolute navigation to ({target_x:.2f}, {target_y:.2f})")
 
             # Set final target pose
             goal_msg.pose.pose.position.x = target_x
@@ -298,71 +316,108 @@ class RobotClientROS2(RobotClient, Node):
             self.navigation_status = "navigating"
             await self.send_navigation_status("navigating", "Navigation goal sent")
 
+            # Start navigation as a background task to avoid blocking
+            asyncio.create_task(self._handle_navigation_async(goal_msg))
+
+        except Exception as e:
+            self.get_logger().error(f"❌ Error in navigation: {e}")
+            self.navigation_status = "failed"
+            await self.send_navigation_status("failed", f"Navigation error: {str(e)}")
+            self.current_goal_handle = None
+
+    async def _handle_navigation_async(self, goal_msg):
+        """Handle navigation asynchronously using rclpy.Future"""
+        try:
+            # Send goal
             send_goal_future = self.navigate_to_pose_client.send_goal_async(
                 goal_msg,
                 feedback_callback=self.navigation_feedback_callback
             )
 
-            # Wait for goal to be accepted
-            goal_handle = await asyncio.wrap_future(send_goal_future)
+            # Wait for goal to be accepted using asyncio-compatible future wrapping
+            goal_handle = await self._wait_for_future(send_goal_future)
 
             if not goal_handle.accepted:
-                print("❌ Navigation goal rejected")
+                self.get_logger().error("❌ Navigation goal rejected")
                 self.navigation_status = "failed"
                 await self.send_navigation_status("failed", "Goal rejected")
                 return
 
-            print("✅ Navigation goal accepted")
+            self.get_logger().info("✅ Navigation goal accepted")
             self.current_goal_handle = goal_handle
 
-            # Wait for result
+            # Wait for result using asyncio-compatible future wrapping
             result_future = goal_handle.get_result_async()
-            result = await asyncio.wrap_future(result_future)
+            result = await self._wait_for_future(result_future)
 
             # Handle result
             if result.status == 4:  # SUCCEEDED
-                print("✅ Navigation succeeded")
+                self.get_logger().info("✅ Navigation succeeded")
                 self.navigation_status = "succeeded"
                 await self.send_navigation_status("succeeded", "Navigation completed successfully")
             elif result.status == 5:  # CANCELED
-                print("🛑 Navigation cancelled")
+                self.get_logger().info("🛑 Navigation cancelled")
                 self.navigation_status = "cancelled"
                 await self.send_navigation_status("cancelled", "Navigation was cancelled")
             else:
-                print(f"❌ Navigation failed with status: {result.status}")
+                self.get_logger().error(f"❌ Navigation failed with status: {result.status}")
                 self.navigation_status = "failed"
                 await self.send_navigation_status("failed", f"Navigation failed with status {result.status}")
 
             self.current_goal_handle = None
 
         except Exception as e:
-            print(f"❌ Error in navigation: {e}")
+            self.get_logger().error(f"❌ Error in async navigation: {e}")
             self.navigation_status = "failed"
-            await self.send_navigation_status("failed", f"Navigation error: {str(e)}")
+            await self.send_navigation_status("failed", f"Async navigation error: {str(e)}")
             self.current_goal_handle = None
+
+    async def _wait_for_future(self, rclpy_future):
+        """Convert rclpy.Future to asyncio.Future for non-blocking execution"""
+        loop = asyncio.get_event_loop()
+
+        # Create an asyncio future that will be resolved when the rclpy future completes
+        asyncio_future = loop.create_future()
+
+        def check_future():
+            if rclpy_future.done():
+                if not asyncio_future.done():
+                    try:
+                        result = rclpy_future.result()
+                        asyncio_future.set_result(result)
+                    except Exception as e:
+                        asyncio_future.set_exception(e)
+            else:
+                # Schedule the next check
+                loop.call_later(0.01, check_future)  # Check every 10ms
+
+        # Start checking
+        check_future()
+
+        return await asyncio_future
 
     async def cancel_navigation(self):
         """Cancel current navigation goal"""
         try:
             if self.current_goal_handle is None:
-                print("ℹ️ No active navigation goal to cancel")
+                self.get_logger().info("ℹ️ No active navigation goal to cancel")
                 await self.send_navigation_status("idle", "No active goal")
                 return
 
-            print("🛑 Cancelling navigation goal")
+            self.get_logger().info("🛑 Cancelling navigation goal")
             cancel_future = self.current_goal_handle.cancel_goal_async()
-            cancel_result = await asyncio.wrap_future(cancel_future)
+            cancel_result = await self._wait_for_future(cancel_future)
 
             if len(cancel_result.goals_canceling) > 0:
-                print("✅ Navigation goal cancelled")
+                self.get_logger().info("✅ Navigation goal cancelled")
                 self.navigation_status = "cancelled"
                 await self.send_navigation_status("cancelled", "Navigation cancelled by user")
             else:
-                print("⚠️ Could not cancel navigation goal")
+                self.get_logger().warning("⚠️ Could not cancel navigation goal")
                 await self.send_navigation_status("failed", "Could not cancel goal")
 
         except Exception as e:
-            print(f"❌ Error cancelling navigation: {e}")
+            self.get_logger().error(f"❌ Error cancelling navigation: {e}")
             await self.send_navigation_status("failed", f"Cancel error: {str(e)}")
 
     def cleanup_and_exit(self):
@@ -378,7 +433,7 @@ class RobotClientROS2(RobotClient, Node):
 
         except Exception as e:
             self.get_logger().error(f'Error during cleanup: {e}')
-            print(f"❌ Error during cleanup: {e}")
+            self.get_logger().error(f"❌ Error during cleanup: {e}")
 
     # ROS2 callback methods
     def scan_callback(self, msg):
@@ -527,13 +582,19 @@ class RobotClientROS2(RobotClient, Node):
             self.get_logger().error(f'Error processing map data: {e}')
 
     def camera_callback(self, msg):
-        """Handle CompressedImage messages from /camera/image/compressed topic"""
+        """Handle Image messages from /color_camera/image_raw topic"""
         try:
             self.camera_data = msg
-            self.get_logger().info(f'Received compressed image: {msg.format}, size={len(msg.data)} bytes')
+            self.get_logger().info(f'Received raw image: {msg.encoding}, {msg.width}x{msg.height}, step={msg.step}')
 
-            # Convert compressed image data to base64 for JSON transmission
-            image_base64 = base64.b64encode(msg.data).decode('utf-8')
+            # Convert ROS Image message to OpenCV format
+            cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
+
+            # Encode image to JPEG for transmission
+            _, jpeg_buffer = cv2.imencode('.jpg', cv_image, [cv2.IMWRITE_JPEG_QUALITY, 80])
+
+            # Convert to base64 for JSON transmission
+            image_base64 = base64.b64encode(jpeg_buffer.tobytes()).decode('utf-8')
 
             # Send camera data immediately to cloud controller
             if self.is_connected():
@@ -546,7 +607,10 @@ class RobotClientROS2(RobotClient, Node):
                         },
                         "frame_id": msg.header.frame_id
                     },
-                    "format": msg.format,
+                    "encoding": msg.encoding,
+                    "width": msg.width,
+                    "height": msg.height,
+                    "format": "jpeg",  # Format after conversion
                     "data": image_base64,
                     "timestamp": time.strftime("%H:%M:%S")
                 }
@@ -646,7 +710,7 @@ class RobotClientROS2(RobotClient, Node):
             distance_remaining = feedback.distance_remaining
             estimated_time_remaining = feedback.estimated_time_remaining
 
-            print(f"📍 Navigation feedback: {distance_remaining:.2f}m remaining, ETA: {estimated_time_remaining.sec}s")
+            self.get_logger().info(f"📍 Navigation feedback: {distance_remaining:.2f}m remaining, ETA: {estimated_time_remaining.sec}s")
 
             # Send feedback to cloud controller
             if self.is_connected():
