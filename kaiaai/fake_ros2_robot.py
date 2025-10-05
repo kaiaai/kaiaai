@@ -87,7 +87,7 @@ class FakeROS2Robot(Node):
         self.map_height = 128  # 128 cells tall (6.4 meters)
         self.map_resolution = 0.05  # 5cm per cell
         self.map_data = None
-        self.map_update_counter = 0
+        self.map_published = False  # Track if map has been published
 
         # Initialize camera simulation variables
         self.camera_frame_counter = 0
@@ -206,9 +206,9 @@ class FakeROS2Robot(Node):
         self.get_logger().info(f'Publishing WiFi status: {msg.rssi_dbm:.1f} dBm')
 
     def publish_fake_map(self):
-        """Publish fake occupancy grid map data"""
-        # Only publish if remote control is active
-        if not self.remote_control_active:
+        """Publish fake occupancy grid map data (only once with latching QoS)"""
+        # Only publish if remote control is active and map hasn't been published yet
+        if not self.remote_control_active or self.map_published:
             return
 
         msg = OccupancyGrid()
@@ -230,20 +230,16 @@ class FakeROS2Robot(Node):
         msg.info.origin.orientation.z = 0.0
         msg.info.origin.orientation.w = 1.0
 
-        # Generate or update map data
+        # Generate map data
         if self.map_data is None:
             # Create initial map with some interesting features
             self.map_data = self.generate_fake_map()
 
-        # Occasionally modify the map to simulate dynamic updates
-        self.map_update_counter += 1
-        if self.map_update_counter % 10 == 0:  # Every 50 seconds (10 * 5 second timer)
-            self.modify_map()
-
         msg.data = self.map_data.tolist()
 
         self.map_publisher_.publish(msg)
-        self.get_logger().info(f'Publishing map: {self.map_width}x{self.map_height}, {len(msg.data)} cells')
+        self.map_published = True  # Mark as published
+        self.get_logger().info(f'Publishing map once (latched): {self.map_width}x{self.map_height}, {len(msg.data)} cells')
 
     def generate_fake_map(self):
         """Generate a fake occupancy grid that matches the static objects used for laser scan"""
