@@ -3,10 +3,11 @@ from rclpy.node import Node
 from rclpy.qos import QoSProfile, QoSDurabilityPolicy, QoSReliabilityPolicy
 from sensor_msgs.msg import LaserScan, BatteryState, CompressedImage
 from nav_msgs.msg import OccupancyGrid, MapMetaData
-from geometry_msgs.msg import Pose, Point, Quaternion
+from geometry_msgs.msg import Pose, Point, Quaternion, Twist, PoseWithCovarianceStamped, PoseStamped, TransformStamped
 from kaiaai_msgs.msg import WifiState
 from builtin_interfaces.msg import Time
-from std_msgs.msg import String
+from std_msgs.msg import String, Header
+from tf2_ros import TransformBroadcaster
 import math
 import numpy as np
 import random
@@ -17,18 +18,22 @@ from PIL import Image, ImageDraw, ImageFont
 class FakeROS2Robot(Node):
     def __init__(self):
         super().__init__('fake_ros2_robot')
-        self.scan_publisher_ = self.create_publisher(LaserScan, 'scan', 10)
-        self.battery_publisher_ = self.create_publisher(BatteryState, 'battery_status', 10)
-        self.wifi_publisher_ = self.create_publisher(WifiState, 'wifi_state', 10)
-        self.map_publisher_ = self.create_publisher(OccupancyGrid, 'map', 10)
-        self.camera_publisher_ = self.create_publisher(CompressedImage, 'camera/image/compressed', 10)
 
-        # Create QoS profile for latched subscription
+        # Create QoS profile for latched subscription/publication
         latched_qos = QoSProfile(
             depth=1,
             durability=QoSDurabilityPolicy.TRANSIENT_LOCAL,
             reliability=QoSReliabilityPolicy.RELIABLE
         )
+
+        self.scan_publisher_ = self.create_publisher(LaserScan, 'scan', 10)
+        self.battery_publisher_ = self.create_publisher(BatteryState, 'battery_status', 10)
+        self.wifi_publisher_ = self.create_publisher(WifiState, 'wifi_state', 10)
+        self.map_publisher_ = self.create_publisher(OccupancyGrid, 'map', latched_qos)
+        self.camera_publisher_ = self.create_publisher(CompressedImage, 'camera/image/compressed', 10)
+
+        # TF2 broadcaster for publishing robot pose
+        self.tf_broadcaster = TransformBroadcaster(self)
 
         # Subscribe to remote control status for testing/monitoring
         self.remote_control_status_subscription = self.create_subscription(
@@ -36,6 +41,14 @@ class FakeROS2Robot(Node):
             '/remote_control_status',
             self.remote_control_status_callback,
             latched_qos
+        )
+
+        # Subscribe to cmd_vel to simulate robot movement
+        self.cmd_vel_subscription = self.create_subscription(
+            Twist,
+            'cmd_vel',
+            self.cmd_vel_callback,
+            10
         )
 
         # Timer for laser scan (0.5 seconds)
@@ -52,6 +65,9 @@ class FakeROS2Robot(Node):
 
         # Timer for camera (0.3 seconds - ~3 FPS)
         self.camera_timer = self.create_timer(0.3, self.publish_fake_camera)
+
+        # Timer for robot pose (0.2 seconds - 5 Hz)
+        self.pose_timer = self.create_timer(0.2, self.publish_robot_pose)
 
         # Initialize battery simulation variables
         self.battery_percentage = 85.0  # Start at 85%
@@ -76,8 +92,20 @@ class FakeROS2Robot(Node):
         # Initialize remote control status tracking
         self.remote_control_active = False  # Start with remote control off
 
-        self.get_logger().info('Fake ROS2 Robot Node started (LaserScan + BatteryState + WifiState + Map + Camera + Remote Control Monitoring).')
+        # Initialize robot pose simulation
+        self.robot_x = 0.0  # Robot position in meters
+        self.robot_y = 0.0
+        self.robot_yaw = 0.0  # Robot orientation in radians
+        self.last_cmd_vel = None
+        self.last_pose_update = self.get_clock().now()
+
+        # Initialize static objects for more realistic laser scans
+        self.static_objects = self.generate_static_objects()
+
+        self.get_logger().info('Fake ROS2 Robot Node started (LaserScan + BatteryState + WifiState + Map + Camera + TF + Remote Control Monitoring).')
         self.get_logger().info('Monitoring /remote_control_status topic for testing')
+        self.get_logger().info('Subscribing to /cmd_vel for robot movement simulation')
+        self.get_logger().info('Publishing robot pose to /tf (map -> base_footprint)')
 
     def publish_fake_scan(self):
         # Only publish if remote control is active
@@ -97,13 +125,13 @@ class FakeROS2Robot(Node):
         msg.range_min = 0.1  # Minimum range value
         msg.range_max = 10.0 # Maximum range value
 
-        # Create fake ranges
+        # Generate realistic ranges based on robot position and map
         num_readings = int((msg.angle_max - msg.angle_min) / msg.angle_increment) + 1
-        msg.ranges = np.random.uniform(low=0.5, high=8.0, size=(360,))
+        msg.ranges = self.generate_realistic_laser_scan(msg.angle_min, msg.angle_increment, num_readings)
         msg.intensities = [] # Optional, can be left empty
 
         self.scan_publisher_.publish(msg)
-        self.get_logger().info('Publishing fake LaserScan message.')
+        self.get_logger().info(f'Publishing realistic LaserScan from pose ({self.robot_x:.2f}, {self.robot_y:.2f}, {math.degrees(self.robot_yaw):.1f}°)')
 
     def publish_fake_battery(self):
         """Publish fake battery status data"""
@@ -364,6 +392,282 @@ class FakeROS2Robot(Node):
     def is_perimeter_wall(self, x, y):
         """Check if a cell is part of the perimeter wall (don't remove these)"""
         return x == 0 or x == self.map_width - 1 or y == 0 or y == self.map_height - 1
+
+    def cmd_vel_callback(self, msg):
+        """Handle Twist messages from cmd_vel topic to simulate robot movement"""
+        if not self.remote_control_active:
+            return
+
+        try:
+            self.last_cmd_vel = msg
+            self.get_logger().info(f'Received cmd_vel: linear.x={msg.linear.x:.2f}, angular.z={msg.angular.z:.2f}')
+
+            # Update robot pose based on cmd_vel
+            self.update_robot_pose_from_cmd_vel(msg)
+
+        except Exception as e:
+            self.get_logger().error(f'Error processing cmd_vel: {e}')
+
+    def update_robot_pose_from_cmd_vel(self, cmd_vel):
+        """Update robot pose based on received cmd_vel command"""
+        current_time = self.get_clock().now()
+        dt = (current_time - self.last_pose_update).nanoseconds / 1e9  # Convert to seconds
+        self.last_pose_update = current_time
+
+        if dt <= 0 or dt > 1.0:  # Sanity check
+            return
+
+        # Extract velocities
+        linear_x = cmd_vel.linear.x
+        angular_z = cmd_vel.angular.z
+
+        # Simple kinematic model for differential drive robot
+        # Update position
+        dx = linear_x * math.cos(self.robot_yaw) * dt
+        dy = linear_x * math.sin(self.robot_yaw) * dt
+        dyaw = angular_z * dt
+
+        self.robot_x += dx
+        self.robot_y += dy
+        self.robot_yaw += dyaw
+
+        # Normalize yaw to [-pi, pi]
+        while self.robot_yaw > math.pi:
+            self.robot_yaw -= 2 * math.pi
+        while self.robot_yaw < -math.pi:
+            self.robot_yaw += 2 * math.pi
+
+        # Add some noise to make it more realistic
+        self.robot_x += random.uniform(-0.001, 0.001)
+        self.robot_y += random.uniform(-0.001, 0.001)
+        self.robot_yaw += random.uniform(-0.001, 0.001)
+
+    def publish_robot_pose(self):
+        """Publish robot pose data via TF"""
+        if not self.remote_control_active:
+            return
+
+        try:
+            # Create transform message
+            t = TransformStamped()
+            t.header.stamp = self.get_clock().now().to_msg()
+            t.header.frame_id = 'map'
+            t.child_frame_id = 'base_footprint'
+
+            # Set translation
+            t.transform.translation.x = self.robot_x
+            t.transform.translation.y = self.robot_y
+            t.transform.translation.z = 0.0
+
+            # Convert yaw to quaternion
+            qz = math.sin(self.robot_yaw / 2.0)
+            qw = math.cos(self.robot_yaw / 2.0)
+            t.transform.rotation.x = 0.0
+            t.transform.rotation.y = 0.0
+            t.transform.rotation.z = qz
+            t.transform.rotation.w = qw
+
+            # Broadcast the transform
+            self.tf_broadcaster.sendTransform(t)
+            self.get_logger().info(f'Publishing robot pose via TF: ({self.robot_x:.2f}, {self.robot_y:.2f}, {math.degrees(self.robot_yaw):.1f}\u00b0)')
+
+        except Exception as e:
+            self.get_logger().error(f'Error publishing robot pose: {e}')
+
+    def generate_static_objects(self):
+        """Generate static objects for realistic laser scan simulation"""
+        objects = []
+
+        # Add some furniture-like objects
+        # Round table
+        objects.append({
+            'type': 'circle',
+            'x': 1.5, 'y': 1.0, 'radius': 0.4
+        })
+
+        # Chair legs (small circles)
+        objects.append({
+            'type': 'circle',
+            'x': 2.0, 'y': 2.0, 'radius': 0.05
+        })
+        objects.append({
+            'type': 'circle',
+            'x': 2.3, 'y': 2.0, 'radius': 0.05
+        })
+        objects.append({
+            'type': 'circle',
+            'x': 2.0, 'y': 2.3, 'radius': 0.05
+        })
+        objects.append({
+            'type': 'circle',
+            'x': 2.3, 'y': 2.3, 'radius': 0.05
+        })
+
+        # Rectangular objects (boxes, furniture)
+        objects.append({
+            'type': 'rectangle',
+            'x1': -1.0, 'y1': 0.5, 'x2': -0.5, 'y2': 1.0
+        })
+        objects.append({
+            'type': 'rectangle',
+            'x1': 0.0, 'y1': -2.0, 'x2': 0.5, 'y2': -1.5
+        })
+
+        # Wall segments
+        objects.append({
+            'type': 'line',
+            'x1': -3.0, 'y1': 3.0, 'x2': 3.0, 'y2': 3.0  # North wall
+        })
+        objects.append({
+            'type': 'line',
+            'x1': -3.0, 'y1': -3.0, 'x2': 3.0, 'y2': -3.0  # South wall
+        })
+        objects.append({
+            'type': 'line',
+            'x1': -3.0, 'y1': -3.0, 'x2': -3.0, 'y2': 3.0  # West wall
+        })
+        objects.append({
+            'type': 'line',
+            'x1': 3.0, 'y1': -3.0, 'x2': 3.0, 'y2': 3.0  # East wall
+        })
+
+        # Interior walls with gaps (doors)
+        objects.append({
+            'type': 'line',
+            'x1': -1.0, 'y1': -1.0, 'x2': 1.0, 'y2': -1.0  # Interior wall with gap
+        })
+
+        return objects
+
+    def generate_realistic_laser_scan(self, angle_min, angle_increment, num_readings):
+        """Generate realistic laser scan ranges based on robot position and objects"""
+        ranges = []
+        max_range = 8.0
+
+        for i in range(num_readings):
+            angle = angle_min + i * angle_increment
+
+            # Calculate the absolute angle in world coordinates
+            world_angle = self.robot_yaw + angle
+
+            # Ray casting to find closest obstacle
+            min_distance = max_range
+
+            # Check against static objects
+            for obj in self.static_objects:
+                distance = self.ray_cast_object(obj, world_angle)
+                if distance < min_distance:
+                    min_distance = distance
+
+            # Add some noise
+            noise = random.uniform(-0.02, 0.02)
+            min_distance += noise
+
+            # Clamp to valid range
+            min_distance = max(0.1, min(max_range, min_distance))
+
+            ranges.append(min_distance)
+
+        return ranges
+
+    def ray_cast_object(self, obj, angle):
+        """Cast a ray from robot position at given angle and find intersection with object"""
+        max_distance = 8.0
+
+        # Ray direction
+        dx = math.cos(angle)
+        dy = math.sin(angle)
+
+        if obj['type'] == 'circle':
+            return self.ray_circle_intersection(self.robot_x, self.robot_y, dx, dy,
+                                              obj['x'], obj['y'], obj['radius'])
+        elif obj['type'] == 'line':
+            return self.ray_line_intersection(self.robot_x, self.robot_y, dx, dy,
+                                            obj['x1'], obj['y1'], obj['x2'], obj['y2'])
+        elif obj['type'] == 'rectangle':
+            return self.ray_rectangle_intersection(self.robot_x, self.robot_y, dx, dy,
+                                                 obj['x1'], obj['y1'], obj['x2'], obj['y2'])
+
+        return max_distance
+
+    def ray_circle_intersection(self, rx, ry, dx, dy, cx, cy, radius):
+        """Find intersection of ray with circle"""
+        # Vector from ray origin to circle center
+        fx = cx - rx
+        fy = cy - ry
+
+        # Quadratic equation coefficients for ray-circle intersection
+        a = dx * dx + dy * dy
+        b = 2 * (dx * (-fx) + dy * (-fy))
+        c = fx * fx + fy * fy - radius * radius
+
+        discriminant = b * b - 4 * a * c
+
+        if discriminant < 0:
+            return 8.0  # No intersection
+
+        # Find closest positive intersection
+        sqrt_discriminant = math.sqrt(discriminant)
+        t1 = (-b - sqrt_discriminant) / (2 * a)
+        t2 = (-b + sqrt_discriminant) / (2 * a)
+
+        if t1 > 0.01:  # Small threshold to avoid self-intersection
+            return t1
+        elif t2 > 0.01:
+            return t2
+        else:
+            return 8.0
+
+    def ray_line_intersection(self, rx, ry, dx, dy, x1, y1, x2, y2):
+        """Find intersection of ray with line segment"""
+        # Line segment vector
+        lx = x2 - x1
+        ly = y2 - y1
+
+        # Solve: ray_origin + t * ray_dir = line_start + s * line_dir
+        denominator = dx * ly - dy * lx
+
+        if abs(denominator) < 1e-10:
+            return 8.0  # Parallel lines
+
+        # Calculate parameters
+        t = ((x1 - rx) * ly - (y1 - ry) * lx) / denominator
+        s = ((x1 - rx) * dy - (y1 - ry) * dx) / denominator
+
+        # Check if intersection is valid
+        if t > 0.01 and 0.0 <= s <= 1.0:
+            return t
+        else:
+            return 8.0
+
+    def ray_rectangle_intersection(self, rx, ry, dx, dy, x1, y1, x2, y2):
+        """Find intersection of ray with rectangle (axis-aligned)"""
+        # Ensure x1 < x2 and y1 < y2
+        if x1 > x2:
+            x1, x2 = x2, x1
+        if y1 > y2:
+            y1, y2 = y2, y1
+
+        # Check intersection with each edge of rectangle
+        min_distance = 8.0
+
+        # Top edge
+        dist = self.ray_line_intersection(rx, ry, dx, dy, x1, y2, x2, y2)
+        min_distance = min(min_distance, dist)
+
+        # Bottom edge
+        dist = self.ray_line_intersection(rx, ry, dx, dy, x1, y1, x2, y1)
+        min_distance = min(min_distance, dist)
+
+        # Left edge
+        dist = self.ray_line_intersection(rx, ry, dx, dy, x1, y1, x1, y2)
+        min_distance = min(min_distance, dist)
+
+        # Right edge
+        dist = self.ray_line_intersection(rx, ry, dx, dy, x2, y1, x2, y2)
+        min_distance = min(min_distance, dist)
+
+        return min_distance
 
 def main(args=None):
     rclpy.init(args=args)
