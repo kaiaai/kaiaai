@@ -1,7 +1,7 @@
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, QoSDurabilityPolicy, QoSReliabilityPolicy
-from sensor_msgs.msg import LaserScan, BatteryState, CompressedImage
+from sensor_msgs.msg import LaserScan, BatteryState, CompressedImage, Image as RosImage
 from nav_msgs.msg import OccupancyGrid, MapMetaData
 from geometry_msgs.msg import Pose, Point, Quaternion, Twist, PoseWithCovarianceStamped, PoseStamped, TransformStamped
 from kaiaai_msgs.msg import WifiState
@@ -30,7 +30,7 @@ class FakeROS2Robot(Node):
         self.battery_publisher_ = self.create_publisher(BatteryState, 'battery_status', 10)
         self.wifi_publisher_ = self.create_publisher(WifiState, 'wifi_state', 10)
         self.map_publisher_ = self.create_publisher(OccupancyGrid, 'map', latched_qos)
-        self.camera_publisher_ = self.create_publisher(CompressedImage, 'camera/image/compressed', 10)
+        self.camera_publisher_ = self.create_publisher(RosImage, '/color_camera/image_raw', 10)
 
         # TF2 broadcaster for publishing robot pose
         self.tf_broadcaster = TransformBroadcaster(self)
@@ -69,6 +69,9 @@ class FakeROS2Robot(Node):
         # Timer for robot pose (0.2 seconds - 5 Hz)
         self.pose_timer = self.create_timer(0.2, self.publish_robot_pose)
 
+        # Timer for motion simulation (0.05 seconds - 20 Hz for smooth motion)
+        self.motion_timer = self.create_timer(0.05, self.update_robot_motion)
+
         # Initialize battery simulation variables
         self.battery_percentage = 85.0  # Start at 85%
         self.battery_drain_rate = 0.02  # Drain 0.02% every 2 seconds
@@ -78,8 +81,10 @@ class FakeROS2Robot(Node):
         self.rssi_noise_range = 15.0  # +/- dBm variation
 
         # Initialize map simulation variables
-        self.map_width = 100  # 100 cells wide
-        self.map_height = 100  # 100 cells tall
+        # Map needs to cover -3.0 to +3.0 meters to include all walls
+        # 6 meters / 0.05 m/cell = 120 cells, use 128 for some margin
+        self.map_width = 128  # 128 cells wide (6.4 meters)
+        self.map_height = 128  # 128 cells tall (6.4 meters)
         self.map_resolution = 0.05  # 5cm per cell
         self.map_data = None
         self.map_update_counter = 0
@@ -96,8 +101,9 @@ class FakeROS2Robot(Node):
         self.robot_x = 0.0  # Robot position in meters
         self.robot_y = 0.0
         self.robot_yaw = 0.0  # Robot orientation in radians
-        self.last_cmd_vel = None
-        self.last_pose_update = self.get_clock().now()
+        self.current_linear_x = 0.0  # Current commanded linear velocity
+        self.current_angular_z = 0.0  # Current commanded angular velocity
+        self.last_motion_update = self.get_clock().now()
 
         # Initialize static objects for more realistic laser scans
         self.static_objects = self.generate_static_objects()
@@ -240,37 +246,79 @@ class FakeROS2Robot(Node):
         self.get_logger().info(f'Publishing map: {self.map_width}x{self.map_height}, {len(msg.data)} cells')
 
     def generate_fake_map(self):
-        """Generate a fake occupancy grid with some interesting features"""
+        """Generate a fake occupancy grid that matches the static objects used for laser scan"""
         # Initialize with free space (0)
         map_data = np.zeros((self.map_height, self.map_width), dtype=np.int8)
 
-        # Add some walls around the perimeter
-        map_data[0, :] = 100  # Top wall
-        map_data[-1, :] = 100  # Bottom wall
-        map_data[:, 0] = 100  # Left wall
-        map_data[:, -1] = 100  # Right wall
+        # Map origin (set in publish_fake_map): calculated as -width*resolution/2
+        # Map covers: x: -3.2 to 3.2 meters, y: -3.2 to 3.2 meters
+        # Resolution: 0.05 m/cell, Size: 128x128 cells
 
-        # Add some internal walls and obstacles
-        # Vertical wall in the middle
-        map_data[20:80, 50] = 100
+        # Helper function to convert world coordinates to grid coordinates
+        def world_to_grid(x, y):
+            # Map origin is at (-2.5, -2.5)
+            origin_x = -self.map_width * self.map_resolution / 2.0
+            origin_y = -self.map_height * self.map_resolution / 2.0
+            grid_x = int((x - origin_x) / self.map_resolution)
+            grid_y = int((y - origin_y) / self.map_resolution)
+            return grid_x, grid_y
 
-        # Horizontal walls
-        map_data[30, 10:40] = 100
-        map_data[70, 60:90] = 100
+        # Add the static objects that match the laser scan simulation
+        # Wall segments (from generate_static_objects)
+        # North wall: y=3.0, x: -3.0 to 3.0
+        for x in np.arange(-3.0, 3.0, self.map_resolution):
+            gx, gy = world_to_grid(x, 3.0)
+            if 0 <= gx < self.map_width and 0 <= gy < self.map_height:
+                map_data[gy, gx] = 100
 
-        # Some scattered obstacles
-        for _ in range(15):
-            x = random.randint(10, self.map_width - 10)
-            y = random.randint(10, self.map_height - 10)
-            size = random.randint(2, 5)
-            map_data[y:y+size, x:x+size] = 100
+        # South wall: y=-3.0, x: -3.0 to 3.0
+        for x in np.arange(-3.0, 3.0, self.map_resolution):
+            gx, gy = world_to_grid(x, -3.0)
+            if 0 <= gx < self.map_width and 0 <= gy < self.map_height:
+                map_data[gy, gx] = 100
 
-        # Add some unknown areas (-1)
-        for _ in range(5):
-            x = random.randint(5, self.map_width - 15)
-            y = random.randint(5, self.map_height - 15)
-            size = random.randint(3, 8)
-            map_data[y:y+size, x:x+size] = -1
+        # West wall: x=-3.0, y: -3.0 to 3.0
+        for y in np.arange(-3.0, 3.0, self.map_resolution):
+            gx, gy = world_to_grid(-3.0, y)
+            if 0 <= gx < self.map_width and 0 <= gy < self.map_height:
+                map_data[gy, gx] = 100
+
+        # East wall: x=3.0, y: -3.0 to 3.0
+        for y in np.arange(-3.0, 3.0, self.map_resolution):
+            gx, gy = world_to_grid(3.0, y)
+            if 0 <= gx < self.map_width and 0 <= gy < self.map_height:
+                map_data[gy, gx] = 100
+
+        # Interior wall: y=-1.0, x: -1.0 to 1.0
+        for x in np.arange(-1.0, 1.0, self.map_resolution):
+            gx, gy = world_to_grid(x, -1.0)
+            if 0 <= gx < self.map_width and 0 <= gy < self.map_height:
+                map_data[gy, gx] = 100
+
+        # Round table (circle at x=1.5, y=1.0, radius=0.4)
+        table_gx, table_gy = world_to_grid(1.5, 1.0)
+        radius_cells = int(0.4 / self.map_resolution)
+        for dy in range(-radius_cells, radius_cells + 1):
+            for dx in range(-radius_cells, radius_cells + 1):
+                if dx*dx + dy*dy <= radius_cells*radius_cells:
+                    gx, gy = table_gx + dx, table_gy + dy
+                    if 0 <= gx < self.map_width and 0 <= gy < self.map_height:
+                        map_data[gy, gx] = 100
+
+        # Rectangular objects
+        # Box 1: x: -1.0 to -0.5, y: 0.5 to 1.0
+        for x in np.arange(-1.0, -0.5, self.map_resolution):
+            for y in np.arange(0.5, 1.0, self.map_resolution):
+                gx, gy = world_to_grid(x, y)
+                if 0 <= gx < self.map_width and 0 <= gy < self.map_height:
+                    map_data[gy, gx] = 100
+
+        # Box 2: x: 0.0 to 0.5, y: -2.0 to -1.5
+        for x in np.arange(0.0, 0.5, self.map_resolution):
+            for y in np.arange(-2.0, -1.5, self.map_resolution):
+                gx, gy = world_to_grid(x, y)
+                if 0 <= gx < self.map_width and 0 <= gy < self.map_height:
+                    map_data[gy, gx] = 100
 
         # Flatten to 1D array (row-major order)
         return map_data.flatten()
@@ -298,7 +346,7 @@ class FakeROS2Robot(Node):
         self.map_data = map_2d.flatten()
 
     def publish_fake_camera(self):
-        """Publish fake compressed image data"""
+        """Publish fake uncompressed image data"""
         # Only publish if remote control is active
         if not self.remote_control_active:
             return
@@ -349,21 +397,25 @@ class FakeROS2Robot(Node):
                     color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
                     draw.rectangle([x1, y1, x2, y2], fill=color)
 
-            # Convert PIL image to JPEG bytes
-            img_byte_arr = io.BytesIO()
-            img.save(img_byte_arr, format='JPEG', quality=85)
-            img_byte_arr.seek(0)
+            # Convert PIL image (RGB) to numpy array and then to BGR for ROS
+            img_array = np.array(img)
+            # Convert RGB to BGR (ROS convention)
+            img_bgr = img_array[:, :, ::-1].copy()
 
-            # Create CompressedImage message
-            msg = CompressedImage()
+            # Create ROS Image message
+            msg = RosImage()
             msg.header.stamp = self.get_clock().now().to_msg()
             msg.header.frame_id = 'camera_frame'
-            msg.format = 'jpeg'
-            msg.data = img_byte_arr.getvalue()
+            msg.height = self.camera_height
+            msg.width = self.camera_width
+            msg.encoding = 'bgr8'
+            msg.is_bigendian = 0
+            msg.step = self.camera_width * 3  # 3 bytes per pixel (BGR)
+            msg.data = img_bgr.tobytes()
 
             # Publish the message
             self.camera_publisher_.publish(msg)
-            self.get_logger().info(f'Publishing fake camera image: frame {self.camera_frame_counter}, size {len(msg.data)} bytes')
+            self.get_logger().info(f'Publishing fake camera image: frame {self.camera_frame_counter}, {msg.width}x{msg.height}')
 
         except Exception as e:
             self.get_logger().error(f'Error generating fake camera image: {e}')
@@ -394,53 +446,60 @@ class FakeROS2Robot(Node):
         return x == 0 or x == self.map_width - 1 or y == 0 or y == self.map_height - 1
 
     def cmd_vel_callback(self, msg):
-        """Handle Twist messages from cmd_vel topic to simulate robot movement"""
+        """Handle Twist messages from cmd_vel topic to store current velocity"""
         if not self.remote_control_active:
             return
 
         try:
-            self.last_cmd_vel = msg
+            # Store the current commanded velocities
+            self.current_linear_x = msg.linear.x
+            self.current_angular_z = msg.angular.z
             self.get_logger().info(f'Received cmd_vel: linear.x={msg.linear.x:.2f}, angular.z={msg.angular.z:.2f}')
-
-            # Update robot pose based on cmd_vel
-            self.update_robot_pose_from_cmd_vel(msg)
 
         except Exception as e:
             self.get_logger().error(f'Error processing cmd_vel: {e}')
 
-    def update_robot_pose_from_cmd_vel(self, cmd_vel):
-        """Update robot pose based on received cmd_vel command"""
-        current_time = self.get_clock().now()
-        dt = (current_time - self.last_pose_update).nanoseconds / 1e9  # Convert to seconds
-        self.last_pose_update = current_time
-
-        if dt <= 0 or dt > 1.0:  # Sanity check
+    def update_robot_motion(self):
+        """Update robot pose based on current velocity commands (called by timer)"""
+        if not self.remote_control_active:
             return
 
-        # Extract velocities
-        linear_x = cmd_vel.linear.x
-        angular_z = cmd_vel.angular.z
+        try:
+            current_time = self.get_clock().now()
+            dt = (current_time - self.last_motion_update).nanoseconds / 1e9  # Convert to seconds
+            self.last_motion_update = current_time
 
-        # Simple kinematic model for differential drive robot
-        # Update position
-        dx = linear_x * math.cos(self.robot_yaw) * dt
-        dy = linear_x * math.sin(self.robot_yaw) * dt
-        dyaw = angular_z * dt
+            if dt <= 0 or dt > 0.2:  # Sanity check (max 200ms)
+                return
 
-        self.robot_x += dx
-        self.robot_y += dy
-        self.robot_yaw += dyaw
+            # Use current commanded velocities
+            linear_x = self.current_linear_x
+            angular_z = self.current_angular_z
 
-        # Normalize yaw to [-pi, pi]
-        while self.robot_yaw > math.pi:
-            self.robot_yaw -= 2 * math.pi
-        while self.robot_yaw < -math.pi:
-            self.robot_yaw += 2 * math.pi
+            # Simple kinematic model for differential drive robot
+            # Update position
+            dx = linear_x * math.cos(self.robot_yaw) * dt
+            dy = linear_x * math.sin(self.robot_yaw) * dt
+            dyaw = angular_z * dt
 
-        # Add some noise to make it more realistic
-        self.robot_x += random.uniform(-0.001, 0.001)
-        self.robot_y += random.uniform(-0.001, 0.001)
-        self.robot_yaw += random.uniform(-0.001, 0.001)
+            self.robot_x += dx
+            self.robot_y += dy
+            self.robot_yaw += dyaw
+
+            # Normalize yaw to [-pi, pi]
+            while self.robot_yaw > math.pi:
+                self.robot_yaw -= 2 * math.pi
+            while self.robot_yaw < -math.pi:
+                self.robot_yaw += 2 * math.pi
+
+            # Add some noise to make it more realistic (only if moving)
+            if abs(linear_x) > 0.001 or abs(angular_z) > 0.001:
+                self.robot_x += random.uniform(-0.0005, 0.0005)
+                self.robot_y += random.uniform(-0.0005, 0.0005)
+                self.robot_yaw += random.uniform(-0.001, 0.001)
+
+        except Exception as e:
+            self.get_logger().error(f'Error updating robot motion: {e}')
 
     def publish_robot_pose(self):
         """Publish robot pose data via TF"""
