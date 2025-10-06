@@ -30,7 +30,8 @@ class RobotClientROS2(RobotClient, Node):
     def __init__(self, specification=None):
         # Initialize both parent classes
         RobotClient.__init__(self, specification)
-        Node.__init__(self, 'robot_controller')
+        Node.__init__(self, 'robot_client_ros2')
+        self.logger = self.get_logger()
 
         # ROS2-specific data storage
         self.position = {"x": 0.0, "y": 0.0}
@@ -40,7 +41,6 @@ class RobotClientROS2(RobotClient, Node):
         self.cmd_vel_data = None  # Will store latest Twist message from /cmd_vel
         self.map_data = None  # Will store latest OccupancyGrid message from /map
         self.camera_data = None  # Will store latest Image message from /color_camera/image_raw
-        self.pose_data = None  # Will store latest PoseWithCovarianceStamped message from /amcl_pose
         self.temperature = 25.0
 
         # Navigation state
@@ -115,28 +115,26 @@ class RobotClientROS2(RobotClient, Node):
 
         self.get_logger().info('ROS2 robot client node initialized')
 
-        # self.get_logger().set_level(rclpy.logging.LoggingSeverity.WARN)
-
     def set_remote_control_status(self, connected: bool):
         """Set remote control status by publishing to /remote_control_status topic"""
         try:
             # Prevent duplicate disconnect messages
             if not connected and self.disconnect_status_set:
-                self.get_logger().debug('Disconnect status already set, skipping duplicate')
+                self.get_logger().warning('Disconnect status already set, skipping duplicate')
                 return
 
             status_data = {
                 "remote_control": connected,
                 "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
-                "robot_id": "robot_controller"
+                "robot_id": "robot_client_ros2"
             }
 
             msg = String()
             msg.data = json.dumps(status_data)
 
             self.remote_control_status_publisher.publish(msg)
-            self.get_logger().info(f'Published remote control status: {connected}')
-            self.get_logger().info(f"📡 Remote control status: {'CONNECTED' if connected else 'DISCONNECTED'}")
+            self.get_logger().debug(f'Published remote control status: {connected}')
+            self.get_logger().debug(f"📡 Remote control status: {'CONNECTED' if connected else 'DISCONNECTED'}")
 
             # Set flag when setting disconnect status
             if not connected:
@@ -146,7 +144,6 @@ class RobotClientROS2(RobotClient, Node):
                 self.disconnect_status_set = False
 
         except Exception as e:
-            self.get_logger().error(f'Error publishing remote control status: {e}')
             self.get_logger().error(f"❌ Error publishing remote control status: {e}")
 
     async def set_velocity(self, command):
@@ -165,11 +162,9 @@ class RobotClientROS2(RobotClient, Node):
             twist_msg.angular.z = float(angular_z)
 
             self.twist_publisher.publish(twist_msg)
-            self.get_logger().info(f'Published Twist command: linear.x={linear_x:.2f}, angular.z={angular_z:.2f}')
-            self.get_logger().info(f"🚀 Published Twist: linear.x={linear_x:.2f} m/s, angular.z={angular_z:.2f} rad/s")
+            self.get_logger().debug(f"🚀 Published Twist: linear.x={linear_x:.2f} m/s, angular.z={angular_z:.2f} rad/s")
 
         except Exception as e:
-            self.get_logger().error(f'Error publishing Twist command: {e}')
             self.get_logger().error(f"❌ Error publishing Twist command: {e}")
 
     async def set_occupancy_grid(self, grid_data):
@@ -214,11 +209,9 @@ class RobotClientROS2(RobotClient, Node):
 
             # Publish the message
             self.map_publisher.publish(grid_msg)
-            self.get_logger().info(f'Published OccupancyGrid: {grid_msg.info.width}x{grid_msg.info.height}, resolution={grid_msg.info.resolution:.3f}m/cell')
-            self.get_logger().info(f"🗺️ Published OccupancyGrid to /map: {grid_msg.info.width}x{grid_msg.info.height} cells")
+            self.get_logger().debug(f"🗺️ Published OccupancyGrid to /map: {grid_msg.info.width}x{grid_msg.info.height} cells")
 
         except Exception as e:
-            self.get_logger().error(f'Error publishing OccupancyGrid: {e}')
             self.get_logger().error(f"❌ Error publishing OccupancyGrid: {e}")
 
     async def navigate_to_pose(self, command):
@@ -295,13 +288,13 @@ class RobotClientROS2(RobotClient, Node):
                 target_qz = math.sin(final_yaw / 2.0)
                 target_qw = math.cos(final_yaw / 2.0)
 
-                self.get_logger().info(f"🎯 Relative navigation:")
-                self.get_logger().info(f"    Current pose: ({current_x:.3f}, {current_y:.3f}, {math.degrees(current_yaw):.1f}°)")
-                self.get_logger().info(f"    Relative offset: ({pose_data.get('x', 0.0):.3f}, {pose_data.get('y', 0.0):.3f}, {math.degrees(relative_yaw):.1f}°)")
-                self.get_logger().info(f"    Target pose: ({target_x:.3f}, {target_y:.3f}, {math.degrees(final_yaw):.1f}°)")
-                self.get_logger().info(f"    Target quaternion: qz={target_qz:.6f}, qw={target_qw:.6f}")
+                self.get_logger().debug(f"🎯 Relative navigation:")
+                self.get_logger().debug(f"    Current pose: ({current_x:.3f}, {current_y:.3f}, {math.degrees(current_yaw):.1f}°)")
+                self.get_logger().debug(f"    Relative offset: ({pose_data.get('x', 0.0):.3f}, {pose_data.get('y', 0.0):.3f}, {math.degrees(relative_yaw):.1f}°)")
+                self.get_logger().debug(f"    Target pose: ({target_x:.3f}, {target_y:.3f}, {math.degrees(final_yaw):.1f}°)")
+                self.get_logger().debug(f"    Target quaternion: qz={target_qz:.6f}, qw={target_qw:.6f}")
             else:
-                self.get_logger().info(f"🎯 Absolute navigation to ({target_x:.2f}, {target_y:.2f})")
+                self.get_logger().debug(f"🎯 Absolute navigation to ({target_x:.2f}, {target_y:.2f})")
 
             # Set final target pose
             goal_msg.pose.pose.position.x = target_x
@@ -400,7 +393,7 @@ class RobotClientROS2(RobotClient, Node):
         """Cancel current navigation goal"""
         try:
             if self.current_goal_handle is None:
-                self.get_logger().info("ℹ️ No active navigation goal to cancel")
+                self.get_logger().warning("ℹ️ No active navigation goal to cancel")
                 await self.send_navigation_status("idle", "No active goal")
                 return
 
@@ -423,7 +416,7 @@ class RobotClientROS2(RobotClient, Node):
     def cleanup_and_exit(self):
         """Cleanup method to publish remote control status as false before exiting"""
         try:
-            self.get_logger().info('Robot client shutting down - publishing remote control status as false')
+            self.get_logger().debug('Robot client shutting down - publishing remote control status as false')
 
             # Set remote control status as disconnected
             self.set_remote_control_status(False)
@@ -432,7 +425,6 @@ class RobotClientROS2(RobotClient, Node):
             super().cleanup_and_exit()
 
         except Exception as e:
-            self.get_logger().error(f'Error during cleanup: {e}')
             self.get_logger().error(f"❌ Error during cleanup: {e}")
 
     # ROS2 callback methods
@@ -461,7 +453,7 @@ class RobotClientROS2(RobotClient, Node):
                 "timestamp": time.strftime("%H:%M:%S")
             }
 
-            self.get_logger().info(f'Received LaserScan with {len(msg.ranges)} points')
+            self.get_logger().debug(f'Received LaserScan with {len(msg.ranges)} points')
 
             # Forward the scan data to cloud controller
             if self.is_connected():
@@ -473,7 +465,7 @@ class RobotClientROS2(RobotClient, Node):
         """Handle BatteryState messages from /battery_status topic"""
         try:
             self.battery_data = msg
-            self.get_logger().info(f'Received battery status: {msg.percentage:.1f}%')
+            self.get_logger().debug(f'Received battery status: {msg.percentage:.1f}%')
 
             # Send battery data immediately to cloud controller
             if self.is_connected():
@@ -495,7 +487,7 @@ class RobotClientROS2(RobotClient, Node):
         """Handle WifiState messages from /wifi_state topic"""
         try:
             self.wifi_data = msg
-            self.get_logger().info(f'Received WiFi status: {msg.rssi_dbm:.1f} dBm')
+            self.get_logger().debug(f'Received WiFi status: {msg.rssi_dbm:.1f} dBm')
 
             # Send wifi data immediately to cloud controller
             if self.is_connected():
@@ -513,7 +505,7 @@ class RobotClientROS2(RobotClient, Node):
         """Handle Twist messages from /cmd_vel topic"""
         try:
             self.cmd_vel_data = msg
-            self.get_logger().info(f'Received cmd_vel: linear.x={msg.linear.x:.2f}, angular.z={msg.angular.z:.2f}')
+            self.get_logger().debug(f'Received cmd_vel: linear.x={msg.linear.x:.2f}, angular.z={msg.angular.z:.2f}')
 
             # Send cmd_vel data immediately to cloud controller
             if self.is_connected():
@@ -539,7 +531,7 @@ class RobotClientROS2(RobotClient, Node):
         """Handle OccupancyGrid messages from /map topic"""
         try:
             self.map_data = msg
-            self.get_logger().info(f'Received map: {msg.info.width}x{msg.info.height}, resolution={msg.info.resolution:.3f}m/cell')
+            self.get_logger().debug(f'Received map: {msg.info.width}x{msg.info.height}, resolution={msg.info.resolution:.3f}m/cell')
 
             # Send map data immediately to cloud controller
             if self.is_connected():
@@ -585,7 +577,7 @@ class RobotClientROS2(RobotClient, Node):
         """Handle Image messages from /color_camera/image_raw topic"""
         try:
             self.camera_data = msg
-            self.get_logger().info(f'Received raw image: {msg.encoding}, {msg.width}x{msg.height}, step={msg.step}')
+            self.get_logger().debug(f'Received raw image: {msg.encoding}, {msg.width}x{msg.height}, step={msg.step}')
 
             # Convert ROS Image message to OpenCV format
             cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
@@ -623,7 +615,7 @@ class RobotClientROS2(RobotClient, Node):
         try:
             pose = self.get_map_pos_2d()
             if pose is not None:
-                self.get_logger().info(f'TF robot pose: ({pose["x"]:.2f}, {pose["y"]:.2f}, {math.degrees(pose["yaw"]):.1f}°)')
+                self.get_logger().debug(f'TF robot pose: ({pose["x"]:.2f}, {pose["y"]:.2f}, {math.degrees(pose["yaw"]):.1f}°)')
 
                 # Send simplified pose data to cloud controller
                 if self.is_connected():
@@ -710,7 +702,7 @@ class RobotClientROS2(RobotClient, Node):
             distance_remaining = feedback.distance_remaining
             estimated_time_remaining = feedback.estimated_time_remaining
 
-            self.get_logger().info(f"📍 Navigation feedback: {distance_remaining:.2f}m remaining, ETA: {estimated_time_remaining.sec}s")
+            self.get_logger().debug(f"📍 Navigation feedback: {distance_remaining:.2f}m remaining, ETA: {estimated_time_remaining.sec}s")
 
             # Send feedback to cloud controller
             if self.is_connected():
@@ -746,7 +738,7 @@ class RobotClientROS2(RobotClient, Node):
                 "timestamp": time.strftime("%H:%M:%S")
             }
             await self.forward_data(status_data)
-            self.get_logger().info(f'Sent navigation status: {status} - {message}')
+            self.get_logger().debug(f'Sent navigation status: {status} - {message}')
         except Exception as e:
             self.get_logger().error(f'Error sending navigation status: {e}')
 
@@ -756,7 +748,7 @@ class RobotClientROS2(RobotClient, Node):
         msg = String()
         msg.data = json.dumps(command)  # Send the original JSON string
         self.command_publisher.publish(msg)
-        self.get_logger().info(f'Published command to /command_received: {json.dumps(command)}')
+        self.get_logger().debug(f'Published command to /command_received: {json.dumps(command)}')
 
         # Call parent implementation
         await super().execute_command(command)

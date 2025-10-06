@@ -137,7 +137,7 @@ class FakeROS2Robot(Node):
         msg.intensities = [] # Optional, can be left empty
 
         self.scan_publisher_.publish(msg)
-        self.get_logger().info(f'Publishing realistic LaserScan from pose ({self.robot_x:.2f}, {self.robot_y:.2f}, {math.degrees(self.robot_yaw):.1f}°)')
+        self.get_logger().debug(f'Publishing realistic LaserScan from pose ({self.robot_x:.2f}, {self.robot_y:.2f}, {math.degrees(self.robot_yaw):.1f}°)')
 
     def publish_fake_battery(self):
         """Publish fake battery status data"""
@@ -155,7 +155,7 @@ class FakeROS2Robot(Node):
         # If battery gets too low, simulate recharging
         if self.battery_percentage < 5.0:
             self.battery_percentage = 90.0  # Simulate battery swap/recharge
-            self.get_logger().info('🔋 Battery recharged to 90%!')
+            self.get_logger().debug('🔋 Battery recharged to 90%!')
 
         # Fill in battery state message
         msg.voltage = 12.0 + (self.battery_percentage / 100.0) * 2.0  # 12V to 14V range
@@ -175,7 +175,7 @@ class FakeROS2Robot(Node):
         msg.serial_number = 'DUMMY_BAT_001'
 
         self.battery_publisher_.publish(msg)
-        self.get_logger().info(f'Publishing battery status: {self.battery_percentage:.1f}%')
+        self.get_logger().debug(f'Publishing battery status: {self.battery_percentage:.1f}%')
 
     def publish_fake_wifi(self):
         """Publish fake WiFi status data"""
@@ -203,7 +203,7 @@ class FakeROS2Robot(Node):
         msg.rssi_dbm = current_rssi
 
         self.wifi_publisher_.publish(msg)
-        self.get_logger().info(f'Publishing WiFi status: {msg.rssi_dbm:.1f} dBm')
+        self.get_logger().debug(f'Publishing WiFi status: {msg.rssi_dbm:.1f} dBm')
 
     def publish_fake_map(self):
         """Publish fake occupancy grid map data (only once with latching QoS)"""
@@ -239,7 +239,7 @@ class FakeROS2Robot(Node):
 
         self.map_publisher_.publish(msg)
         self.map_published = True  # Mark as published
-        self.get_logger().info(f'Publishing map once (latched): {self.map_width}x{self.map_height}, {len(msg.data)} cells')
+        self.get_logger().debug(f'Publishing map once (latched): {self.map_width}x{self.map_height}, {len(msg.data)} cells')
 
     def generate_fake_map(self):
         """Generate a fake occupancy grid that matches the static objects used for laser scan"""
@@ -411,7 +411,7 @@ class FakeROS2Robot(Node):
 
             # Publish the message
             self.camera_publisher_.publish(msg)
-            self.get_logger().info(f'Publishing fake camera image: frame {self.camera_frame_counter}, {msg.width}x{msg.height}')
+            self.get_logger().debug(f'Publishing fake camera image: frame {self.camera_frame_counter}, {msg.width}x{msg.height}')
 
         except Exception as e:
             self.get_logger().error(f'Error generating fake camera image: {e}')
@@ -419,7 +419,7 @@ class FakeROS2Robot(Node):
     def remote_control_status_callback(self, msg):
         """Handle String messages from /remote_control_status topic (for testing)"""
         try:
-            self.get_logger().info(f'Received remote control status: {msg.data}')
+            self.get_logger().debug(f'Received remote control status: {msg.data}')
 
             # Try to parse as JSON for prettier display and status tracking
             try:
@@ -450,7 +450,7 @@ class FakeROS2Robot(Node):
             # Store the current commanded velocities
             self.current_linear_x = msg.linear.x
             self.current_angular_z = msg.angular.z
-            self.get_logger().info(f'Received cmd_vel: linear.x={msg.linear.x:.2f}, angular.z={msg.angular.z:.2f}')
+            self.get_logger().debug(f'Received cmd_vel: linear.x={msg.linear.x:.2f}, angular.z={msg.angular.z:.2f}')
 
         except Exception as e:
             self.get_logger().error(f'Error processing cmd_vel: {e}')
@@ -524,7 +524,7 @@ class FakeROS2Robot(Node):
 
             # Broadcast the transform
             self.tf_broadcaster.sendTransform(t)
-            self.get_logger().info(f'Publishing robot pose via TF: ({self.robot_x:.2f}, {self.robot_y:.2f}, {math.degrees(self.robot_yaw):.1f}\u00b0)')
+            self.get_logger().debug(f'Publishing robot pose via TF: ({self.robot_x:.2f}, {self.robot_y:.2f}, {math.degrees(self.robot_yaw):.1f}\u00b0)')
 
         except Exception as e:
             self.get_logger().error(f'Error publishing robot pose: {e}')
