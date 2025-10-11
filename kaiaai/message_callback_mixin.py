@@ -2,6 +2,7 @@ import asyncio
 import logging
 from typing import Dict, List, Callable, Any
 
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -105,7 +106,7 @@ class MessageCallbackMixin:
             else:
                 # Wait for the message indefinitely
                 await message_received.wait()
-            logger.info(f"Received {message_type} message")
+            logger.debug(f"Received {message_type} message")
             return received_message
         except asyncio.TimeoutError:
             logger.warning(f"Timeout waiting for {message_type} message after {timeout_seconds}s")
