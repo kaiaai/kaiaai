@@ -94,7 +94,7 @@ async def main():
             print("🛑 Disconnect command received - stopping reconnection and exiting")
             should_exit = True
 
-        robot.add_message_callback('robot_disconnect', disconnect_callback)
+        robot.add_message_callback('end_session', disconnect_callback)
 
         # Set up signal handlers for graceful shutdown
         def signal_handler(signum, frame):
