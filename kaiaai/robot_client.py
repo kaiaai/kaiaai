@@ -25,13 +25,12 @@ class RobotClient(ABC, MessageCallbackMixin):
         self.running = False
         self.disconnect_status_set = False  # Flag to prevent duplicate disconnect status setting
 
-
         # Register known message types and their callback handlers
         self.register_message_type('twist')
         self.register_message_type('navigate_to_pose')
         self.register_message_type('cancel_navigation')
         self.register_message_type('get_robot_specification')
-        self.register_message_type('robot_disconnect')
+        self.register_message_type('end_session')
         self.register_message_type('occupancy_grid')
 
         # Set up message type callbacks
@@ -39,11 +38,10 @@ class RobotClient(ABC, MessageCallbackMixin):
         self.add_message_callback('navigate_to_pose', self.navigate_to_pose)
         self.add_message_callback('cancel_navigation', self.cancel_navigation)
         self.add_message_callback('get_robot_specification', self.send_robot_specification)
-        self.add_message_callback('robot_disconnect', self.handle_disconnect_command)
+        self.add_message_callback('end_session', self.handle_disconnect_command)
         self.add_message_callback('occupancy_grid', self.set_occupancy_grid)
 
         self.logger.info("Robot client initialized")
-
 
     # Abstract methods that must be implemented by subclasses
     @abstractmethod
@@ -90,7 +88,13 @@ class RobotClient(ABC, MessageCallbackMixin):
 
     async def connect_to_cloud(self, uri="ws://localhost:8000/robot"):
         """Connect to the cloud controller"""
-        self.websocket = await websockets.connect(uri)
+        # Configure WebSocket with longer timeouts for hotspot/unstable connections
+        self.websocket = await websockets.connect(
+            uri,
+            ping_interval=20,  # Send ping every 20 seconds
+            ping_timeout=60,   # Wait up to 60 seconds for pong response
+            close_timeout=10   # Wait 10 seconds for close handshake
+        )
         self.logger.info(f"✅ Connected to cloud controller at {uri}")
         self.running = True
 
@@ -148,7 +152,7 @@ class RobotClient(ABC, MessageCallbackMixin):
             self.logger.error(f"❌ Error sending robot specification: {e}")
 
     async def handle_disconnect_command(self, command=None):
-        """Handle robot_disconnect command from backend"""
+        """Handle end_session command from backend"""
         try:
             self.logger.info("🔌 Received disconnect command from backend")
 
