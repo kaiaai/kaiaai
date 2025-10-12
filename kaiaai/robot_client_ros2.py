@@ -75,7 +75,7 @@ class RobotClientROS2(RobotClient, Node):
         )
         self.battery_subscription = self.create_subscription(
             BatteryState,
-            '/battery_status',
+            '/battery_state',
             self.battery_callback,
             10
         )
@@ -431,6 +431,17 @@ class RobotClientROS2(RobotClient, Node):
     def scan_callback(self, msg):
         """Handle LaserScan messages from /scan topic"""
         try:
+            # Check if intensities are all zeros (common case) and send empty list to save bandwidth
+            intensities_list = list(msg.intensities) if msg.intensities else []
+            if intensities_list and all(intensity == 0.0 for intensity in intensities_list):
+                intensities_list = []
+
+            # Convert ranges to float32 binary format for efficient transmission
+            # This reduces size by ~75% compared to JSON array of floats
+            ranges_array = np.array(msg.ranges, dtype=np.float32)
+            ranges_binary = ranges_array.tobytes()
+            ranges_base64 = base64.b64encode(ranges_binary).decode('utf-8')
+
             # Convert LaserScan message to JSON structure
             scan_data = {
                 "type": "laser_scan",
@@ -448,12 +459,17 @@ class RobotClientROS2(RobotClient, Node):
                 "scan_time": msg.scan_time,
                 "range_min": msg.range_min,
                 "range_max": msg.range_max,
-                "ranges": list(msg.ranges),
-                "intensities": list(msg.intensities),
+                "ranges_binary": ranges_base64,  # Binary format (base64 encoded float32 array)
+                "ranges_count": len(msg.ranges),  # Number of points for decoding
+                "intensities": intensities_list,
                 "timestamp": time.strftime("%H:%M:%S")
             }
 
-            self.get_logger().debug(f'Received LaserScan with {len(msg.ranges)} points')
+            # Calculate and log JSON message size for performance monitoring
+            json_str = json.dumps(scan_data)
+            json_size_bytes = len(json_str.encode('utf-8'))
+            json_size_kb = json_size_bytes / 1024
+            self.get_logger().debug(f'LaserScan: {len(msg.ranges)} points, {len(intensities_list)} intensities, JSON size: {json_size_kb:.2f} KB')
 
             # Forward the scan data to cloud controller
             if self.is_connected():
@@ -462,7 +478,7 @@ class RobotClientROS2(RobotClient, Node):
             self.get_logger().error(f'Error processing LaserScan data: {e}')
 
     def battery_callback(self, msg):
-        """Handle BatteryState messages from /battery_status topic"""
+        """Handle BatteryState messages from /battery_state topic"""
         try:
             self.battery_data = msg
             self.get_logger().debug(f'Received battery status: {msg.percentage:.1f}%')
@@ -507,23 +523,11 @@ class RobotClientROS2(RobotClient, Node):
             self.cmd_vel_data = msg
             self.get_logger().debug(f'Received cmd_vel: linear.x={msg.linear.x:.2f}, angular.z={msg.angular.z:.2f}')
 
-            # Send cmd_vel data immediately to cloud controller
-            if self.is_connected():
-                cmd_vel_data = {
-                    "type": "cmd_vel",
-                    "linear": {
-                        "x": round(msg.linear.x, 3),
-                        "y": round(msg.linear.y, 3),
-                        "z": round(msg.linear.z, 3)
-                    },
-                    "angular": {
-                        "x": round(msg.angular.x, 3),
-                        "y": round(msg.angular.y, 3),
-                        "z": round(msg.angular.z, 3)
-                    },
-                    "timestamp": time.strftime("%H:%M:%S")
-                }
-                asyncio.create_task(self.forward_data(cmd_vel_data))
+            # NOTE: We don't forward cmd_vel data to avoid feedback loop.
+            # The robot publishes to /cmd_vel when it receives twist commands,
+            # and forwarding those back would create duplicate commands.
+            # The backend already knows what commands it sent.
+
         except Exception as e:
             self.get_logger().error(f'Error processing cmd_vel data: {e}')
 
