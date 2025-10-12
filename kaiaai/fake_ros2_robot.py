@@ -27,7 +27,7 @@ class FakeROS2Robot(Node):
         )
 
         self.scan_publisher_ = self.create_publisher(LaserScan, 'scan', 10)
-        self.battery_publisher_ = self.create_publisher(BatteryState, 'battery_status', 10)
+        self.battery_publisher_ = self.create_publisher(BatteryState, 'battery_state', 10)
         self.wifi_publisher_ = self.create_publisher(WifiState, 'wifi_state', 10)
         self.map_publisher_ = self.create_publisher(OccupancyGrid, 'map', latched_qos)
         self.camera_publisher_ = self.create_publisher(RosImage, '/color_camera/image_raw', 10)
