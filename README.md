@@ -136,7 +136,6 @@ ros2 run nav2_map_server map_saver_cli -f ~/maps/map --ros-args -p save_map_time
 ros2 node list
 ros2 node info /pet
 ros2 param list /pet
-ros2 param dump /pet
 
 # Get the current laser scan frequency
 ros2 param get /pet lidar.scan.freq.now
