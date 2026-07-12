@@ -26,7 +26,7 @@ def get_config_path():
 def load():
   path = get_config_path()
   if not os.path.exists(path):
-    os.mknod(path)
+    open(path, 'a').close()
 
   with open(path, 'r') as file:
     config = yaml.safe_load(file)

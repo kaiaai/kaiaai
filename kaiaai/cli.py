@@ -21,8 +21,10 @@ def main():
   count = len(argv)
   if count == 3 and argv[0] == "config":
     config.set_var(argv[1], argv[2])
+  elif count == 2 and argv[0] == "config":
+    print(config.get_var(argv[1]))
   elif count == 0:
-    print("Usage: kaia config var_name var_value")
+    print("Usage: kaia config var_name [var_value]")
 
 if __name__ == '__main__':
   main()
