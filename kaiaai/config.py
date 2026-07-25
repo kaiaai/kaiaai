@@ -36,6 +36,9 @@ def save(config):
   with open(get_config_path(), 'w') as file:
     yaml.dump(config, file)
 
+def all_vars():
+  return load()
+
 def get_var(var_name):
   config = load()
   if var_name in config.keys():

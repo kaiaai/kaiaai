@@ -23,8 +23,17 @@ def main():
     config.set_var(argv[1], argv[2])
   elif count == 2 and argv[0] == "config":
     print(config.get_var(argv[1]))
+  elif count == 1 and argv[0] == "config":
+    cfg = config.all_vars()
+    for name in sorted(cfg):
+      print(f"{name}: {cfg[name]}")
+    if 'robot.model' not in cfg:
+      print(f"robot.model: {config.get_var('robot.model')} (default)")
   elif count == 0:
-    print("Usage: kaia config var_name [var_value]")
+    print("Usage:")
+    print("  kaia config                   list all variables")
+    print("  kaia config var_name          print a variable")
+    print("  kaia config var_name value    set a variable")
 
 if __name__ == '__main__':
   main()
