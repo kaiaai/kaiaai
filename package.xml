@@ -12,6 +12,7 @@
   <author email="iliao@kaia.ai">Ilia O.</author>
 
   <depend>rclpy</depend>
+  <exec_depend>ament_index_python</exec_depend>
 
   <!-- exec_depend>python3-websockets</exec_depend -->
   <!-- rosdep installs an old version of python3-websockets, causing WS connection to fail -->

@@ -15,6 +15,7 @@
 # limitations under the License.
 import sys
 from kaiaai import config
+from kaiaai import yamledit
 
 
 def _split_scope(text):
@@ -71,9 +72,66 @@ def _list(model=None, instance=None):
     print(f"instances of {m}: {', '.join(insts)}")
 
 
+def _is_active(model, instance):
+  tm = config.current_model() if model is None else model
+  ti = config.current_instance() if instance is None else instance
+  return tm == config.current_model() and ti == config.current_instance()
+
+
+def _yaml_items(scope):
+  # Scoped variables whose name is "FILE.yaml/dotted.path" address a config
+  # file; yield (filename, dotted_path, value) for each.
+  for name in sorted(scope):
+    if '/' in name:
+      fname, dotted = name.split('/', 1)
+      yield fname, dotted, scope[name]
+
+
+def _apply_file(model, fname, dotted, value):
+  try:
+    path = yamledit.config_file_path(model, fname)
+    yamledit.ensure_writable(path)
+    was = yamledit.apply(path, dotted, value)
+    print(f"  {fname}: {dotted} {was} -> {value}")
+  except FileNotFoundError as err:
+    print(f"  ! config file not found: {err}")
+  except PermissionError as err:
+    print(f"  ! read-only, cannot edit (needs a writable workspace): {err}")
+  except KeyError:
+    print(f"  ! path not found in {fname}: {dotted}")
+  except Exception as err:
+    print(f"  ! cannot resolve {model}/{fname}: {err}")
+
+
+def _revert_file(model, fname, dotted):
+  try:
+    path = yamledit.config_file_path(model, fname)
+    yamledit.ensure_writable(path)
+    if yamledit.revert(path, dotted):
+      print(f"  {fname}: {dotted} reverted to default")
+  except FileNotFoundError as err:
+    print(f"  ! config file not found: {err}")
+  except PermissionError as err:
+    print(f"  ! read-only, cannot edit (needs a writable workspace): {err}")
+  except Exception as err:
+    print(f"  ! cannot resolve {model}/{fname}: {err}")
+
+
+def _render_files(model, instance, revert):
+  for fname, dotted, value in _yaml_items(config.scope_vars(model=model, instance=instance)):
+    if revert:
+      _revert_file(model, fname, dotted)
+    else:
+      _apply_file(model, fname, dotted, value)
+
+
 def _use(text):
   model, instance = _split_scope(text)
+  # Re-render the config files: strip the scope we are leaving back to
+  # defaults, then write the scope we are entering onto the untouched files.
+  _render_files(config.current_model(), config.current_instance(), revert=True)
   m, i = config.use_robot(model, instance)
+  _render_files(m, i, revert=False)
   print(f"now using {m}.{i}")
 
 
@@ -84,6 +142,10 @@ def _print_usage():
   print("  kaia set VAR VALUE [--robot M]   set a variable in the (given) scope")
   print("  kaia get VAR [--robot M[.I]]     print a variable")
   print("  kaia unset VAR [--robot M[.I]]   remove a variable (revert to default)")
+  print("")
+  print("  VAR of the form FILE.yaml/a.b.c edits <robot_pkg>/config/FILE.yaml")
+  print("  in place, e.g. navigation.yaml/amcl.ros__parameters.alpha1 0.2 ;")
+  print("  unset restores the original value from its # kaia-was: comment.")
   print("")
   print("  --robot MODEL[.INSTANCE]  target another scope without switching to it")
   print("                            (.INSTANCE alone keeps the current model)")
@@ -103,15 +165,32 @@ def _run(argv):
   elif verb == 'list':
     _list(model, instance)
   elif verb == 'set' and len(rest) == 2:
-    config.set_var(rest[0], rest[1], model=model, instance=instance)
-    print(f"set {rest[0]} = {rest[1]}  [{_scope_label(model, instance)}]")
+    name, value = rest
+    config.set_var(name, value, model=model, instance=instance)
+    print(f"set {name} = {value}  [{_scope_label(model, instance)}]")
+    if '/' in name and _is_active(model, instance):
+      fname, dotted = name.split('/', 1)
+      _apply_file(config.current_model(), fname, dotted, value)
   elif verb == 'get' and len(rest) == 1:
-    print(config.get_var(rest[0], model=model, instance=instance))
-  elif verb == 'unset' and len(rest) == 1:
-    if config.unset_var(rest[0], model=model, instance=instance):
-      print(f"unset {rest[0]}  [{_scope_label(model, instance)}]")
+    name = rest[0]
+    if '/' in name and _is_active(model, instance):
+      fname, dotted = name.split('/', 1)
+      try:
+        path = yamledit.config_file_path(config.current_model(), fname)
+        print(yamledit.read_value(path, dotted))
+      except Exception:
+        print(config.get_var(name, model=model, instance=instance))
     else:
-      print(f"{rest[0]} was not set  [{_scope_label(model, instance)}]")
+      print(config.get_var(name, model=model, instance=instance))
+  elif verb == 'unset' and len(rest) == 1:
+    name = rest[0]
+    if config.unset_var(name, model=model, instance=instance):
+      print(f"unset {name}  [{_scope_label(model, instance)}]")
+      if '/' in name and _is_active(model, instance):
+        fname, dotted = name.split('/', 1)
+        _revert_file(config.current_model(), fname, dotted)
+    else:
+      print(f"{name} was not set  [{_scope_label(model, instance)}]")
   else:
     _print_usage()
 
