@@ -69,9 +69,16 @@ Print a variable's value.
 Remove a variable, reverting it to its default. For a config-file edit, this
 restores the original value (see below).
 
-### `kaia list [--robot M[.I]]`
+### `kaia list [PREFIX] [--robot M[.I]]`
 
-Show a scope's variables, and any other instances of the model.
+Show a scope's variables, and any other instances of the model. A `PREFIX`
+narrows the list to that namespace — `kaia list clean` shows `clean` and every
+`clean.*` variable.
+
+```bash
+kaia list          # everything in the active scope
+kaia list clean    # only clean / clean.* variables
+```
 
 ### `kaia copy SRC DST`
 

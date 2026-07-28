@@ -61,20 +61,26 @@ def _scope_label(model, instance):
   return f"{m}/{i}"
 
 
-def _list(model=None, instance=None):
+def _list(model=None, instance=None, prefix=None):
   m = config.current_model() if model is None else model
   i = config.current_instance() if instance is None else instance
-  print(f"robot: {m}.{i}")
   scope = config.scope_vars(model=model, instance=instance)
-  print(f"--- {m}/{i} ---")
+  if prefix:
+    scope = {name: value for name, value in scope.items()
+             if name == prefix or name.startswith(prefix + '.')}
+  print(f"robot: {m}.{i}")
+  print(f"--- {m}/{i}{('  ' + prefix) if prefix else ''} ---")
   if scope:
     for name in sorted(scope):
       print(f"  {name} = {scope[name]}")
+  elif prefix:
+    print(f"  (no variables under '{prefix}')")
   else:
     print("  (no variables set for this scope)")
-  insts = config.instances(model=m)
-  if len(insts) > 1:
-    print(f"instances of {m}: {', '.join(insts)}")
+  if prefix is None:
+    insts = config.instances(model=m)
+    if len(insts) > 1:
+      print(f"instances of {m}: {', '.join(insts)}")
 
 
 def _is_active(model, instance):
@@ -181,7 +187,7 @@ def _import(path):
 def _print_usage():
   print("Usage:")
   print("  kaia use MODEL[.INSTANCE]        switch the active robot (and instance)")
-  print("  kaia list [--robot M[.I]]        show a scope's variables")
+  print("  kaia list [PREFIX] [--robot M[.I]]   show a scope's variables (under PREFIX)")
   print("  kaia set VAR VALUE [--robot M]   set a variable in the (given) scope")
   print("  kaia get VAR [--robot M[.I]]     print a variable")
   print("  kaia unset VAR [--robot M[.I]]   remove a variable (revert to default)")
@@ -220,7 +226,7 @@ def _run(argv):
   # Remaining verbs act on a single concrete scope.
   model, instance = _concrete(model, instance)
   if verb == 'list':
-    _list(model, instance)
+    _list(model, instance, rest[0] if rest else None)
   elif verb == 'set' and len(rest) == 2:
     name, value = rest
     config.set_var(name, value, model=model, instance=instance)
