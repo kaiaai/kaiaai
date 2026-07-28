@@ -39,15 +39,20 @@ def _pull_robot(argv):
   while i < len(argv):
     if argv[i] in ('--robot', '-r') and i + 1 < len(argv):
       model, instance = _split_scope(argv[i + 1])
-      # Naming another model without an instance targets its default, rather
-      # than leaking the active instance (e.g. "fast") across models.
-      if model is not None and instance is None:
-        instance = config.DEFAULT_INSTANCE
       i += 2
     else:
       rest.append(argv[i])
       i += 1
   return model, instance, rest
+
+
+def _concrete(model, instance):
+  # For verbs that act on ONE scope: a named model without an instance targets
+  # its default, rather than leaking the active instance (e.g. "fast") across
+  # models. An unnamed model (None) stays None -> the active scope.
+  if model is not None and instance is None:
+    instance = config.DEFAULT_INSTANCE
+  return model, instance
 
 
 def _scope_label(model, instance):
@@ -135,6 +140,44 @@ def _use(text):
   print(f"now using {m}.{i}")
 
 
+def _copy(src_text, dst_text):
+  sm, si = _concrete(*_split_scope(src_text))
+  dm, di = _concrete(*_split_scope(dst_text))
+  sm = sm or config.current_model()
+  dm = dm or config.current_model()
+  si = si or config.current_instance()
+  di = di or config.current_instance()
+  copied = config.copy_scope(sm, si, dm, di)
+  print(f"copied {len(copied)} var(s) {sm}.{si} -> {dm}.{di}")
+  if dm == config.current_model() and di == config.current_instance():
+    _render_files(dm, di, revert=False)
+
+
+def _export_label(model, instance):
+  if model is None:
+    return "entire config"
+  return model if instance is None else f"{model}.{instance}"
+
+
+def _export(model, instance, rest):
+  if len(rest) > 1:
+    _print_usage()
+    return
+  text = config.dumps(config.export_config(model, instance))
+  if rest:
+    with open(rest[0], 'w') as file:
+      file.write(text)
+    print(f"exported {_export_label(model, instance)} to {rest[0]}")
+  else:
+    sys.stdout.write(text)
+
+
+def _import(path):
+  config.import_config(config.load_file(path))
+  print(f"imported {path}")
+  _render_files(config.current_model(), config.current_instance(), revert=False)
+
+
 def _print_usage():
   print("Usage:")
   print("  kaia use MODEL[.INSTANCE]        switch the active robot (and instance)")
@@ -142,6 +185,9 @@ def _print_usage():
   print("  kaia set VAR VALUE [--robot M]   set a variable in the (given) scope")
   print("  kaia get VAR [--robot M[.I]]     print a variable")
   print("  kaia unset VAR [--robot M[.I]]   remove a variable (revert to default)")
+  print("  kaia copy SRC DST                copy a scope's vars to another scope")
+  print("  kaia export [--robot M[.I]] [FILE]   dump config (scope) to FILE/stdout")
+  print("  kaia import FILE                 merge an exported config back in")
   print("")
   print("  VAR of the form FILE.yaml/a.b.c edits <robot_pkg>/config/FILE.yaml")
   print("  in place, e.g. navigation.yaml/amcl.ros__parameters.alpha1 0.2 ;")
@@ -157,12 +203,23 @@ def _run(argv):
   verb = argv[0]
   model, instance, rest = _pull_robot(argv[1:])
 
-  if verb == 'use':
-    if len(rest) != 1:
-      _print_usage()
-      return
+  # Verbs that span scopes parse the raw (possibly whole-model) target.
+  if verb == 'use' and len(rest) == 1:
     _use(rest[0])
-  elif verb == 'list':
+    return
+  if verb == 'export':
+    _export(model, instance, rest)
+    return
+  if verb == 'import' and len(rest) == 1:
+    _import(rest[0])
+    return
+  if verb == 'copy' and len(rest) == 2:
+    _copy(rest[0], rest[1])
+    return
+
+  # Remaining verbs act on a single concrete scope.
+  model, instance = _concrete(model, instance)
+  if verb == 'list':
     _list(model, instance)
   elif verb == 'set' and len(rest) == 2:
     name, value = rest

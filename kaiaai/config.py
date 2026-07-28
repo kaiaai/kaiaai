@@ -120,3 +120,53 @@ def unset_var(var_name, model=None, instance=None):
   del scope[var_name]
   save(config)
   return True
+
+
+def copy_scope(src_model, src_instance, dst_model, dst_instance):
+  config = load()
+  src = _scope(config, src_model, src_instance)
+  dst = _scope(config, dst_model, dst_instance, create=True)
+  dst.update(src)
+  save(config)
+  return dict(src)
+
+
+def export_config(model=None, instance=None):
+  # None model -> the whole config; a model -> that model's subtree (all
+  # instances); model+instance -> a single scope. Always shaped like the config
+  # file itself so import_config() can merge it straight back.
+  config = load()
+  if model is None:
+    return config
+  sub = config.get('models', {}).get(model, {})
+  if instance is None:
+    return {'models': {model: sub}}
+  return {'models': {model: {instance: sub.get(instance, {})}}}
+
+
+def _deep_merge(base, overlay):
+  for key, value in overlay.items():
+    if isinstance(value, dict) and isinstance(base.get(key), dict):
+      _deep_merge(base[key], value)
+    else:
+      base[key] = value
+  return base
+
+
+def import_config(payload):
+  config = load()
+  payload = dict(payload)
+  # Bringing in someone's scopes/vars should not hijack which robot you are on.
+  for name in GLOBAL_VARS:
+    payload.pop(name, None)
+  _deep_merge(config, payload)
+  save(config)
+
+
+def dumps(data):
+  return yaml.dump(data)
+
+
+def load_file(path):
+  with open(path, 'r') as file:
+    return yaml.safe_load(file) or {}
