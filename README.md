@@ -83,11 +83,15 @@ If you installed ROS2/Kaia.ai without Docker directly on a Ubuntu PC/VM, just bo
 
 # Command cheat sheets
 
-`makerspet_mini` is the default robot model. When using another robot model, change the default model using Kaia.ai CLI.
-For example, the command below sets the default robot model to `makerspet_loki`.
+`makerspet_mini` is the default robot model. When using another robot model, select it with the Kaia.ai CLI.
+For example, the command below selects the `makerspet_loki` robot model.
 ```
-kaia config robot.model makerspet_loki
+kaia use makerspet_loki
 ```
+The `kaia` CLI stores per-robot settings in `~/.kaiaai.yaml` and can tune values
+inside a robot's ROS 2 config files. See the [kaia CLI reference](docs/cli.md);
+for how launch files read these values, see the [Python API reference](docs/python-api.md).
+(The older `kaia config robot.model makerspet_loki` form still works.)
 
 ## Operate a physical robot
 
