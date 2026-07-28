@@ -55,9 +55,16 @@ def current_instance(config=None):
   return config.get('robot.instance', DEFAULT_INSTANCE)
 
 
-def _scope(config, create=False):
-  model = current_model(config)
-  instance = current_instance(config)
+def _resolve(config, model, instance):
+  # None means "the active scope"; an explicit value targets another scope
+  # (used by the --robot flag) without switching the active robot.
+  model = current_model(config) if model is None else model
+  instance = current_instance(config) if instance is None else instance
+  return model, instance
+
+
+def _scope(config, model=None, instance=None, create=False):
+  model, instance = _resolve(config, model, instance)
   if create:
     return config.setdefault('models', {}) \
                  .setdefault(model, {}) \
@@ -65,9 +72,9 @@ def _scope(config, create=False):
   return config.get('models', {}).get(model, {}).get(instance, {})
 
 
-def scope_vars(config=None):
+def scope_vars(config=None, model=None, instance=None):
   config = load() if config is None else config
-  return _scope(config)
+  return _scope(config, model, instance)
 
 
 def instances(model=None, config=None):
@@ -76,19 +83,40 @@ def instances(model=None, config=None):
   return sorted(config.get('models', {}).get(model, {}).keys())
 
 
-def get_var(var_name, default=None):
+def use_robot(model=None, instance=None):
+  config = load()
+  if model is not None:
+    config['robot.model'] = model
+  config['robot.instance'] = instance if instance is not None else DEFAULT_INSTANCE
+  save(config)
+  return current_model(config), current_instance(config)
+
+
+def get_var(var_name, default=None, model=None, instance=None):
   config = load()
   if var_name == 'robot.model':
     return config.get('robot.model', DEFAULT_MODEL)
   if var_name == 'robot.instance':
     return config.get('robot.instance', DEFAULT_INSTANCE)
-  return _scope(config).get(var_name, default)
+  return _scope(config, model, instance).get(var_name, default)
 
 
-def set_var(var_name, var_value):
+def set_var(var_name, var_value, model=None, instance=None):
   config = load()
   if var_name in GLOBAL_VARS:
     config[var_name] = var_value
   else:
-    _scope(config, create=True)[var_name] = var_value
+    _scope(config, model, instance, create=True)[var_name] = var_value
   save(config)
+
+
+def unset_var(var_name, model=None, instance=None):
+  config = load()
+  if var_name in GLOBAL_VARS:
+    return False
+  scope = _scope(config, model, instance)
+  if var_name not in scope:
+    return False
+  del scope[var_name]
+  save(config)
+  return True
