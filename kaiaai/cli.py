@@ -16,6 +16,33 @@
 import sys
 from kaiaai import config
 
+
+def _print_config():
+  model = config.current_model()
+  instance = config.current_instance()
+  print(f"robot.model: {model}")
+  print(f"robot.instance: {instance}")
+  scope = config.scope_vars()
+  print(f"--- {model} / {instance} ---")
+  if scope:
+    for name in sorted(scope):
+      print(f"{name}: {scope[name]}")
+  else:
+    print("(no variables set for this model/instance)")
+  insts = config.instances()
+  if len(insts) > 1:
+    print(f"instances of {model}: {', '.join(insts)}")
+
+
+def _print_usage():
+  print("Usage:")
+  print("  kaia config                      list current model/instance vars")
+  print("  kaia config VAR                  print a variable")
+  print("  kaia config VAR VALUE            set a variable (scoped to model/instance)")
+  print("  kaia config robot.model NAME     switch robot model")
+  print("  kaia config robot.instance NAME  switch/create a config instance")
+
+
 def main():
   argv = sys.argv[1:]
   count = len(argv)
@@ -24,16 +51,10 @@ def main():
   elif count == 2 and argv[0] == "config":
     print(config.get_var(argv[1]))
   elif count == 1 and argv[0] == "config":
-    cfg = config.all_vars()
-    for name in sorted(cfg):
-      print(f"{name}: {cfg[name]}")
-    if 'robot.model' not in cfg:
-      print(f"robot.model: {config.get_var('robot.model')} (default)")
+    _print_config()
   elif count == 0:
-    print("Usage:")
-    print("  kaia config                   list all variables")
-    print("  kaia config var_name          print a variable")
-    print("  kaia config var_name value    set a variable")
+    _print_usage()
+
 
 if __name__ == '__main__':
   main()

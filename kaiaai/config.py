@@ -18,6 +18,13 @@ from pathlib import Path
 
 CONFIG_FILE_NAME = ".kaiaai.yaml"
 
+# Variables that select the active scope; always stored at the top level. Every
+# other variable is scoped under models/<robot.model>/<robot.instance>/, so a
+# value set for one robot model (or instance) does not leak into another.
+GLOBAL_VARS = ('robot.model', 'robot.instance')
+DEFAULT_MODEL = 'makerspet_mini'
+DEFAULT_INSTANCE = 'default'
+
 
 def get_config_path():
   return Path.home() / CONFIG_FILE_NAME
@@ -30,23 +37,58 @@ def load():
 
   with open(path, 'r') as file:
     config = yaml.safe_load(file)
-    return {} if config == None else config
+    return {} if config is None else config
+
 
 def save(config):
   with open(get_config_path(), 'w') as file:
     yaml.dump(config, file)
 
-def all_vars():
-  return load()
 
-def get_var(var_name):
+def current_model(config=None):
+  config = load() if config is None else config
+  return config.get('robot.model', DEFAULT_MODEL)
+
+
+def current_instance(config=None):
+  config = load() if config is None else config
+  return config.get('robot.instance', DEFAULT_INSTANCE)
+
+
+def _scope(config, create=False):
+  model = current_model(config)
+  instance = current_instance(config)
+  if create:
+    return config.setdefault('models', {}) \
+                 .setdefault(model, {}) \
+                 .setdefault(instance, {})
+  return config.get('models', {}).get(model, {}).get(instance, {})
+
+
+def scope_vars(config=None):
+  config = load() if config is None else config
+  return _scope(config)
+
+
+def instances(model=None, config=None):
+  config = load() if config is None else config
+  model = current_model(config) if model is None else model
+  return sorted(config.get('models', {}).get(model, {}).keys())
+
+
+def get_var(var_name, default=None):
   config = load()
-  if var_name in config.keys():
-    return config[var_name]
-  else:
-    return 'makerspet_mini' if (var_name == 'robot.model') else None
+  if var_name == 'robot.model':
+    return config.get('robot.model', DEFAULT_MODEL)
+  if var_name == 'robot.instance':
+    return config.get('robot.instance', DEFAULT_INSTANCE)
+  return _scope(config).get(var_name, default)
+
 
 def set_var(var_name, var_value):
   config = load()
-  config[var_name] = var_value
+  if var_name in GLOBAL_VARS:
+    config[var_name] = var_value
+  else:
+    _scope(config, create=True)[var_name] = var_value
   save(config)
