@@ -302,7 +302,7 @@ v0.11.0 in debug
 - added a Python API reference for launch files (see [docs/python-api.md](docs/python-api.md))
 
 v0.10.0
-- converted kaiaa from metapackage to Pyhon package
+- converted kaiaai from metapackage to Python package
 - kaia CLI sets default robot model
 - added YDLIDAR SCL
   - added intensity telemetry publication
