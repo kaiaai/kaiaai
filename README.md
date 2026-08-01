@@ -1,8 +1,21 @@
-# Kaia.ai Arduino/ROS2 home robots
+# Kaia.ai — DIY LiDAR robots on ROS 2
 
-[Kaia.ai](https://kaia.ai) is an open-source software platform to run apps on (consumer/home) robots. For now, it uses ROS2 for mapping/navigation/SLAM and [Arduino-compabile firwmare](https://github.com/kaiaai/firmware).
+[Kaia.ai](https://kaia.ai) is a small framework on top of ROS 2 for building and running
+low-cost, LiDAR-enabled differential-drive robots — mostly for education and hobbyists.
+It gives you two things:
 
-Here is a current 3/2025 brief demo (I have not released the apps setup yet).
+1. **A robot recipe.** Inexpensive robots whose on-board brain is an ESP32 running
+   Arduino + [micro-ROS firmware](https://github.com/kaiaai/firmware), driving a hobby
+   [LiDAR](https://github.com/kaiaai/LDS) for mapping and navigation, while the full ROS 2
+   stack (SLAM, Nav2, Gazebo simulation) runs on a nearby PC.
+2. **One workspace, many robots.** A convenience CLI — `kaia` — that switches the active
+   ROS 2 robot description, and now its launch and tuning settings, with a single command.
+   The same setup drives a tiny [makerspet_mini](https://github.com/makerspet/makerspet_mini)
+   educational robot today and a larger [makerspet_snoopy](https://github.com/makerspet/makerspet_snoopy),
+   [oomwoo_one](https://github.com/makerspet/oomwoo) or `proscenic_m6pro` tomorrow — whereas a
+   typical ROS 2 setup is wired for a single robot.
+
+Here is a brief 3/2025 demo:
 
 [![My DIY Arduino robot loves self-driving](https://img.youtube.com/vi/RCPUQmvS37Q/0.jpg)](https://www.youtube.com/watch?v=RCPUQmvS37Q&list=PLOSXKDW70aR8uA1IFahSKVuk5ODDfjTZV)
 
@@ -14,26 +27,31 @@ Here are [troubleshooting instructions](https://makerspet.com/blog/BLD-120MM-PAC
 
 Here is the technical [support forum](https://github.com/makerspet/support/discussions/).
 
-## Components
+## What's in the framework
 
-Kaia.ai robotics software platform is actively evolving and currently consists of these parts:
-- Cloud software infrastructure (TODO)
-- robot skills store (TODO)
-- Micro-ROS Arduino library for Kaia.ai-compatible robots [repo](https://github.com/kaiaai/micro_ros_arduino_kaia)
-  - Micro-ROS LiDAR telemetry receiver [package](https://github.com/kaiaai/kaiaai_telemetry)
-- End-user and development ROS2 Docker images [repo](https://github.com/kaiaai/install)
-- Robot Gazebo simulation ROS2 [package](https://github.com/kaiaai/kaiaai_gazebo)
-- Kaia.ai Python ROS2 software wrapper [package](https://github.com/kaiaai/kaiaai)
-- Robot operation ROS2 [repo](https://github.com/kaiaai/kaiaai_bringup), including SLAM mapping, navigation, frontier exploration, etc.
-- Robot keyboard teleoperation [package](https://github.com/kaiaai/kaiaai_teleop)
-- [WebRTC-based](https://github.com/kaiaai/kaiaai_python) image/video/data streaming
-  - [Python-based](https://github.com/kaiaai/kaiaai_python) image/audio sensing, processing (ML), decision making (ML/AI), robot face animation (TODO)
+Kaia.ai is actively evolving. The pieces split between the robot and the PC that drives it:
+
+**On the robot — ESP32 / Arduino / micro-ROS**
+- [firmware](https://github.com/kaiaai/firmware) — the ESP32 Arduino firmware (micro-ROS) that runs the robot
+- [LDS](https://github.com/kaiaai/LDS) — LiDAR driver library (the sensors listed below)
+- [micro_ros_arduino_kaia](https://github.com/kaiaai/micro_ros_arduino_kaia) — micro-ROS Arduino library
+
+**On the PC — ROS 2**
+- [kaiaai](https://github.com/kaiaai/kaiaai) — this package: the `kaia` CLI and Python helpers
+- [kaiaai_bringup](https://github.com/kaiaai/kaiaai_bringup) — robot operation: SLAM mapping, navigation, frontier exploration
+- [kaiaai_telemetry](https://github.com/kaiaai/kaiaai_telemetry) — micro-ROS LiDAR / telemetry receiver
+- [kaiaai_gazebo](https://github.com/kaiaai/kaiaai_gazebo) — Gazebo simulation
+- [kaiaai_teleop](https://github.com/kaiaai/kaiaai_teleop) — keyboard teleoperation
+- [install](https://github.com/kaiaai/install) — end-user and development ROS 2 Docker images
+
+Experimental: [kaiaai_python](https://github.com/kaiaai/kaiaai_python) — WebRTC image/video/audio streaming and on-PC ML.
 
 ## Kaia.ai compatible robots
 - Maker's Pet [Loki](https://github.com/makerspet/makerspet_loki) 200mm 3D-printed pet robot
 - Maker's Pet [Fido](https://github.com/makerspet/makerspet_fido) 250mm 3D-printed pet robot
 - Maker's Pet [Snoopy](https://github.com/makerspet/makerspet_snoopy) 300mm 3D-printed pet robot
 - Maker's Pet [Mini](https://github.com/makerspet/makerspet_mini) 125mm 3D-printed educational robot
+- [OOMWOO](https://github.com/makerspet/oomwoo) 3D-printable robot vacuum — a non-pet kaiaai-compatible robot
 - Add your own version to the [list](https://github.com/topics/kaiaai-robot)
 
 ## Supported LiDAR sensors
