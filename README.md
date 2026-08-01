@@ -1,25 +1,25 @@
 # Kaia.ai — DIY LiDAR robots on ROS 2
 
 [Kaia.ai](https://kaia.ai) is a small framework on top of ROS 2 for building and running
-low-cost, LiDAR-enabled differential-drive robots — mostly for education and hobbyists.
+low-cost, LiDAR-enabled differential-drive robots - mostly for education/hobbyists.
 It gives you two things:
 
 1. **A robot recipe.** Inexpensive robots whose on-board brain is an ESP32 running
    Arduino + [micro-ROS firmware](https://github.com/kaiaai/firmware), driving a hobby
    [LiDAR](https://github.com/kaiaai/LDS) for mapping and navigation, while the full ROS 2
    stack (SLAM, Nav2, Gazebo simulation) runs on a nearby PC.
-2. **One workspace, many robots.** A convenience CLI — `kaia` — that switches the active
+2. **One workspace, many robots.** A convenience CLI - `kaia` - that switches the active
    ROS 2 robot description, and now its launch and tuning settings, with a single command.
    The same setup drives a tiny [makerspet_mini](https://github.com/makerspet/makerspet_mini)
    educational robot today and a larger [makerspet_snoopy](https://github.com/makerspet/makerspet_snoopy),
-   [oomwoo_one](https://github.com/makerspet/oomwoo) or `proscenic_m6pro` tomorrow — whereas a
+   [oomwoo_one](https://github.com/makerspet/oomwoo) or [proscenic_m6pro](https://github.com/makerspet/proscenic-m6pro) - whereas a
    typical ROS 2 setup is wired for a single robot.
 
-Here is a brief 3/2025 demo:
+Here is a briefdemo:
 
 [![My DIY Arduino robot loves self-driving](https://img.youtube.com/vi/RCPUQmvS37Q/0.jpg)](https://www.youtube.com/watch?v=RCPUQmvS37Q&list=PLOSXKDW70aR8uA1IFahSKVuk5ODDfjTZV)
 
-Here are current 3/2025 build, setup, bring-up and operation instructions.
+Here are build, setup, bring-up and operation instructions.
 
 [![My DIY Arduino robot loves self-driving](https://img.youtube.com/vi/6GtjAB19GP8/0.jpg)](https://www.youtube.com/watch?v=6GtjAB19GP8&list=PLOSXKDW70aR8uA1IFahSKVuk5ODDfjTZV)
 
@@ -27,9 +27,9 @@ Here are [troubleshooting instructions](https://makerspet.com/blog/BLD-120MM-PAC
 
 Here is the technical [support forum](https://github.com/makerspet/support/discussions/).
 
-## What's in the framework
+## Framework components
 
-Kaia.ai is actively evolving. The pieces split between the robot and the PC that drives it:
+Some kaia components live on the robot - others on the PC:
 
 **On the robot — ESP32 / Arduino / micro-ROS**
 - [firmware](https://github.com/kaiaai/firmware) — the ESP32 Arduino firmware (micro-ROS) that runs the robot
@@ -52,6 +52,7 @@ Experimental: [kaiaai_python](https://github.com/kaiaai/kaiaai_python) — WebRT
 - Maker's Pet [Snoopy](https://github.com/makerspet/makerspet_snoopy) 300mm 3D-printed pet robot
 - Maker's Pet [Mini](https://github.com/makerspet/makerspet_mini) 125mm 3D-printed educational robot
 - [OOMWOO](https://github.com/makerspet/oomwoo) 3D-printable robot vacuum — a non-pet kaiaai-compatible robot
+- [Proscenic M6 Pro](https://github.com/makerspet/proscenic-m6pro) consumer vacuum cleaner robot
 - Add your own version to the [list](https://github.com/topics/kaiaai-robot)
 
 ## Supported LiDAR sensors
@@ -69,7 +70,7 @@ The entire up-to-date list of supported LiDAR is [here](https://github.com/kaiaa
 There are two ways to install ROS2 and Kaia.ai on your PC - using Docker (Windows, Linux) or Ubuntu 24.04 (physical PC of virtual machine).
 Follow the installation [instructions here](https://github.com/kaiaai/install).
 
-Watch build, setup and bringup [videos](https://www.youtube.com/playlist?list=PLOSXKDW70aR8SA16wTB0ou9ClKhv7micy)
+Watch build, setup and bring-up [videos](https://www.youtube.com/playlist?list=PLOSXKDW70aR8SA16wTB0ou9ClKhv7micy)
 - Note: these videos are outdated; updated videos will be published shortly for Maker's Pet Mini
 
 ### Launch ROS2/Kaia.ai (Docker only)
