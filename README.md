@@ -15,7 +15,7 @@ It gives you two things:
    [oomwoo_one](https://github.com/makerspet/oomwoo) or [proscenic_m6pro](https://github.com/makerspet/proscenic-m6pro) - whereas a
    typical ROS 2 setup is wired for a single robot.
 
-Here is a briefdemo:
+Here is a brief demo:
 
 [![My DIY Arduino robot loves self-driving](https://img.youtube.com/vi/RCPUQmvS37Q/0.jpg)](https://www.youtube.com/watch?v=RCPUQmvS37Q&list=PLOSXKDW70aR8uA1IFahSKVuk5ODDfjTZV)
 
