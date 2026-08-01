@@ -80,12 +80,12 @@ Open a Windows command shell or Windows PowerShell window and type the command b
 Note that your `c:\maps` will be mapped to `/root/maps` to store navigation maps. Feel free to change `c:\maps` path to a more suitable location, e.g. `c:\Users\MyUserName\maps`.
 ```
 # Windows WSL2
-docker pull kaiaai/kaiaai:iron
-docker run --name makerspet -it --rm -v c:\maps:/root/maps -p 8888:8888/udp -p 4430:4430/tcp -e DISPLAY=host.docker.internal:0.0 -e LIBGL_ALWAYS_INDIRECT=0 kaiaai/kaiaai:iron
+docker pull kaiaai/kaiaai:jazzy
+docker run --name makerspet -it --rm -v c:\maps:/root/maps -p 8888:8888/udp -p 4430:4430/tcp -e DISPLAY=host.docker.internal:0.0 -e LIBGL_ALWAYS_INDIRECT=0 kaiaai/kaiaai:jazzy
 
 # Ubuntu
-sudo docker pull kaiaai/kaiaai:iron
-sudo docker run --name makerspet -it --rm -v ~/maps:/root/maps -p 8888:8888/udp -p 4430:4430/tcp -e DISPLAY -e QT_X11_NO_MITSHM=1 --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" --volume="${XAUTHORITY}:/root/.Xauthority" kaiaai/kaiaai:iron
+sudo docker pull kaiaai/kaiaai:jazzy
+sudo docker run --name makerspet -it --rm -v ~/maps:/root/maps -p 8888:8888/udp -p 4430:4430/tcp -e DISPLAY -e QT_X11_NO_MITSHM=1 --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" --volume="${XAUTHORITY}:/root/.Xauthority" kaiaai/kaiaai:jazzy
 ```
 
 Get an aditional bash prompt by opening another Windows command shell or Windows PowerShell window and typing:
@@ -291,7 +291,17 @@ Initial versions of packages in this repo are based on ROBOTIS
 [Turtlebot3 code](https://github.com/ROBOTIS-GIT/turtlebot3)
 
 ## Release notes
-v0.10.0 in debug
+v0.11.0 in debug
+- expanded the `kaia` CLI (see [docs/cli.md](docs/cli.md))
+  - settings are now scoped by robot model *and* named instance
+  - new verbs: `use` / `set` / `get` / `unset` / `list` (`config` kept as a legacy alias)
+  - `--robot` targets another robot/instance without switching to it
+  - `kaia set FILE.yaml/a.b.c` edits a robot's ROS 2 config file in place, preserving
+    the original value as a comment; `unset` reverts it
+  - `copy` settings between robots/instances; `export` / `import` complete configs
+- added a Python API reference for launch files (see [docs/python-api.md](docs/python-api.md))
+
+v0.10.0
 - converted kaiaa from metapackage to Pyhon package
 - kaia CLI sets default robot model
 - added YDLIDAR SCL
