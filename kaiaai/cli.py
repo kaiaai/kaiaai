@@ -186,7 +186,7 @@ def _import(path):
 
 def _print_usage():
   print("Usage:")
-  print("  kaia use MODEL[.INSTANCE]        switch the active robot (and instance)")
+  print("  kaia use [MODEL[.INSTANCE]]      show the active robot, or switch it")
   print("  kaia list [PREFIX] [--robot M[.I]]   show a scope's variables (under PREFIX)")
   print("  kaia set VAR VALUE [--robot M]   set a variable in the (given) scope")
   print("  kaia get VAR [--robot M[.I]]     print a variable")
@@ -210,8 +210,14 @@ def _run(argv):
   model, instance, rest = _pull_robot(argv[1:])
 
   # Verbs that span scopes parse the raw (possibly whole-model) target.
-  if verb == 'use' and len(rest) == 1:
-    _use(rest[0])
+  if verb == 'use':
+    if len(rest) == 1:
+      _use(rest[0])
+    elif not rest:
+      # no argument: report the robot currently in use
+      print(f"{config.current_model()}.{config.current_instance()}")
+    else:
+      _print_usage()
     return
   if verb == 'export':
     _export(model, instance, rest)

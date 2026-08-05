@@ -33,12 +33,14 @@ kaia set clean.v_cruise 0.6         # this value belongs to oomwoo_one.fast only
 
 ## Commands
 
-### `kaia use MODEL[.INSTANCE]`
+### `kaia use [MODEL[.INSTANCE]]`
 
-Switch the active robot, and optionally the instance. A bare `MODEL` selects its
-`default` instance; `.INSTANCE` alone keeps the current model.
+With no argument, print the robot currently in use (as `model.instance`).
+With an argument, switch the active robot, and optionally the instance: a bare
+`MODEL` selects its `default` instance; `.INSTANCE` alone keeps the current model.
 
 ```bash
+kaia use                       # -> oomwoo_one.default   (which robot am I on?)
 kaia use oomwoo_one            # oomwoo_one, default instance
 kaia use oomwoo_one.fast       # oomwoo_one, fast instance
 kaia use .slow                 # current model, slow instance
