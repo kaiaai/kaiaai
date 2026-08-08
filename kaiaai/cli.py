@@ -128,6 +128,19 @@ def _revert_file(model, fname, dotted):
     print(f"  ! cannot resolve {model}/{fname}: {err}")
 
 
+def _live_push(name, value):
+  # Best-effort: if a node declaring this parameter is already running, update
+  # it live so `kaia set` needs no follow-up `ros2 param set`. Stays silent when
+  # ROS is unavailable or nothing matches (e.g. setting config before launch).
+  try:
+    from kaiaai import ros_params
+  except Exception:
+    return
+  leaf = name.split('.')[-1]
+  for node_name, status in ros_params.push(leaf, value):
+    print(f"  live: {node_name} {leaf} {status}")
+
+
 def _render_files(model, instance, revert):
   for fname, dotted, value in _yaml_items(config.scope_vars(model=model, instance=instance)):
     if revert:
@@ -199,6 +212,11 @@ def _print_usage():
   print("  in place, e.g. navigation.yaml/amcl.ros__parameters.alpha1 0.2 ;")
   print("  unset restores the original value from its # kaia-was: comment.")
   print("")
+  print("  set of a simple VAR (e.g. clean.arc_omega) is ALSO pushed live to")
+  print("  any running node that declares that parameter, so you need no")
+  print("  follow-up ros2 param set. Best-effort; silent when nothing matches.")
+  print("  KAIA_NO_LIVE_PARAMS=1 disables the live push.")
+  print("")
   print("  --robot MODEL[.INSTANCE]  target another scope without switching to it")
   print("                            (.INSTANCE alone keeps the current model)")
   print("")
@@ -240,6 +258,8 @@ def _run(argv):
     if '/' in name and _is_active(model, instance):
       fname, dotted = name.split('/', 1)
       _apply_file(config.current_model(), fname, dotted, value)
+    elif name not in config.GLOBAL_VARS and _is_active(model, instance):
+      _live_push(name, value)
   elif verb == 'get' and len(rest) == 1:
     name = rest[0]
     if '/' in name and _is_active(model, instance):

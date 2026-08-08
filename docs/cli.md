@@ -62,6 +62,32 @@ kaia set nav.v_cruise 0.5
 Variable names are opaque keys; dotted prefixes like `clean.` / `nav.` are just
 a convention so different launches can read their own group.
 
+#### Live push to a running node
+
+Setting a simple variable also updates it **live**, so you don't have to switch
+to `ros2 param set` once a node is up. After persisting the value, `kaia set`
+looks for any running node that declares a parameter named after the variable's
+leaf (`clean.arc_omega` → parameter `arc_omega`) and sets it there:
+
+```bash
+kaia set clean.arc_omega 0.1
+# set clean.arc_omega = 0.1  [makerspet_mini/default]
+#   live: /wall_clean arc_omega updated
+```
+
+This works because the launch convention seeds each node parameter from the
+variable's leaf name (see `wall_clean.launch.py`), so no node↔section registry
+is needed. It is **best-effort**: it stays silent when ROS isn't sourced, no
+node is running, or nothing declares that parameter — so setting values before
+launch behaves exactly as before. The value is coerced to the parameter's
+declared type; if more than one running node declares the leaf, each is updated
+and reported. It does not apply to `FILE.yaml/...` keys (those edit files on
+disk) or to `robot.model` / `robot.instance`.
+
+Because probing the ROS graph adds ~1 s per `set` when your shell is sourced,
+set **`KAIA_NO_LIVE_PARAMS=1`** to skip the probe (handy when scripting many
+sets before anything is launched).
+
 ### `kaia get VAR [--robot M[.I]]`
 
 Print a variable's value.
