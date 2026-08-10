@@ -1,8 +1,13 @@
 # kaia CLI reference
 
 `kaia` stores per-robot configuration on your machine and lets you tune a
-robot's settings — including values inside its ROS 2 config files — from the
-command line. It is a thin wrapper around `ros2 run kaiaai cli`.
+robot's settings — including values inside its ROS 2 config files, and
+parameters on an **already-running** node — from the command line. It is a thin
+wrapper around `ros2 run kaiaai cli`.
+
+`kaia set` works the same before and after launch: it persists the value, and if
+a matching node is already running it also pushes the value live (no follow-up
+`ros2 param set`). See [Live push to a running node](#live-push-to-a-running-node).
 
 The configuration lives in a single file, `~/.kaiaai.yaml`.
 
@@ -29,7 +34,11 @@ kaia set clean.v_cruise 0.35        # set a variable for oomwoo_one.default
 kaia list                           # show the active scope
 kaia use oomwoo_one.fast            # switch to a "fast" instance of the same robot
 kaia set clean.v_cruise 0.6         # this value belongs to oomwoo_one.fast only
+kaia set clean.arc_omega 0.1        # persisted AND pushed live if a node is running
 ```
+
+Tuning a robot that's already driving? Just `kaia set` — the value is saved for
+next launch and applied to the running node in the same step.
 
 ## Commands
 
